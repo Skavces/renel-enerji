@@ -44,10 +44,10 @@ const stats = [
 ]
 
 const collagePhotos = [
-  '/whyus/muhendislik-altyapisi.jpg',
-  '/whyus/verimlilik-odakli.jpg',
-  '/whyus/yerel-ve-guvenilir.jpg',
-  '/whyus/onayli-ekipmanlar.jpg',
+  '/whyus/muhendislik-altyapisi.webp',
+  '/whyus/verimlilik-odakli.webp',
+  '/whyus/yerel-ve-guvenilir.webp',
+  '/whyus/onayli-ekipmanlar.webp',
 ]
 
 export default function Kurumsal() {
@@ -57,7 +57,7 @@ export default function Kurumsal() {
 
       {/* Hero split: photo collage left, content right */}
       <section className="relative py-20 bg-white overflow-hidden">
-        <img src="/stats.png" alt="" className="absolute bottom-0 right-0 w-[560px] opacity-50 pointer-events-none select-none" />
+        <img src="/stats.webp" alt="" className="absolute bottom-0 right-0 w-[560px] opacity-50 pointer-events-none select-none" />
         <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-16 items-center">
 
           {/* Photo collage */}

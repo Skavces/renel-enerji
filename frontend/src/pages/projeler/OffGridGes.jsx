@@ -4,9 +4,9 @@ import { ArrowLeft, ArrowRight, MapPin, CheckCircle2, X, Play, Zap } from 'lucid
 import PageHeader from '../../components/PageHeader'
 
 const media = [
-  { type: 'image', src: '/off-grid/SnapInsta.to_606030691_17863261425551552_5849723382801399238_n.jpg' },
-  { type: 'image', src: '/off-grid/SnapInsta.to_606302793_17863261416551552_3153582796018964246_n.jpg' },
-  { type: 'image', src: '/off-grid/SnapInsta.to_606927601_17863261407551552_6676336886876542149_n.jpg' },
+  { type: 'image', src: '/off-grid/SnapInsta.to_606030691_17863261425551552_5849723382801399238_n.webp' },
+  { type: 'image', src: '/off-grid/SnapInsta.to_606302793_17863261416551552_3153582796018964246_n.webp' },
+  { type: 'image', src: '/off-grid/SnapInsta.to_606927601_17863261407551552_6676336886876542149_n.webp' },
   { type: 'video', src: '/off-grid/SnapInsta.to_AQPvEJkOFwuaV-xVLx98EKIoZngi2rbv1XfuvObEpujnXhjq9zyGtjac4ufO4krLyAvUr_R7-zTrFRj51AGfCus8JT9IZ5U-wx79w_k.mp4' },
 ]
 

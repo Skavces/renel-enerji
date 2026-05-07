@@ -117,7 +117,7 @@ export default function Projelerimiz() {
       {/* CTA */}
       <section
         className="py-16 border-t border-gray-100 relative bg-cover bg-center"
-        style={{ backgroundImage: "url('/stats-bg.png')" }}
+        style={{ backgroundImage: "url('/stats-bg.webp')" }}
       >
         <div className="absolute inset-0 bg-white/50" />
         <div className="relative z-10 max-w-2xl mx-auto px-6 text-center">

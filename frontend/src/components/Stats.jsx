@@ -159,7 +159,7 @@ export default function Stats() {
         <div className="relative bg-white rounded-lg shadow-xl border border-gray-100 overflow-hidden">
           {/* Background image */}
           <div className="absolute inset-0 pointer-events-none">
-            <img src="/stats-bg.png" alt="" className="w-full h-full object-cover opacity-35" />
+            <img src="/stats-bg.webp" alt="" className="w-full h-full object-cover opacity-35" />
           </div>
 
           {/* Stats */}

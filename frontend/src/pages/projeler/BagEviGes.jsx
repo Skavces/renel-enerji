@@ -4,9 +4,9 @@ import { ArrowLeft, ArrowRight, MapPin, CheckCircle2, X } from 'lucide-react'
 import PageHeader from '../../components/PageHeader'
 
 const images = [
-  '/4kwp-bagevi/SnapInsta.to_572962383_17857134906551552_2235488587040886983_n.jpg',
-  '/4kwp-bagevi/SnapInsta.to_573313405_17857134897551552_1782090065706594247_n.jpg',
-  '/4kwp-bagevi/SnapInsta.to_573689641_17857134888551552_2721821468274745229_n.jpg',
+  '/4kwp-bagevi/SnapInsta.to_572962383_17857134906551552_2235488587040886983_n.webp',
+  '/4kwp-bagevi/SnapInsta.to_573313405_17857134897551552_1782090065706594247_n.webp',
+  '/4kwp-bagevi/SnapInsta.to_573689641_17857134888551552_2721821468274745229_n.webp',
 ]
 
 const specs = [

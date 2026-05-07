@@ -1,25 +1,27 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
-import { useEffect } from 'react'
+import { useEffect, lazy, Suspense } from 'react'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import WhatsAppWidget from './components/WhatsAppWidget'
-import Home from './pages/Home'
-import Hizmetler from './pages/Hizmetler'
-import Kurumsal from './pages/Kurumsal'
-import Referanslar from './pages/Referanslar'
-import Iletisim from './pages/Iletisim'
-import Projelerimiz from './pages/Projelerimiz'
-import ProjeDetay from './pages/projeler/ProjeDetay'
-import AdminLogin from './pages/admin/AdminLogin'
-import AdminLayout from './pages/admin/AdminLayout'
-import AdminDashboard from './pages/admin/AdminDashboard'
-import ProjelerAdmin from './pages/admin/ProjelerAdmin'
-import ProjeForm from './pages/admin/ProjeForm'
-import ReferanslarAdmin from './pages/admin/ReferanslarAdmin'
-import ReferansForm from './pages/admin/ReferansForm'
-import Analitik from './pages/admin/Analitik'
-import TwoFactorSetup from './pages/admin/TwoFactorSetup'
 import { AdminAuthProvider, useAdminAuth } from './contexts/AdminAuthContext'
+
+const Home = lazy(() => import('./pages/Home'))
+const Hizmetler = lazy(() => import('./pages/Hizmetler'))
+const Kurumsal = lazy(() => import('./pages/Kurumsal'))
+const Referanslar = lazy(() => import('./pages/Referanslar'))
+const Iletisim = lazy(() => import('./pages/Iletisim'))
+const Projelerimiz = lazy(() => import('./pages/Projelerimiz'))
+const ProjeDetay = lazy(() => import('./pages/projeler/ProjeDetay'))
+
+const AdminLogin = lazy(() => import('./pages/admin/AdminLogin'))
+const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'))
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'))
+const ProjelerAdmin = lazy(() => import('./pages/admin/ProjelerAdmin'))
+const ProjeForm = lazy(() => import('./pages/admin/ProjeForm'))
+const ReferanslarAdmin = lazy(() => import('./pages/admin/ReferanslarAdmin'))
+const ReferansForm = lazy(() => import('./pages/admin/ReferansForm'))
+const Analitik = lazy(() => import('./pages/admin/Analitik'))
+const TwoFactorSetup = lazy(() => import('./pages/admin/TwoFactorSetup'))
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -46,21 +48,27 @@ function ProtectedRoute({ children }) {
   return children
 }
 
+function PageLoader() {
+  return <div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-2 border-[#448834] border-t-transparent rounded-full animate-spin" /></div>
+}
+
 function PublicLayout() {
   return (
     <>
       <ScrollToTop />
       <Navbar />
       <main>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/hizmetler" element={<Hizmetler />} />
-          <Route path="/kurumsal" element={<Kurumsal />} />
-          <Route path="/projelerimiz" element={<Projelerimiz />} />
-          <Route path="/projelerimiz/:slug" element={<ProjeDetay />} />
-          <Route path="/referanslar" element={<Referanslar />} />
-          <Route path="/iletisim" element={<Iletisim />} />
-        </Routes>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/hizmetler" element={<Hizmetler />} />
+            <Route path="/kurumsal" element={<Kurumsal />} />
+            <Route path="/projelerimiz" element={<Projelerimiz />} />
+            <Route path="/projelerimiz/:slug" element={<ProjeDetay />} />
+            <Route path="/referanslar" element={<Referanslar />} />
+            <Route path="/iletisim" element={<Iletisim />} />
+          </Routes>
+        </Suspense>
       </main>
       <Footer />
       <WhatsAppWidget />
@@ -71,20 +79,22 @@ function PublicLayout() {
 function AdminRoutes() {
   return (
     <AdminAuthProvider>
-      <Routes>
-        <Route path="login" element={<AdminLogin />} />
-        <Route element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
-          <Route index element={<AdminDashboard />} />
-          <Route path="projeler" element={<ProjelerAdmin />} />
-          <Route path="projeler/yeni" element={<ProjeForm />} />
-          <Route path="projeler/:id/duzenle" element={<ProjeForm />} />
-          <Route path="referanslar" element={<ReferanslarAdmin />} />
-          <Route path="referanslar/yeni" element={<ReferansForm />} />
-          <Route path="referanslar/:id/duzenle" element={<ReferansForm />} />
-          <Route path="analitik" element={<Analitik />} />
-          <Route path="2fa" element={<TwoFactorSetup />} />
-        </Route>
-      </Routes>
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route path="login" element={<AdminLogin />} />
+          <Route element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
+            <Route index element={<AdminDashboard />} />
+            <Route path="projeler" element={<ProjelerAdmin />} />
+            <Route path="projeler/yeni" element={<ProjeForm />} />
+            <Route path="projeler/:id/duzenle" element={<ProjeForm />} />
+            <Route path="referanslar" element={<ReferanslarAdmin />} />
+            <Route path="referanslar/yeni" element={<ReferansForm />} />
+            <Route path="referanslar/:id/duzenle" element={<ReferansForm />} />
+            <Route path="analitik" element={<Analitik />} />
+            <Route path="2fa" element={<TwoFactorSetup />} />
+          </Route>
+        </Routes>
+      </Suspense>
     </AdminAuthProvider>
   )
 }

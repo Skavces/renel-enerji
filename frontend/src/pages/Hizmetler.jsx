@@ -22,7 +22,7 @@ const services = [
     iconColor: 'text-blue-600',
     badge: 'Tarımsal Çözüm',
     badgeColor: 'bg-blue-100 text-blue-700',
-    photo: '/tarimsal-sulama-sistemleri-gunes-enerjisi.png',
+    photo: '/tarimsal-sulama-sistemleri-gunes-enerjisi.webp',
   },
   {
     icon: Home,
@@ -43,7 +43,7 @@ const services = [
     iconColor: 'text-orange-600',
     badge: 'En Popüler',
     badgeColor: 'bg-orange-100 text-orange-700',
-    photo: '/arazi-cati-tipi-ges.png',
+    photo: '/arazi-cati-tipi-ges.webp',
     highlight: true,
   },
   {
@@ -65,7 +65,7 @@ const services = [
     iconColor: 'text-green-600',
     badge: 'Off-Grid',
     badgeColor: 'bg-green-100 text-green-700',
-    photo: '/bag-evi-ges.png',
+    photo: '/bag-evi-ges.webp',
   },
   {
     icon: Car,
@@ -86,7 +86,7 @@ const services = [
     iconColor: 'text-purple-600',
     badge: 'E-Mobilite',
     badgeColor: 'bg-purple-100 text-purple-700',
-    photo: '/elektrikli-arac-sarj-istasyonu.png',
+    photo: '/elektrikli-arac-sarj-istasyonu.webp',
   },
 ]
 

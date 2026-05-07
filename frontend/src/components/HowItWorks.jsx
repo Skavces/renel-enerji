@@ -3,32 +3,32 @@ const steps = [
     num: '01',
     title: 'Keşif & Fizibilite',
     desc: 'Yerinde inceleme ile ihtiyaç analizi yapılır, çatı/arazi ölçümü ve gölgeleme etüdü hazırlanır.',
-    img: '/kesif.png',
+    img: '/kesif.webp',
   },
   {
     num: '02',
     title: 'Sistem Tasarımı',
     desc: 'Mühendislik hesaplamalarıyla optimum panel kapasitesi, inverter seçimi ve elektrik projesi hazırlanır.',
-    img: '/sistem-tasarimi.png',
+    img: '/sistem-tasarimi.webp',
   },
   {
     num: '03',
     title: 'Kurulum & Montaj',
     desc: 'Sertifikalı ekibimiz tarafından standartlara uygun güvenli kurulum gerçekleştirilir.',
-    img: '/kurulum-montaj.png',
+    img: '/kurulum-montaj.webp',
   },
   {
     num: '04',
     title: 'Devreye Alma & Takip',
     desc: 'Sistem devreye alınır, uzaktan izleme kurulur, bakım ve destek hizmeti başlar.',
-    img: '/devreye-alma-takip.png',
+    img: '/devreye-alma-takip.webp',
   },
 ]
 
 export default function HowItWorks() {
   return (
     <section className="py-24 bg-white relative overflow-hidden">
-      <img src="/nasil-calisiriz.png" alt="" className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none z-0" />
+      <img src="/nasil-calisiriz.webp" alt="" className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none z-0" />
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-10 right-20 w-72 h-72 rounded-full bg-[#448834]/5 blur-3xl" />
         <div className="absolute bottom-10 left-20 w-56 h-56 rounded-full bg-[#f5ce31]/10 blur-3xl" />
@@ -50,7 +50,7 @@ export default function HowItWorks() {
         {/* Steps — wave layout */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 items-start relative">
           {/* Wavy connector */}
-          <img src="/shape.png" alt="" className="hidden md:block absolute top-8 left-1/2 -translate-x-1/2 w-[140%] pointer-events-none select-none" />
+          <img src="/shape.webp" alt="" className="hidden md:block absolute top-8 left-1/2 -translate-x-1/2 w-[140%] pointer-events-none select-none" />
 
           {steps.map((s, i) => (
             <div key={s.num} className={`flex flex-col text-center ${i === 0 || i === 3 ? 'mt-16' : 'mt-0'}`}>

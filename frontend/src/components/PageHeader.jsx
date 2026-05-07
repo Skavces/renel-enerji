@@ -5,7 +5,7 @@ export default function PageHeader({ title, parent }) {
   return (
     <div className="relative h-40 flex items-center overflow-hidden">
       <img
-        src="/panael-bg.png"
+        src="/panael-bg.webp"
         alt=""
         className="absolute inset-0 w-full h-full object-cover"
       />

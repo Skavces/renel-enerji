@@ -4,11 +4,11 @@ import { ArrowLeft, ArrowRight, MapPin, Zap, CheckCircle2, X, Play } from 'lucid
 import PageHeader from '../../components/PageHeader'
 
 const media = [
-  { type: 'image', src: '/hibrit-ges/SnapInsta.to_540529601_17847453474551552_7890774048914980763_n.jpg' },
-  { type: 'image', src: '/hibrit-ges/SnapInsta.to_540609246_17847453456551552_8132941253529611121_n.jpg' },
-  { type: 'image', src: '/hibrit-ges/SnapInsta.to_540388995_17847453465551552_5607991210025723648_n.jpg' },
-  { type: 'image', src: '/hibrit-ges/SnapInsta.to_539550993_17847453438551552_4441868670112979963_n.jpg' },
-  { type: 'image', src: '/hibrit-ges/SnapInsta.to_539538434_17847453447551552_6919977082585415323_n.jpg' },
+  { type: 'image', src: '/hibrit-ges/SnapInsta.to_540529601_17847453474551552_7890774048914980763_n.webp' },
+  { type: 'image', src: '/hibrit-ges/SnapInsta.to_540609246_17847453456551552_8132941253529611121_n.webp' },
+  { type: 'image', src: '/hibrit-ges/SnapInsta.to_540388995_17847453465551552_5607991210025723648_n.webp' },
+  { type: 'image', src: '/hibrit-ges/SnapInsta.to_539550993_17847453438551552_4441868670112979963_n.webp' },
+  { type: 'image', src: '/hibrit-ges/SnapInsta.to_539538434_17847453447551552_6919977082585415323_n.webp' },
   { type: 'video', src: '/hibrit-ges/SnapInsta.to_AQMM_5yxVmBDc-PC8E0GJ-xbcdK4vFofDOvzCSjdFNzN5u9E55kgUmvOSs95K3hZqIKHjiLZ1MVVA0aeIdMgrBVp_i3PL-y0Q6cXxoA.mp4' },
 ]
 

@@ -10,7 +10,7 @@ const services = [
     color: 'from-blue-500 to-cyan-400',
     iconBg: 'bg-blue-100',
     iconColor: 'text-blue-600',
-    photo: '/tarimsal-sulama-sistemleri-gunes-enerjisi.png',
+    photo: '/tarimsal-sulama-sistemleri-gunes-enerjisi.webp',
     ring: 'ring-2 ring-[#448834]/30',
   },
   {
@@ -21,7 +21,7 @@ const services = [
     color: 'from-[#448834] to-[#6ab84e]',
     iconBg: 'bg-[#448834]/15',
     iconColor: 'text-[#448834]',
-    photo: '/arazi-cati-tipi-ges.png',
+    photo: '/arazi-cati-tipi-ges.webp',
     highlight: true,
   },
   {
@@ -32,7 +32,7 @@ const services = [
     color: 'from-amber-500 to-yellow-400',
     iconBg: 'bg-amber-100',
     iconColor: 'text-amber-600',
-    photo: '/bag-evi-ges.png',
+    photo: '/bag-evi-ges.webp',
     ring: 'ring-2 ring-[#448834]/30',
   },
   {
@@ -43,7 +43,7 @@ const services = [
     color: 'from-purple-500 to-violet-400',
     iconBg: 'bg-purple-100',
     iconColor: 'text-purple-600',
-    photo: '/elektrikli-arac-sarj-istasyonu.png',
+    photo: '/elektrikli-arac-sarj-istasyonu.webp',
     ring: 'ring-2 ring-[#448834]/30',
   },
 ]
@@ -53,7 +53,7 @@ export default function Services() {
     <section id="hizmetler" className="relative py-24 bg-white overflow-hidden">
       {/* Decorative background */}
       <div className="absolute left-0 bottom-0 w-[750px] h-[750px] pointer-events-none select-none opacity-70">
-        <img src="/banner.png" alt="" className="w-full h-full object-contain object-bottom-left" />
+        <img src="/banner.webp" alt="" className="w-full h-full object-contain object-bottom-left" />
       </div>
       <div className="max-w-[1400px] mx-auto px-6">
         {/* Header */}

@@ -5,7 +5,7 @@ import { Mail, MapPin } from 'lucide-react'
 export default function Footer() {
   return (
     <footer className="relative bg-black text-gray-400 overflow-hidden">
-      <img src="/footer-banner.png" alt="" className="absolute inset-0 w-full h-full object-cover opacity-[0.15] pointer-events-none select-none" />
+      <img src="/footer-banner.webp" alt="" className="absolute inset-0 w-full h-full object-cover opacity-[0.15] pointer-events-none select-none" />
       <div className="relative max-w-7xl mx-auto px-6 py-16">
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-10">
           {/* Brand */}

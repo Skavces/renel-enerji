@@ -4,11 +4,11 @@ import { ArrowLeft, ArrowRight, MapPin, Zap, CheckCircle2, X } from 'lucide-reac
 import PageHeader from '../../components/PageHeader'
 
 const images = [
-  '/bag-projesi/SnapInsta.to_658048509_17877068112551552_3955411799585925962_n.jpg',
-  '/bag-projesi/SnapInsta.to_658993120_17877068097551552_530301442728432572_n.jpg',
-  '/bag-projesi/SnapInsta.to_656829483_17877068085551552_9099235329430647652_n.jpg',
-  '/bag-projesi/SnapInsta.to_657225888_17877068076551552_781352117709125062_n.jpg',
-  '/bag-projesi/SnapInsta.to_656367211_17877068067551552_5595932734356314435_n.jpg',
+  '/bag-projesi/SnapInsta.to_658048509_17877068112551552_3955411799585925962_n.webp',
+  '/bag-projesi/SnapInsta.to_658993120_17877068097551552_530301442728432572_n.webp',
+  '/bag-projesi/SnapInsta.to_656829483_17877068085551552_9099235329430647652_n.webp',
+  '/bag-projesi/SnapInsta.to_657225888_17877068076551552_781352117709125062_n.webp',
+  '/bag-projesi/SnapInsta.to_656367211_17877068067551552_5595932734356314435_n.webp',
 ]
 
 const specs = [

@@ -7,49 +7,49 @@ const featuredProjects = [
     name: 'Ahmetli Bağ Sulama',
     kw: '11 kW',
     category: 'Sulama GES',
-    photo: '/bag-projesi/SnapInsta.to_658048509_17877068112551552_3955411799585925962_n.jpg',
+    photo: '/bag-projesi/SnapInsta.to_658048509_17877068112551552_3955411799585925962_n.webp',
     slug: '/projelerimiz/ahmetli-bag-projesi',
   },
   {
     name: '10,2 kW Hibrit GES',
     kw: '10,2 kW',
     category: 'Depolamalı GES',
-    photo: '/hibrit-ges/SnapInsta.to_540529601_17847453474551552_7890774048914980763_n.jpg',
+    photo: '/hibrit-ges/SnapInsta.to_540529601_17847453474551552_7890774048914980763_n.webp',
     slug: '/projelerimiz/hibrit-ges',
   },
   {
     name: '4 kWp Bağ Evi',
     kw: '4 kWp',
     category: 'Depolamalı GES',
-    photo: '/4kwp-bagevi/SnapInsta.to_572962383_17857134906551552_2235488587040886983_n.jpg',
+    photo: '/4kwp-bagevi/SnapInsta.to_572962383_17857134906551552_2235488587040886983_n.webp',
     slug: '/projelerimiz/4kwp-bag-evi',
   },
   {
     name: 'Hayvan Çiftliği GES',
     kw: '4,6 kW',
     category: 'Depolamalı GES',
-    photo: '/hayvan-ciftligi/SnapInsta.to_581867901_17858371554551552_1664283504094743853_n.jpg',
+    photo: '/hayvan-ciftligi/SnapInsta.to_581867901_17858371554551552_1664283504094743853_n.webp',
     slug: '/projelerimiz/hayvan-ciftligi',
   },
   {
     name: 'Off-Grid Sistem',
     kw: '3,75 kWp',
     category: 'Off-Grid GES',
-    photo: '/off-grid/SnapInsta.to_606030691_17863261425551552_5849723382801399238_n.jpg',
+    photo: '/off-grid/SnapInsta.to_606030691_17863261425551552_5849723382801399238_n.webp',
     slug: '/projelerimiz/off-grid',
   },
   {
     name: '2,3 kWp Hibrit GES',
     kw: '2,3 kWp',
     category: 'Depolamalı GES',
-    photo: '/2,3kWp/SnapInsta.to_567104077_17854973667551552_2686719391728865953_n.jpg',
+    photo: '/2,3kWp/SnapInsta.to_567104077_17854973667551552_2686719391728865953_n.webp',
     slug: '/projelerimiz/2-3kwp-hibrit-ges',
   },
   {
     name: 'Şebekesiz Sulama Çözümü',
     kw: '1,1 kWp',
     category: 'Şebekesiz Sulama',
-    photo: '/sebekesiz-sulama-cozumu/SnapInsta.to_685360645_17882474067551552_3241083911849974964_n.jpg',
+    photo: '/sebekesiz-sulama-cozumu/SnapInsta.to_685360645_17882474067551552_3241083911849974964_n.webp',
     slug: '/projelerimiz/sebekesiz-sulama-cozumu',
   },
 ]
@@ -71,7 +71,7 @@ export default function Hero() {
       {/* Background image */}
       <div className="absolute inset-0">
         <img
-          src="/photos/hero.jpg"
+          src="/photos/hero.webp"
           alt="Güneş enerjisi"
           className="w-full h-full object-cover animate-[kenburns_18s_ease-in-out_infinite_alternate]"
         />

@@ -4,10 +4,10 @@ import { ArrowLeft, ArrowRight, MapPin, CheckCircle2, X, Zap } from 'lucide-reac
 import PageHeader from '../../components/PageHeader'
 
 const images = [
-  '/hayvan-ciftligi/SnapInsta.to_581867901_17858371554551552_1664283504094743853_n.jpg',
-  '/hayvan-ciftligi/SnapInsta.to_581865005_17858371542551552_3948687021531757533_n.jpg',
-  '/hayvan-ciftligi/SnapInsta.to_583637153_17858371530551552_7037390681860944930_n.jpg',
-  '/hayvan-ciftligi/SnapInsta.to_582194221_17858371521551552_1754378382427015973_n.jpg',
+  '/hayvan-ciftligi/SnapInsta.to_581867901_17858371554551552_1664283504094743853_n.webp',
+  '/hayvan-ciftligi/SnapInsta.to_581865005_17858371542551552_3948687021531757533_n.webp',
+  '/hayvan-ciftligi/SnapInsta.to_583637153_17858371530551552_7037390681860944930_n.webp',
+  '/hayvan-ciftligi/SnapInsta.to_582194221_17858371521551552_1754378382427015973_n.webp',
 ]
 
 const specs = [

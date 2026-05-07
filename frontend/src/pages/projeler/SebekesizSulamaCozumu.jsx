@@ -4,9 +4,9 @@ import { ArrowLeft, ArrowRight, CheckCircle2, X, Play, Zap } from 'lucide-react'
 import PageHeader from '../../components/PageHeader'
 
 const media = [
-  { type: 'image', src: '/sebekesiz-sulama-cozumu/SnapInsta.to_685360645_17882474067551552_3241083911849974964_n.jpg' },
-  { type: 'image', src: '/sebekesiz-sulama-cozumu/SnapInsta.to_684650418_17882474049551552_284955555832794576_n.jpg' },
-  { type: 'image', src: '/sebekesiz-sulama-cozumu/SnapInsta.to_686047932_17882474058551552_262508276789012101_n.jpg' },
+  { type: 'image', src: '/sebekesiz-sulama-cozumu/SnapInsta.to_685360645_17882474067551552_3241083911849974964_n.webp' },
+  { type: 'image', src: '/sebekesiz-sulama-cozumu/SnapInsta.to_684650418_17882474049551552_284955555832794576_n.webp' },
+  { type: 'image', src: '/sebekesiz-sulama-cozumu/SnapInsta.to_686047932_17882474058551552_262508276789012101_n.webp' },
   { type: 'video', src: '/sebekesiz-sulama-cozumu/SnapInsta.to_AQO0z0q21Up5hQbavNOpj8ICPChj1TMNx9csHXkkTM18gC3SSYkze-4zeenssb0AcM9d9Kz6EDqAQEx_n2h1X71Q2T8aKdol6G1Rrck.mp4' },
 ]
 
