@@ -1,103 +1,103 @@
 # RenEL Enerji
 
-Güneş enerjisi çözümleri sunan **RenEL Enerji** firmasının kurumsal web sitesi ve yönetim paneli.
+Corporate website and admin panel for **RenEL Enerji**, a solar energy solutions company based in Turkey.
 
-## Teknoloji Stack
+## Tech Stack
 
-| Katman | Teknoloji |
-|--------|-----------|
+| Layer | Technology |
+|-------|------------|
 | Frontend | React 19, Vite 8, Tailwind CSS 4 |
 | Backend | NestJS, TypeORM, PostgreSQL |
 | Analytics | Umami |
 | Deployment | Docker Compose, Nginx |
 
-## Proje Yapısı
+## Project Structure
 
 ```
 renel-enerji/
-├── frontend/          # React + Vite uygulaması
+├── frontend/          # React + Vite application
 │   ├── src/
-│   │   ├── components/    # Ortak bileşenler
-│   │   ├── pages/         # Sayfalar
-│   │   │   ├── admin/     # Yönetim paneli sayfaları
-│   │   │   └── projeler/  # Proje detay sayfaları
-│   │   ├── api/           # API istek fonksiyonları
-│   │   └── contexts/      # React context'leri
-│   └── public/            # Statik dosyalar
-├── backend/           # NestJS API
+│   │   ├── components/    # Shared components
+│   │   ├── pages/         # Pages
+│   │   │   ├── admin/     # Admin panel pages
+│   │   │   └── projeler/  # Project detail pages
+│   │   ├── api/           # API request functions
+│   │   └── contexts/      # React contexts
+│   └── public/            # Static assets
+├── backend/           # NestJS REST API
 │   └── src/
-│       ├── auth/          # JWT kimlik doğrulama
-│       ├── projects/      # Projeler modülü
-│       ├── references/    # Referanslar modülü
-│       ├── analytics/     # Umami analytics entegrasyonu
-│       └── upload/        # Dosya yükleme
-└── docker-compose.yml # Tüm servisler
+│       ├── auth/          # JWT authentication
+│       ├── projects/      # Projects module
+│       ├── references/    # References module
+│       ├── analytics/     # Umami analytics integration
+│       └── upload/        # File upload
+└── docker-compose.yml # All services
 ```
 
-## Kurulum
+## Getting Started
 
-### Gereksinimler
+### Prerequisites
 - Docker & Docker Compose
-- Node.js 20+ (yerel geliştirme için)
+- Node.js 20+ (for local development)
 
-### Yerel Geliştirme
+### Local Development
 
 ```bash
-# Bağımlılıkları yükle
+# Install dependencies
 cd frontend && npm install
 cd ../backend && npm install
 
-# Ortam değişkenlerini ayarla
-cp .env.example .env              # proje kök dizini
+# Set up environment variables
+cp .env.example .env
 cp backend/.env.example backend/.env
 
-# Veritabanını başlat
+# Start the database
 docker compose up db -d
 
-# Backend'i başlat (http://localhost:3001)
+# Start the backend (http://localhost:3001)
 cd backend && npm run start:dev
 
-# Frontend'i başlat (http://localhost:5173)
+# Start the frontend (http://localhost:5173)
 cd frontend && npm run dev
 ```
 
-### Production Deploy
+### Production Deployment
 
 ```bash
-# Ortam değişkenlerini ayarla
-cp .env.production .env   # .env.production dosyasını oluştur (aşağıya bak)
+# Set up environment variables
+cp .env.production .env
 
-# Tüm servisleri build edip başlat
+# Build and start all services
 docker compose up -d --build
 ```
 
-**Gerekli `.env` değişkenleri:**
+**Required `.env` variables:**
 
 ```env
-JWT_SECRET=          # En az 32 karakter rastgele string
-ADMIN_USERNAME=      # Admin kullanıcı adı
-ADMIN_PASSWORD=      # Admin şifresi
-UMAMI_WEBSITE_ID=    # Umami dashboard'dan alınan website ID
-UMAMI_USER=          # Umami kullanıcı adı
-UMAMI_PASS=          # Umami şifresi
-UMAMI_APP_SECRET=    # Umami uygulama secret'ı
+JWT_SECRET=          # Random string, min 32 characters
+ADMIN_USERNAME=      # Admin username
+ADMIN_PASSWORD=      # Admin password
+UMAMI_WEBSITE_ID=    # Website ID from Umami dashboard
+UMAMI_USER=          # Umami username
+UMAMI_PASS=          # Umami password
+UMAMI_APP_SECRET=    # Umami app secret
 ```
 
-## Servisler
+## Services
 
-| Servis | Port | Açıklama |
-|--------|------|----------|
-| Frontend (Nginx) | 8080 | React uygulaması |
+| Service | Port | Description |
+|---------|------|-------------|
+| Frontend (Nginx) | 8080 | React application |
 | Backend (NestJS) | 3001 | REST API (internal) |
-| Umami | 3002 | Analytics paneli |
-| PostgreSQL | 5432 | Ana veritabanı (internal) |
+| Umami | 3002 | Analytics dashboard |
+| PostgreSQL | 5432 | Main database (internal) |
 
-## Admin Paneli
+## Admin Panel
 
-`/admin` rotasından erişilir. JWT ile korumalıdır.
+Accessible at `/admin`, protected by JWT authentication.
 
-**Özellikler:**
-- Proje yönetimi (ekleme, düzenleme, silme, medya yükleme)
-- Referans yönetimi
-- Site analitikleri (Umami entegrasyonu)
-- İki faktörlü doğrulama (2FA)
+**Features:**
+- Project management (create, edit, delete, media upload)
+- References management
+- Site analytics (Umami integration)
+- Two-factor authentication (2FA)
