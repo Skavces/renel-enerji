@@ -4,7 +4,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: renel
-      POSTGRES_PASSWORD: renel_pass
+      POSTGRES_PASSWORD: ${DB_PASS}
       POSTGRES_DB: renel_enerji
     volumes:
       - pgdata:/var/lib/postgresql/data
@@ -24,17 +24,17 @@ services:
       DB_HOST: db
       DB_PORT: "5432"
       DB_USER: renel
-      DB_PASS: renel_pass
+      DB_PASS: ${DB_PASS}
       DB_NAME: renel_enerji
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: 8h
       ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
       ADMIN_PASSWORD_HASH: ${ADMIN_PASSWORD_HASH}
-      FRONTEND_URL: "http://141.98.51.126"
+      FRONTEND_URL: ${FRONTEND_URL}
       UMAMI_URL: http://umami:3000
       UMAMI_WEBSITE_ID: ${UMAMI_WEBSITE_ID}
       UMAMI_USER: ${UMAMI_USER:-admin}
-      UMAMI_PASS: ${UMAMI_PASS:-umami}
+      UMAMI_PASS: ${UMAMI_PASS}
     volumes:
       - uploads:/app/uploads
     depends_on:
@@ -45,8 +45,8 @@ services:
     build:
       context: ./frontend
       args:
-        VITE_API_URL: http://141.98.51.126
-        VITE_UMAMI_URL: http://141.98.51.126:3002
+        VITE_API_URL: ${VITE_API_URL}
+        VITE_UMAMI_URL: ${VITE_UMAMI_URL}
         VITE_UMAMI_WEBSITE_ID: ${UMAMI_WEBSITE_ID}
     restart: unless-stopped
     ports:
@@ -59,7 +59,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: umami
-      POSTGRES_PASSWORD: umami_pass
+      POSTGRES_PASSWORD: ${UMAMI_DB_PASS}
       POSTGRES_DB: umami
     volumes:
       - umami_pgdata:/var/lib/postgresql/data
@@ -75,8 +75,8 @@ services:
     ports:
       - "3002:3000"
     environment:
-      DATABASE_URL: postgresql://umami:umami_pass@umami-db:5432/umami
-      APP_SECRET: ${UMAMI_APP_SECRET:-renel-umami-secret-change-in-production}
+      DATABASE_URL: postgresql://umami:${UMAMI_DB_PASS}@umami-db:5432/umami
+      APP_SECRET: ${UMAMI_APP_SECRET}
     depends_on:
       umami-db:
         condition: service_healthy
