@@ -1,16 +1,103 @@
-# React + Vite
+# RenEL Enerji
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Güneş enerjisi çözümleri sunan **RenEL Enerji** firmasının kurumsal web sitesi ve yönetim paneli.
 
-Currently, two official plugins are available:
+## Teknoloji Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+| Katman | Teknoloji |
+|--------|-----------|
+| Frontend | React 19, Vite 8, Tailwind CSS 4 |
+| Backend | NestJS, TypeORM, PostgreSQL |
+| Analytics | Umami |
+| Deployment | Docker Compose, Nginx |
 
-## React Compiler
+## Proje Yapısı
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```
+renel-enerji/
+├── frontend/          # React + Vite uygulaması
+│   ├── src/
+│   │   ├── components/    # Ortak bileşenler
+│   │   ├── pages/         # Sayfalar
+│   │   │   ├── admin/     # Yönetim paneli sayfaları
+│   │   │   └── projeler/  # Proje detay sayfaları
+│   │   ├── api/           # API istek fonksiyonları
+│   │   └── contexts/      # React context'leri
+│   └── public/            # Statik dosyalar
+├── backend/           # NestJS API
+│   └── src/
+│       ├── auth/          # JWT kimlik doğrulama
+│       ├── projects/      # Projeler modülü
+│       ├── references/    # Referanslar modülü
+│       ├── analytics/     # Umami analytics entegrasyonu
+│       └── upload/        # Dosya yükleme
+└── docker-compose.yml # Tüm servisler
+```
 
-## Expanding the ESLint configuration
+## Kurulum
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Gereksinimler
+- Docker & Docker Compose
+- Node.js 20+ (yerel geliştirme için)
+
+### Yerel Geliştirme
+
+```bash
+# Bağımlılıkları yükle
+cd frontend && npm install
+cd ../backend && npm install
+
+# Ortam değişkenlerini ayarla
+cp .env.example .env              # proje kök dizini
+cp backend/.env.example backend/.env
+
+# Veritabanını başlat
+docker compose up db -d
+
+# Backend'i başlat (http://localhost:3001)
+cd backend && npm run start:dev
+
+# Frontend'i başlat (http://localhost:5173)
+cd frontend && npm run dev
+```
+
+### Production Deploy
+
+```bash
+# Ortam değişkenlerini ayarla
+cp .env.production .env   # .env.production dosyasını oluştur (aşağıya bak)
+
+# Tüm servisleri build edip başlat
+docker compose up -d --build
+```
+
+**Gerekli `.env` değişkenleri:**
+
+```env
+JWT_SECRET=          # En az 32 karakter rastgele string
+ADMIN_USERNAME=      # Admin kullanıcı adı
+ADMIN_PASSWORD=      # Admin şifresi
+UMAMI_WEBSITE_ID=    # Umami dashboard'dan alınan website ID
+UMAMI_USER=          # Umami kullanıcı adı
+UMAMI_PASS=          # Umami şifresi
+UMAMI_APP_SECRET=    # Umami uygulama secret'ı
+```
+
+## Servisler
+
+| Servis | Port | Açıklama |
+|--------|------|----------|
+| Frontend (Nginx) | 8080 | React uygulaması |
+| Backend (NestJS) | 3001 | REST API (internal) |
+| Umami | 3002 | Analytics paneli |
+| PostgreSQL | 5432 | Ana veritabanı (internal) |
+
+## Admin Paneli
+
+`/admin` rotasından erişilir. JWT ile korumalıdır.
+
+**Özellikler:**
+- Proje yönetimi (ekleme, düzenleme, silme, medya yükleme)
+- Referans yönetimi
+- Site analitikleri (Umami entegrasyonu)
+- İki faktörlü doğrulama (2FA)
