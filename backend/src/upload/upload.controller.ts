@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Controller,
   Param,
   Post,
@@ -10,6 +11,8 @@ import {
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express'
 import { diskStorage } from 'multer'
 import { extname } from 'path'
+import { unlinkSync } from 'fs'
+import { fromFile } from 'file-type'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 import { ProjectsService } from '../projects/projects.service'
 import { ReferencesService } from '../references/references.service'
@@ -22,11 +25,20 @@ const imageStorage = diskStorage({
   },
 })
 
-const ALLOWED_IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml']
+// SVG hariç — tarayıcıda script çalıştırabilir (XSS)
+const ALLOWED_IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 const ALLOWED_MEDIA_MIMES = [...ALLOWED_IMAGE_MIMES, 'video/mp4', 'video/quicktime', 'video/webm']
 
 const imageFilter = (_req: any, file: Express.Multer.File, cb: any) => {
   cb(null, ALLOWED_IMAGE_MIMES.includes(file.mimetype))
+}
+
+async function assertMagicBytes(filePath: string, allowedMimes: string[]): Promise<void> {
+  const detected = await fromFile(filePath)
+  if (!detected || !allowedMimes.includes(detected.mime)) {
+    unlinkSync(filePath)
+    throw new BadRequestException('Dosya içeriği izin verilen türlerle eşleşmiyor')
+  }
 }
 
 @Controller('upload')
@@ -53,6 +65,7 @@ export class UploadController {
   ) {
     const results = []
     for (const file of files) {
+      await assertMagicBytes(file.path, ALLOWED_MEDIA_MIMES)
       const type = ['video/mp4', 'video/quicktime', 'video/webm'].includes(file.mimetype) ? 'video' : 'image'
       const src = `/uploads/${file.filename}`
       const media = await this.projectsService.addMedia(projectId, type, src)
@@ -68,6 +81,7 @@ export class UploadController {
     @Param('id') id: string,
     @UploadedFile() file: Express.Multer.File,
   ) {
+    await assertMagicBytes(file.path, ALLOWED_IMAGE_MIMES)
     const logo = `/uploads/${file.filename}`
     return this.referencesService.update(id, { logo })
   }

@@ -2,6 +2,8 @@ import { BadRequestException, Controller, Get, Query, UseGuards } from '@nestjs/
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 import { AnalyticsService } from './analytics.service'
 
+const ALLOWED_UNITS = new Set(['hour', 'day', 'month', 'year'])
+
 @Controller('analytics')
 @UseGuards(JwtAuthGuard)
 export class AnalyticsController {
@@ -29,7 +31,11 @@ export class AnalyticsController {
     @Query('unit') unit: string,
   ) {
     const [start, end] = this.parseDateRange(startAt, endAt)
-    return this.service.getPageviews(start, end, unit || 'day')
+    const safeUnit = unit || 'day'
+    if (!ALLOWED_UNITS.has(safeUnit)) {
+      throw new BadRequestException('unit must be one of: hour, day, month, year')
+    }
+    return this.service.getPageviews(start, end, safeUnit)
   }
 
   @Get('pages')
