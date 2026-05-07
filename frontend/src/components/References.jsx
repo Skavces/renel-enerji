@@ -1,0 +1,58 @@
+import { useEffect, useState } from 'react'
+import { fetchReferences } from '../api/references'
+
+const API = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+
+export default function References() {
+  const [refs, setRefs] = useState([])
+
+  useEffect(() => {
+    fetchReferences().then(setRefs).catch(() => {})
+  }, [])
+
+  if (refs.length === 0) return null
+
+  return (
+    <section id="referanslar" className="py-24 bg-gray-50">
+      <div className="max-w-6xl mx-auto px-6">
+        <div className="text-center mb-16">
+          <span className="inline-block bg-[#f97316]/10 text-[#f97316] font-semibold text-sm px-4 py-1.5 rounded-full mb-4">
+            REFERANSLARIMIZ
+          </span>
+          <h2 className="text-3xl sm:text-4xl font-bold text-[#0f2744] mb-4">
+            Bizi Tercih Edenler
+          </h2>
+          <p className="text-gray-500 max-w-xl mx-auto">
+            Manisa ve çevresinde güneş enerjisi sistemleri kurduğumuz müşterilerimiz.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {refs.map((r) => (
+            <div
+              key={r.id}
+              className="bg-white rounded-2xl border border-gray-100 hover:shadow-md hover:border-[#448834]/20 transition-all duration-200 p-5 flex flex-col items-center gap-3"
+            >
+              <div className="w-full h-16 flex items-center justify-center">
+                {r.logo ? (
+                  <img
+                    src={`${API}${r.logo}`}
+                    alt={r.name}
+                    className="max-h-14 max-w-full object-contain"
+                  />
+                ) : (
+                  <div className="w-12 h-12 rounded-full bg-[#448834]/10 flex items-center justify-center">
+                    <span className="text-[#448834] font-bold text-lg">
+                      {r.name.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                )}
+              </div>
+              <p className="text-xs font-semibold text-gray-700 text-center leading-tight">{r.name}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
