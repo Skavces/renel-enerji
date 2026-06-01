@@ -28,7 +28,7 @@ const steps = [
 export default function HowItWorks() {
   return (
     <section className="py-24 bg-white relative overflow-hidden">
-      <img src="/nasil-calisiriz.webp" alt="" className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none z-0" />
+      <img src="/nasil-calisiriz.webp" alt="" className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none z-0" loading="lazy" />
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-10 right-20 w-72 h-72 rounded-full bg-[#448834]/5 blur-3xl" />
         <div className="absolute bottom-10 left-20 w-56 h-56 rounded-full bg-[#f5ce31]/10 blur-3xl" />
@@ -50,14 +50,14 @@ export default function HowItWorks() {
         {/* Steps — wave layout */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 items-start relative">
           {/* Wavy connector */}
-          <img src="/shape.webp" alt="" className="hidden md:block absolute top-8 left-1/2 -translate-x-1/2 w-[140%] pointer-events-none select-none" />
+          <img src="/shape.webp" alt="" className="hidden md:block absolute top-8 left-1/2 -translate-x-1/2 w-[140%] pointer-events-none select-none" loading="lazy" />
 
           {steps.map((s, i) => (
             <div key={s.num} className={`flex flex-col text-center ${i === 0 || i === 3 ? 'mt-16' : 'mt-0'}`}>
               {/* Image with number badge */}
               <div className="relative mb-5 w-3/4 mx-auto pt-3 pl-3">
                 <div className="aspect-square overflow-hidden rounded-xl">
-                  <img src={s.img} alt={s.title} className="w-full h-full object-cover" />
+                  <img src={s.img} alt={s.title} className="w-full h-full object-cover" loading="lazy" />
                 </div>
                 <div className="absolute top-0 left-0 w-12 h-12 rounded-full bg-[#448834] flex items-center justify-center shadow-md z-10">
                   <span className="text-white font-bold text-base font-['Rajdhani']">{s.num}</span>

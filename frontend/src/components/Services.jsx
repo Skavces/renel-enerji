@@ -59,7 +59,7 @@ export default function Services() {
     <section id="hizmetler" className="relative py-24 bg-white overflow-hidden">
       {/* Decorative background */}
       <div className="absolute left-0 bottom-0 w-[750px] h-[750px] pointer-events-none select-none opacity-70">
-        <img src="/banner.webp" alt="" className="w-full h-full object-contain object-bottom-left" />
+        <img src="/banner.webp" alt="" className="w-full h-full object-contain object-bottom-left" loading="lazy" />
       </div>
       <div className="max-w-[1400px] mx-auto px-6">
         {/* Header */}
@@ -89,8 +89,7 @@ export default function Services() {
                   <img
                     src={s.photo}
                     alt={s.title}
-                    className="w-full h-full object-cover"
-                  />
+                    className="w-full h-full object-cover" loading="lazy" />
                 </div>
 
                 <div className="p-5 flex flex-col gap-3 flex-1 bg-white">

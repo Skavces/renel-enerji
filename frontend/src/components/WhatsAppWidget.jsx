@@ -47,7 +47,7 @@ export default function WhatsAppWidget() {
           <div className="px-4 py-3 flex items-center justify-between" style={{background: '#1a9e50'}}>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shrink-0 overflow-hidden p-1">
-                <img src="/renel-logo.svg" alt="RenEl Logo" className="w-full h-full object-contain" />
+                <img src="/renel-logo.svg" alt="RenEl Logo" className="w-full h-full object-contain" loading="lazy" />
               </div>
               <div>
                 <p className="text-white font-semibold text-sm">Mertcan Yılmaz</p>

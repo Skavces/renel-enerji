@@ -46,8 +46,7 @@ export default function BlogDetay() {
             <img
               src={`${API}${post.coverImage}`}
               alt={post.title}
-              className="w-full max-h-80 object-cover"
-            />
+              className="w-full max-h-80 object-cover" loading="lazy" />
           </div>
         )}
 

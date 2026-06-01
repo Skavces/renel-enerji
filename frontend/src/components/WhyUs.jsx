@@ -13,7 +13,7 @@ const reasons = [
 export default function WhyUs() {
   return (
     <section id="hakkimizda" className="relative py-24 bg-gray-50 overflow-hidden">
-      <img src="/neden-biz.webp" alt="" className="absolute top-0 right-0 h-full w-[130%] object-cover object-right pointer-events-none select-none z-0" />
+      <img src="/neden-biz.webp" alt="" className="absolute top-0 right-0 h-full w-[130%] object-cover object-right pointer-events-none select-none z-0" loading="lazy" />
 
       <div className="relative z-10 max-w-7xl mx-auto px-6">
         {/* Header */}

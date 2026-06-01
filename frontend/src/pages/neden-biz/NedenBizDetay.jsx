@@ -200,8 +200,7 @@ export default function NedenBizDetay() {
                 <img
                   src={page.photo}
                   alt={page.title}
-                  className="w-full h-full object-cover"
-                />
+                  className="w-full h-full object-cover" loading="lazy" />
                 <div className="absolute inset-0 bg-linear-to-t from-black/65 via-black/15 to-transparent" />
                 <div className="absolute bottom-0 left-0 p-7">
                   <span className="inline-flex items-center gap-1.5 bg-[#448834] text-white text-xs font-bold px-3 py-1 rounded-full mb-3">

@@ -29,6 +29,8 @@ export default function Hero() {
           src="/hero.webp"
           alt="Güneş enerjisi"
           className="w-full h-full object-cover animate-[kenburns_18s_ease-in-out_infinite_alternate]"
+          fetchpriority="high"
+          decoding="async"
         />
         <div className="absolute inset-0 bg-linear-to-r from-black/50 via-black/25 to-black/10" />
       </div>

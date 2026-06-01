@@ -61,7 +61,7 @@ export default function SebekesizSulamaCozumu() {
                 </>
               ) : (
                 <>
-                  <img src={item.src} alt={`Proje görseli ${current + 1}`} className="w-full h-full object-cover" />
+                  <img src={item.src} alt={`Proje görseli ${current + 1}`} className="w-full h-full object-cover" loading="lazy" />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
                     <span className="opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs font-semibold bg-black/40 px-3 py-1 rounded-full">Büyüt</span>
                   </div>
@@ -93,7 +93,7 @@ export default function SebekesizSulamaCozumu() {
                       </div>
                     </>
                   ) : (
-                    <img src={m.src} alt="" className="w-full h-full object-cover" />
+                    <img src={m.src} alt="" className="w-full h-full object-cover" loading="lazy" />
                   )}
                 </button>
               ))}
@@ -186,7 +186,7 @@ export default function SebekesizSulamaCozumu() {
               src={media[lightbox].src}
               alt=""
               className="max-h-[85vh] max-w-[90vw] rounded-xl object-contain"
-              onClick={e => e.stopPropagation()}
+              onClick={e = loading="lazy"> e.stopPropagation()}
             />
           )}
           <button className="absolute right-5 top-1/2 -translate-y-1/2 text-white/70 hover:text-white" onClick={lightboxNext}>

@@ -5,13 +5,13 @@ import { Mail, MapPin } from 'lucide-react'
 export default function Footer() {
   return (
     <footer className="relative bg-black text-gray-400 overflow-hidden">
-      <img src="/footer-banner.webp" alt="" className="absolute inset-0 w-full h-full object-cover opacity-[0.15] pointer-events-none select-none" />
+      <img src="/footer-banner.webp" alt="" className="absolute inset-0 w-full h-full object-cover opacity-[0.15] pointer-events-none select-none" loading="lazy" />
       <div className="relative max-w-7xl mx-auto px-6 py-16">
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-10">
           {/* Brand */}
           <div className="lg:col-span-2">
             <div className="mb-4 -ml-3">
-              <img src="/renel-enerji.svg" alt="RenEl Enerji Mühendislik" className="h-20 w-auto brightness-0 invert" />
+              <img src="/renel-enerji.svg" alt="RenEl Enerji Mühendislik" className="h-20 w-auto brightness-0 invert" loading="lazy" />
             </div>
             <p className="text-[#f5ce31] font-semibold italic mb-3">"Şebekeden Güneşe, Gücün Her Noktasında."</p>
             <p className="text-sm leading-relaxed max-w-sm mb-6">

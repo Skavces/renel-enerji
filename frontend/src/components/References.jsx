@@ -38,8 +38,7 @@ export default function References() {
                   <img
                     src={`${API}${r.logo}`}
                     alt={r.name}
-                    className="max-h-40 max-w-full object-contain"
-                  />
+                    className="max-h-40 max-w-full object-contain" loading="lazy" />
                 ) : (
                   <div className="w-12 h-12 rounded-full bg-[#448834]/10 flex items-center justify-center">
                     <span className="text-[#448834] font-bold text-lg">

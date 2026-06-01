@@ -99,7 +99,7 @@ export default function AdminDashboard() {
     <div>
       {/* Hero Banner — tam genişlik */}
       <div className="relative overflow-hidden w-full flex items-center justify-center py-8"
-        style={{ backgroundImage: 'url(/adminbanner.png)', backgroundSize: 'cover', backgroundPosition: 'center 85%' }}>
+        style={{ backgroundImage: 'url(/adminbanner.webp)', backgroundSize: 'cover', backgroundPosition: 'center 85%' }}>
         <div className="absolute inset-0 bg-black/45" />
         <div className="relative z-10 text-center">
           <p className="text-white/70 text-lg mb-2 drop-shadow-md tracking-widest uppercase">Yönetim Paneli</p>
@@ -117,7 +117,7 @@ export default function AdminDashboard() {
           Genel İstatistikler
         </p>
       <div className="relative bg-white rounded-2xl border border-gray-100 shadow-md overflow-hidden flex items-center">
-        <img src="/statsbanner.png" alt="" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[25%] w-full h-auto opacity-10 pointer-events-none" />
+        <img src="/statsbanner.webp" alt="" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[25%] w-full h-auto opacity-10 pointer-events-none" />
         <div className="relative flex-1 px-7 py-6 overflow-hidden">
           <div className="relative z-10">
             <p className="text-5xl font-bold text-[#448834] font-['Rajdhani'] drop-shadow-sm">{projects.length}</p>
@@ -165,7 +165,7 @@ export default function AdminDashboard() {
           to="/admin/projeler/yeni"
           className="group relative bg-white hover:bg-gray-50 rounded-2xl overflow-hidden flex items-center px-6 py-5 min-h-[90px] transition-all duration-200 border border-gray-100 border-l-4 border-l-[#448834] shadow-md hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
         >
-          <img src="/yeni_proje.jpg" alt="" className="absolute w-44 h-44 object-contain shrink-0 opacity-10" style={{ right: -30, bottom: -47 }} />
+          <img src="/yeni_proje.webp" alt="" className="absolute w-44 h-44 object-contain shrink-0 opacity-10" style={{ right: -30, bottom: -47 }} />
           <div className="relative z-10">
             <div className="flex items-center gap-1.5">
               <p className="text-gray-800 font-bold text-base">Yeni Proje</p>
@@ -179,7 +179,7 @@ export default function AdminDashboard() {
           to="/admin/referanslar/yeni"
           className="group relative bg-white hover:bg-gray-50 rounded-2xl overflow-hidden flex items-center px-6 py-5 min-h-[90px] transition-all duration-200 border border-gray-100 border-l-4 border-l-[#448834] shadow-md hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
         >
-          <img src="/yeni_referans.jpg" alt="" className="absolute w-36 h-36 object-contain shrink-0 opacity-10" style={{ right: -25, bottom: -30 }} />
+          <img src="/yeni_referans.webp" alt="" className="absolute w-36 h-36 object-contain shrink-0 opacity-10" style={{ right: -25, bottom: -30 }} />
           <div className="relative z-10">
             <div className="flex items-center gap-1.5">
               <p className="text-gray-800 font-bold text-base">Yeni Referans</p>
@@ -193,7 +193,7 @@ export default function AdminDashboard() {
           to="/admin/analitik"
           className="group relative bg-white hover:bg-gray-50 rounded-2xl overflow-hidden flex items-center px-6 py-5 min-h-[90px] transition-all duration-200 border border-gray-100 border-l-4 border-l-[#448834] shadow-md hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
         >
-          <img src="/analitik_banner.jpg" alt="" className="absolute w-36 h-36 object-contain shrink-0 opacity-10" style={{ right: -25, bottom: -35 }} />
+          <img src="/analitik_banner.webp" alt="" className="absolute w-36 h-36 object-contain shrink-0 opacity-10" style={{ right: -25, bottom: -35 }} />
           <div className="relative z-10">
             <p className="text-gray-800 font-bold text-base">Analitik</p>
             <p className="text-gray-400 text-sm mt-0.5">Ziyaret istatistikleri</p>

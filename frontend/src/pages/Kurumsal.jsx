@@ -57,33 +57,33 @@ export default function Kurumsal() {
 
       {/* Hero split: photo collage left, content right */}
       <section className="relative py-20 bg-white overflow-hidden">
-        <img src="/stats.webp" alt="" className="absolute bottom-0 right-0 w-[560px] opacity-50 pointer-events-none select-none" />
+        <img src="/stats.webp" alt="" className="absolute bottom-0 right-0 w-[560px] opacity-50 pointer-events-none select-none" loading="lazy" />
         <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-16 items-center">
 
           {/* Photo collage */}
           <div className="relative border-2 border-[#448834] rounded-3xl p-3">
             <div className="absolute -top-7 -left-7 z-20">
               <div className="w-24 h-24 rounded-full border-2 border-[#448834] bg-white shadow-lg flex items-center justify-center">
-                <img src="/renel-logo.svg" alt="RenEl" className="w-16 h-16" />
+                <img src="/renel-logo.svg" alt="RenEl" className="w-16 h-16" loading="lazy" />
               </div>
             </div>
             <div className="flex gap-3 h-[320px] sm:h-[420px] lg:h-[560px]">
               {/* Sol kolon */}
               <div className="flex-1 flex flex-col gap-3">
                 <div className="flex-3 overflow-hidden rounded-xl">
-                  <img src={collagePhotos[0]} alt="" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
+                  <img src={collagePhotos[0]} alt="" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" loading="lazy" />
                 </div>
                 <div className="flex-2 overflow-hidden rounded-xl">
-                  <img src={collagePhotos[1]} alt="" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
+                  <img src={collagePhotos[1]} alt="" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" loading="lazy" />
                 </div>
               </div>
               {/* Sağ kolon */}
               <div className="flex-1 flex flex-col gap-3">
                 <div className="flex-2 overflow-hidden rounded-xl">
-                  <img src={collagePhotos[2]} alt="" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
+                  <img src={collagePhotos[2]} alt="" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" loading="lazy" />
                 </div>
                 <div className="flex-3 overflow-hidden rounded-xl">
-                  <img src={collagePhotos[3]} alt="" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
+                  <img src={collagePhotos[3]} alt="" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" loading="lazy" />
                 </div>
               </div>
             </div>

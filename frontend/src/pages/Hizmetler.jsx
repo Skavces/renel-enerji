@@ -132,8 +132,7 @@ export default function Hizmetler() {
                   <img
                     src={s.photo}
                     alt={s.title}
-                    className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
-                  />
+                    className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700" loading="lazy" />
                   {/* Gradient overlay */}
                   <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/25 to-transparent" />
 

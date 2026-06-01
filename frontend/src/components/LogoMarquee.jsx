@@ -12,8 +12,7 @@ function LogoStrip({ refs, measureRef }) {
             <img
               src={`${API}${r.logo}`}
               alt={r.name}
-              className="h-16 w-auto object-contain grayscale hover:grayscale-0 transition-all duration-300 opacity-60 hover:opacity-100"
-            />
+              className="h-16 w-auto object-contain grayscale hover:grayscale-0 transition-all duration-300 opacity-60 hover:opacity-100" loading="lazy" />
           ) : (
             <span className="text-gray-300 font-semibold text-sm uppercase tracking-widest whitespace-nowrap flex items-center gap-3">
               <span className="w-1.5 h-1.5 rounded-full bg-[#448834] inline-block shrink-0" />

@@ -55,8 +55,7 @@ export default function Blog() {
                       <img
                         src={`${API}${post.coverImage}`}
                         alt={post.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
                         <span className="text-4xl font-bold text-gray-200 font-['Rajdhani']">BLOG</span>
