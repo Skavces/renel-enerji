@@ -16,13 +16,22 @@ export default function WhyUs() {
       <img src="/neden-biz.webp" alt="" className="absolute top-0 right-0 h-full w-[130%] object-cover object-right pointer-events-none select-none z-0" />
 
       <div className="relative z-10 max-w-7xl mx-auto px-6">
-        <div className="grid grid-cols-4 auto-rows-[330px] gap-4">
+        {/* Header */}
+        <div className="text-center mb-10 lg:hidden">
+          <span className="block text-[#448834] font-semibold text-sm mb-3">NEDEN RenEl?</span>
+          <h2 className="text-2xl font-bold text-gray-900 leading-tight mb-3">
+            Güneş Enerjisinde Güvenilir Ortağınız
+          </h2>
+          <p className="text-gray-500 text-sm leading-relaxed max-w-md mx-auto">
+            Manisa/Soma'da mühendislik altyapısıyla kaliteli ve uzun ömürlü güneş enerjisi sistemleri kuruyoruz.
+          </p>
+        </div>
 
-          {/* Header — plain text, no card */}
-          <div className="col-span-1 flex flex-col justify-center py-4 pr-4 text-center">
-            <span className="block text-[#448834] font-semibold text-sm mb-3 text-center">
-              NEDEN RenEl?
-            </span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+          {/* Header — sadece desktop'ta grid içinde */}
+          <div className="hidden lg:flex flex-col justify-center py-4 pr-4 text-center">
+            <span className="block text-[#448834] font-semibold text-sm mb-3">NEDEN RenEl?</span>
             <h2 className="text-2xl font-bold text-gray-900 leading-tight mb-3">
               Güneş Enerjisinde Güvenilir Ortağınız
             </h2>
@@ -31,38 +40,23 @@ export default function WhyUs() {
             </p>
           </div>
 
-          {/* Row 1 cards — ilk 3 */}
-          {reasons.slice(0, 3).map(({ icon, title, slug, desc }) => {
+          {/* 6 kart */}
+          {reasons.map(({ icon, title, slug, desc }) => {
             const Icon = icon
             return (
-            <div key={title} className="col-span-1 bg-white rounded-2xl border border-gray-100 border-b-4 border-b-transparent hover:border-b-[#448834] p-7 flex flex-col gap-3 shadow-sm hover:shadow-lg hover:-translate-y-2 transition-all duration-300 group">
-              <Icon size={28} className="text-[#448834]" />
-              <h4 className="font-bold text-gray-900 text-lg">{title}</h4>
-              <p className="text-gray-500 text-base leading-relaxed flex-1">{desc}</p>
-              <Link to={`/neden-biz/${slug}`} className="text-[#448834] text-sm font-semibold flex items-center gap-1 hover:gap-2 transition-all w-fit">
-                Detaylı Bilgi <span>›</span>
-              </Link>
-            </div>
+              <div key={title} className="bg-white rounded-2xl border border-gray-100 border-b-4 border-b-transparent hover:border-b-[#448834] p-7 flex flex-col gap-3 shadow-sm hover:shadow-lg hover:-translate-y-2 transition-all duration-300">
+                <Icon size={28} className="text-[#448834]" />
+                <h4 className="font-bold text-gray-900 text-lg">{title}</h4>
+                <p className="text-gray-500 text-base leading-relaxed flex-1">{desc}</p>
+                <Link to={`/neden-biz/${slug}`} className="text-[#448834] text-sm font-semibold flex items-center gap-1 hover:gap-2 transition-all w-fit">
+                  Detaylı Bilgi <span>›</span>
+                </Link>
+              </div>
             )
           })}
 
-          {/* Row 2 cards — son 3 */}
-          {reasons.slice(3).map(({ icon, title, slug, desc }) => {
-            const Icon = icon
-            return (
-            <div key={title} className="col-span-1 bg-white rounded-2xl border border-gray-100 border-b-4 border-b-transparent hover:border-b-[#448834] p-7 flex flex-col gap-3 shadow-sm hover:shadow-lg hover:-translate-y-2 transition-all duration-300 group">
-              <Icon size={28} className="text-[#448834]" />
-              <h4 className="font-bold text-gray-900 text-lg">{title}</h4>
-              <p className="text-gray-500 text-base leading-relaxed flex-1">{desc}</p>
-              <Link to={`/neden-biz/${slug}`} className="text-[#448834] text-sm font-semibold flex items-center gap-1 hover:gap-2 transition-all w-fit">
-                Detaylı Bilgi <span>›</span>
-              </Link>
-            </div>
-            )
-          })}
-
-          {/* CTA — sağ alt */}
-          <div className="col-span-1 p-6 flex flex-col items-center justify-center text-center gap-4">
+          {/* CTA */}
+          <div className="sm:col-span-2 lg:col-span-1 p-6 flex flex-col items-center justify-center text-center gap-4 bg-white rounded-2xl border border-gray-100 shadow-sm lg:bg-transparent lg:border-0 lg:shadow-none">
             <h3 className="font-bold text-gray-900 text-2xl leading-snug">
               Projenizi Birlikte Hayata Geçirelim
             </h3>
