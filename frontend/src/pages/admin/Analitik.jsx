@@ -7,13 +7,6 @@ import {
 const API = import.meta.env.VITE_API_URL || ''
 const UMAMI_URL = import.meta.env.VITE_UMAMI_URL || 'http://localhost:3002'
 
-function getToken() {
-  return localStorage.getItem('admin_token')
-}
-
-function authHeaders() {
-  return { Authorization: `Bearer ${getToken()}` }
-}
 
 function startOfDay(daysAgo = 0) {
   const d = new Date()
@@ -93,7 +86,7 @@ export default function Analitik() {
     const endAt = range.endAt()
     try {
       const fetcher = (url) =>
-        fetch(url, { headers: authHeaders() }).then((r) => {
+        fetch(url, { credentials: 'include' }).then((r) => {
           if (!r.ok) throw new Error(`HTTP ${r.status}`)
           return r.json()
         })

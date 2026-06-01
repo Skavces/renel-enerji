@@ -20,13 +20,13 @@ export class AnalyticsController {
   }
 
   @Get('stats')
-  getStats(@Query('startAt') startAt: string, @Query('endAt') endAt: string) {
+  async getStats(@Query('startAt') startAt: string, @Query('endAt') endAt: string) {
     const [start, end] = this.parseDateRange(startAt, endAt)
-    return this.service.getStats(start, end)
+    return (await this.service.getStats(start, end)) ?? {}
   }
 
   @Get('pageviews')
-  getPageviews(
+  async getPageviews(
     @Query('startAt') startAt: string,
     @Query('endAt') endAt: string,
     @Query('unit') unit: string,
@@ -36,17 +36,17 @@ export class AnalyticsController {
     if (!ALLOWED_UNITS.has(safeUnit)) {
       throw new BadRequestException('unit must be one of: hour, day, month, year')
     }
-    return this.service.getPageviews(start, end, safeUnit)
+    return (await this.service.getPageviews(start, end, safeUnit)) ?? {}
   }
 
   @Get('pages')
-  getPages(@Query('startAt') startAt: string, @Query('endAt') endAt: string) {
+  async getPages(@Query('startAt') startAt: string, @Query('endAt') endAt: string) {
     const [start, end] = this.parseDateRange(startAt, endAt)
-    return this.service.getTopPages(start, end)
+    return (await this.service.getTopPages(start, end)) ?? []
   }
 
   @Get('metrics')
-  getMetrics(
+  async getMetrics(
     @Query('startAt') startAt: string,
     @Query('endAt') endAt: string,
     @Query('type') type: string,
@@ -55,6 +55,6 @@ export class AnalyticsController {
     if (!type || !ALLOWED_METRICS.has(type)) {
       throw new BadRequestException(`type must be one of: ${[...ALLOWED_METRICS].join(', ')}`)
     }
-    return this.service.getMetrics(type, start, end)
+    return (await this.service.getMetrics(type, start, end)) ?? []
   }
 }
