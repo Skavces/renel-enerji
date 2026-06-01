@@ -37,6 +37,7 @@ services:
       UMAMI_PASS: ${UMAMI_PASS}
       OPENWEATHER_API_KEY: ${OPENWEATHER_API_KEY}
       REDIS_URL: redis://redis:6379
+      DB_SYNC: ${DB_SYNC:-false}
     volumes:
       - uploads:/app/uploads
     depends_on:
