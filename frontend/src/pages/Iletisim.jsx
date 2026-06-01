@@ -199,7 +199,7 @@ export default function Iletisim() {
       </section>
 
       {/* Full-width map */}
-      <div className="h-[420px] w-full">
+      <div className="h-[260px] sm:h-[360px] lg:h-[420px] w-full">
         <iframe
           title="RenEl Enerji Konumu"
           src="https://maps.google.com/maps?q=Renel+Enerji+M%C3%BChendislik&output=embed&hl=tr"

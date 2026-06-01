@@ -163,14 +163,14 @@ export default function Stats() {
           </div>
 
           {/* Stats */}
-          <div className="relative z-10 grid grid-cols-3">
+          <div className="relative z-10 grid grid-cols-1 sm:grid-cols-3">
             {stats.map(({ value, suffix, label, sub }, i) => (
               <div
                 key={label}
                 className="px-8 py-7 text-center relative"
               >
                 {i < stats.length - 1 && (
-                  <div className="absolute right-0 top-5 bottom-5 w-px bg-gray-400" />
+                  <div className="absolute right-0 top-5 bottom-5 w-px bg-gray-400 hidden sm:block" />
                 )}
                 <Counter value={value} suffix={suffix} />
                 <p className="text-gray-800 font-bold mt-1 text-sm">{label}</p>

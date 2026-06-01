@@ -97,7 +97,7 @@ export default function BagEviGes() {
               </ul>
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               <div className="bg-white rounded-xl border border-gray-100 p-4 text-center">
                 <p className="text-[#448834] font-bold text-2xl font-['Rajdhani']">4 kWp</p>
                 <p className="text-xs text-gray-400 font-medium mt-1">Kurulu Güç</p>

@@ -67,7 +67,7 @@ export default function Kurumsal() {
                 <img src="/renel-logo.svg" alt="RenEl" className="w-16 h-16" />
               </div>
             </div>
-            <div className="flex gap-3 h-[560px]">
+            <div className="flex gap-3 h-[320px] sm:h-[420px] lg:h-[560px]">
               {/* Sol kolon */}
               <div className="flex-1 flex flex-col gap-3">
                 <div className="flex-3 overflow-hidden rounded-xl">

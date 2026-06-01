@@ -41,7 +41,7 @@ export default function Projelerimiz() {
 
       {/* Stats */}
       <section className="bg-gray-50 border-b border-gray-100 py-10">
-        <div className="max-w-7xl mx-auto px-6 grid grid-cols-3 divide-x divide-gray-100">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-gray-100">
           {[
             { v: projects.length.toString(), l: 'Tamamlanan Proje' },
             { v: `${Math.round(totalKw * 10) / 10} kW`, l: 'Toplam Kurulu Güç' },
