@@ -39,7 +39,7 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop links */}
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden lg:flex items-center gap-5">
             {navLinks.map(l => (
               <NavLink
                 key={l.to}
@@ -67,12 +67,12 @@ export default function Navbar() {
           <div className="flex items-center gap-4">
             <Link
               to="/iletisim"
-              className="hidden md:inline-flex items-center gap-2 bg-[#448834] hover:bg-[#357228] text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors"
+              className="hidden lg:inline-flex items-center gap-2 bg-[#448834] hover:bg-[#357228] text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors"
             >
               Teklif Al
             </Link>
             <button
-              className="md:hidden p-2 text-gray-700"
+              className="lg:hidden p-2 text-gray-700"
               onClick={() => setOpen(o => !o)}
               aria-label="Menü"
             >
@@ -83,7 +83,7 @@ export default function Navbar() {
 
         {/* Mobile menu */}
         {open && (
-          <div className="md:hidden bg-white border-t border-gray-100 px-6 py-4 flex flex-col gap-4 shadow-lg">
+          <div className="lg:hidden bg-white border-t border-gray-100 px-6 py-4 flex flex-col gap-4 shadow-lg">
             {navLinks.map(l => (
               <NavLink
                 key={l.to}

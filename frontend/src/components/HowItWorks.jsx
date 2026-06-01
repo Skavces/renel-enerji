@@ -48,12 +48,12 @@ export default function HowItWorks() {
         </div>
 
         {/* Steps — wave layout */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 items-start relative">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 items-start relative">
           {/* Wavy connector */}
           <img src="/shape.webp" alt="" className="hidden md:block absolute top-8 left-1/2 -translate-x-1/2 w-[140%] pointer-events-none select-none" loading="lazy" />
 
           {steps.map((s, i) => (
-            <div key={s.num} className={`flex flex-col text-center ${i === 0 || i === 3 ? 'mt-16' : 'mt-0'}`}>
+            <div key={s.num} className={`flex flex-col text-center ${i === 0 || i === 3 ? 'md:mt-16' : ''}`}>
               {/* Image with number badge */}
               <div className="relative mb-5 w-3/4 mx-auto pt-3 pl-3">
                 <div className="aspect-square overflow-hidden rounded-xl">

@@ -210,7 +210,8 @@ export default function ProjeDetay() {
               src={mediaUrl(media[lightbox].src)}
               alt=""
               className="max-h-[85vh] max-w-[90vw] rounded-xl object-contain"
-              onClick={(e) = loading="lazy"> e.stopPropagation()}
+              loading="lazy"
+              onClick={(e) => e.stopPropagation()}
             />
           )}
           <button className="absolute right-5 top-1/2 -translate-y-1/2 text-white/70 hover:text-white" onClick={lightboxNext}>

@@ -76,7 +76,8 @@ export default function Projelerimiz() {
                         src={coverPhoto(p)}
                         alt={`${p.name} - ${p.location} güneş enerjisi sistemi`}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        onError={(e) = loading="lazy"> {
+                        loading="lazy"
+                        onError={(e) => {
                           e.currentTarget.style.display = 'none'
                           e.currentTarget.nextElementSibling.style.display = 'flex'
                         }}

@@ -36,7 +36,7 @@ export default function Hero() {
       </div>
 
       {/* Content */}
-      <div className="relative max-w-7xl mx-auto px-6 pt-[164px] pb-24 w-full flex items-center justify-between gap-12">
+      <div className="relative max-w-7xl mx-auto px-6 pt-[100px] sm:pt-[132px] lg:pt-[164px] pb-24 w-full flex items-center justify-between gap-12">
 
         {/* Left — text */}
         <div className="max-w-xl shrink-0">
