@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react'
-import { Users, Eye, MousePointer, Clock, ExternalLink, RefreshCw } from 'lucide-react'
+import { Users, Eye, MousePointer, Clock, ExternalLink, RefreshCw, Globe, Monitor, Smartphone, Link2 } from 'lucide-react'
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  BarChart, Bar, Cell,
 } from 'recharts'
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+const API = import.meta.env.VITE_API_URL || ''
 const UMAMI_URL = import.meta.env.VITE_UMAMI_URL || 'http://localhost:3002'
 
 function getToken() {
@@ -29,8 +28,6 @@ const RANGES = [
   { label: '30 Gün', startAt: () => startOfDay(29), endAt: () => Date.now(), unit: 'day' },
 ]
 
-const PAGE_COLORS = ['#448834', '#f97316', '#3b82f6', '#a855f7', '#ec4899', '#14b8a6', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4']
-
 function CustomTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null
   return (
@@ -45,11 +42,46 @@ function CustomTooltip({ active, payload, label }) {
   )
 }
 
+function MetricList({ title, icon: Icon, items, emptyText }) {
+  const max = items[0]?.y || 1
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 p-5">
+      <div className="flex items-center gap-2 mb-4">
+        <Icon size={13} className="text-gray-300" />
+        <h3 className="font-semibold text-gray-700 text-sm">{title}</h3>
+      </div>
+      {items.length === 0 ? (
+        <p className="text-center py-6 text-gray-300 text-sm">{emptyText || 'Veri yok'}</p>
+      ) : (
+        <div className="space-y-2.5">
+          {items.slice(0, 6).map((item) => (
+            <div key={item.x} className="flex items-center gap-2">
+              <span className="text-xs text-gray-500 truncate flex-1 min-w-0">{item.x || 'Doğrudan'}</span>
+              <div className="w-20 h-1 bg-gray-100 rounded-full overflow-hidden shrink-0">
+                <div
+                  className="h-full bg-[#448834] rounded-full"
+                  style={{ width: `${(item.y / max) * 100}%` }}
+                />
+              </div>
+              <span className="text-xs text-gray-400 w-5 text-right shrink-0">{item.y}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function Analitik() {
   const [rangeIdx, setRangeIdx] = useState(1)
   const [stats, setStats] = useState(null)
   const [pageviews, setPageviews] = useState(null)
   const [pages, setPages] = useState([])
+  const [browsers, setBrowsers] = useState([])
+  const [devices, setDevices] = useState([])
+  const [os, setOs] = useState([])
+  const [referrers, setReferrers] = useState([])
+  const [countries, setCountries] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -60,16 +92,38 @@ export default function Analitik() {
     const startAt = range.startAt()
     const endAt = range.endAt()
     try {
-      const [s, pv, pg] = await Promise.all([
-        fetch(`${API}/api/analytics/stats?startAt=${startAt}&endAt=${endAt}`, { headers: authHeaders() }).then(r => r.json()),
-        fetch(`${API}/api/analytics/pageviews?startAt=${startAt}&endAt=${endAt}&unit=${range.unit}`, { headers: authHeaders() }).then(r => r.json()),
-        fetch(`${API}/api/analytics/pages?startAt=${startAt}&endAt=${endAt}`, { headers: authHeaders() }).then(r => r.json()),
+      const fetcher = (url) =>
+        fetch(url, { headers: authHeaders() }).then((r) => {
+          if (!r.ok) throw new Error(`HTTP ${r.status}`)
+          return r.json()
+        })
+      const q = `startAt=${startAt}&endAt=${endAt}`
+      const [s, pv, pg, br, dv, oss, ref, ctr] = await Promise.all([
+        fetcher(`${API}/api/dash/stats?${q}`),
+        fetcher(`${API}/api/dash/pageviews?${q}&unit=${range.unit}`),
+        fetcher(`${API}/api/dash/pages?${q}`),
+        fetcher(`${API}/api/dash/metrics?${q}&type=browser`),
+        fetcher(`${API}/api/dash/metrics?${q}&type=device`),
+        fetcher(`${API}/api/dash/metrics?${q}&type=os`),
+        fetcher(`${API}/api/dash/metrics?${q}&type=referrer`),
+        fetcher(`${API}/api/dash/metrics?${q}&type=country`),
       ])
       setStats(s)
       setPageviews(pv)
       setPages(Array.isArray(pg) ? pg : [])
+      setBrowsers(Array.isArray(br) ? br : [])
+      setDevices(Array.isArray(dv) ? dv : [])
+      setOs(Array.isArray(oss) ? oss : [])
+      setReferrers(Array.isArray(ref) ? ref : [])
+      setCountries(Array.isArray(ctr) ? ctr : [])
     } catch (e) {
-      setError('Umami verisi alınamadı. Backend çalışıyor mu?')
+      if (e.message.includes('401')) {
+        setError('Oturum süresi dolmuş. Yeniden giriş yapın.')
+      } else if (e.message.includes('500')) {
+        setError('Umami bağlantısı kurulamadı. Docker çalışıyor mu? (localhost:3002)')
+      } else {
+        setError(`Veri alınamadı: ${e.message}`)
+      }
     } finally {
       setLoading(false)
     }
@@ -87,6 +141,7 @@ export default function Analitik() {
 
   return (
     <main className="max-w-6xl mx-auto px-6 py-8">
+
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
@@ -94,7 +149,6 @@ export default function Analitik() {
           <p className="text-sm text-gray-400 mt-1">Site ziyaretçi istatistikleri</p>
         </div>
         <div className="flex items-center gap-2">
-          {/* Range seçici */}
           <div className="flex bg-gray-100 rounded-xl p-1 gap-0.5">
             {RANGES.map((r, i) => (
               <button
@@ -128,34 +182,33 @@ export default function Analitik() {
       </div>
 
       {error ? (
-        <div className="bg-red-50 border border-red-100 text-red-600 rounded-2xl px-5 py-4 text-sm">
-          {error}
-        </div>
+        <div className="bg-red-50 border border-red-100 text-red-600 rounded-2xl px-5 py-4 text-sm">{error}</div>
       ) : loading ? (
         <div className="text-center py-20 text-gray-400">Yükleniyor...</div>
       ) : (
-        <>
+        <div className="space-y-6">
+
           {/* Stat kartları */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[
-              { label: 'Sayfa Görüntülenme', value: stats?.pageviews?.value ?? 0, icon: Eye, color: 'bg-blue-50 text-blue-600' },
-              { label: 'Tekil Ziyaretçi', value: stats?.visitors?.value ?? 0, icon: Users, color: 'bg-green-50 text-green-600' },
-              { label: 'Oturum', value: stats?.visits?.value ?? 0, icon: MousePointer, color: 'bg-orange-50 text-orange-600' },
-              { label: 'Ort. Oturum Süresi', value: stats?.totaltime?.value ? `${Math.round(stats.totaltime.value / 60 / (stats.visits?.value || 1))}dk` : '0dk', icon: Clock, color: 'bg-purple-50 text-purple-600' },
+              { label: 'Sayfa Görüntülenme', value: stats?.pageviews?.value ?? stats?.pageviews ?? 0, icon: Eye },
+              { label: 'Tekil Ziyaretçi', value: stats?.visitors?.value ?? stats?.visitors ?? 0, icon: Users },
+              { label: 'Oturum', value: stats?.visits?.value ?? stats?.visits ?? 0, icon: MousePointer },
+              { label: 'Ort. Süre', value: (() => { const t = stats?.totaltime?.value ?? stats?.totaltime ?? 0; const v = stats?.visits?.value ?? stats?.visits ?? 1; return t ? `${Math.round(t / 60 / v)}dk` : '0dk' })(), icon: Clock },
             ].map((s) => (
               <div key={s.label} className="bg-white rounded-2xl border border-gray-100 p-5">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">{s.label}</span>
-                  <div className={`p-2 rounded-lg ${s.color}`}><s.icon size={14} /></div>
+                  <span className="text-xs font-medium text-gray-400 uppercase tracking-widest">{s.label}</span>
+                  <s.icon size={14} className="text-gray-300" />
                 </div>
                 <p className="text-3xl font-bold text-gray-900 font-['Rajdhani']">{s.value}</p>
               </div>
             ))}
           </div>
 
-          {/* Alan grafik — ziyaret trendi */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-6">
-            <h3 className="font-semibold text-gray-900 text-sm mb-5">Ziyaret Trendi</h3>
+          {/* Ziyaret trendi */}
+          <div className="bg-white rounded-2xl border border-gray-100 p-6">
+            <h3 className="font-semibold text-gray-700 text-sm mb-5">Ziyaret Trendi</h3>
             {chartData.length === 0 ? (
               <div className="h-48 flex items-center justify-center text-gray-300 text-sm">Veri yok</div>
             ) : (
@@ -163,52 +216,62 @@ export default function Analitik() {
                 <AreaChart data={chartData}>
                   <defs>
                     <linearGradient id="pvGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#448834" stopOpacity={0.15} />
+                      <stop offset="5%" stopColor="#448834" stopOpacity={0.12} />
                       <stop offset="95%" stopColor="#448834" stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="sesGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#f97316" stopOpacity={0.15} />
-                      <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#94a3b8" stopOpacity={0.12} />
+                      <stop offset="95%" stopColor="#94a3b8" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <XAxis dataKey="t" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} width={28} />
+                  <XAxis dataKey="t" tick={{ fontSize: 11, fill: '#d1d5db' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 11, fill: '#d1d5db' }} axisLine={false} tickLine={false} width={28} />
                   <Tooltip content={<CustomTooltip />} />
-                  <Area type="monotone" dataKey="Sayfa Görüntülenme" stroke="#448834" strokeWidth={2} fill="url(#pvGrad)" dot={false} />
-                  <Area type="monotone" dataKey="Ziyaretçi" stroke="#f97316" strokeWidth={2} fill="url(#sesGrad)" dot={false} />
+                  <Area type="monotone" dataKey="Sayfa Görüntülenme" stroke="#448834" strokeWidth={1.5} fill="url(#pvGrad)" dot={false} />
+                  <Area type="monotone" dataKey="Ziyaretçi" stroke="#cbd5e1" strokeWidth={1.5} fill="url(#sesGrad)" dot={false} />
                 </AreaChart>
               </ResponsiveContainer>
             )}
           </div>
 
-          {/* En çok görüntülenen sayfalar */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-6">
-            <h3 className="font-semibold text-gray-900 text-sm mb-5">En Çok Görüntülenen Sayfalar</h3>
-            {pages.length === 0 ? (
-              <div className="text-center py-8 text-gray-300 text-sm">Veri yok</div>
-            ) : (
-              <div className="space-y-3">
-                {pages.slice(0, 8).map((p, i) => (
-                  <div key={p.x} className="flex items-center gap-3">
-                    <span className="text-xs text-gray-400 w-4 shrink-0 text-right">{i + 1}</span>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm text-gray-700 truncate">{p.x}</span>
-                        <span className="text-sm font-semibold text-gray-900 ml-3 shrink-0">{p.y}</span>
-                      </div>
-                      <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+          {/* Sayfalar + Kaynaklar */}
+          <div className="grid lg:grid-cols-2 gap-6">
+            {/* En çok görüntülenen sayfalar */}
+            <div className="bg-white rounded-2xl border border-gray-100 p-5">
+              <h3 className="font-semibold text-gray-700 text-sm mb-4">En Çok Görüntülenen Sayfalar</h3>
+              {pages.length === 0 ? (
+                <p className="text-center py-6 text-gray-300 text-sm">Veri yok</p>
+              ) : (
+                <div className="space-y-2.5">
+                  {pages.slice(0, 8).map((p, i) => (
+                    <div key={p.x} className="flex items-center gap-2">
+                      <span className="text-xs text-gray-300 w-4 shrink-0 text-right">{i + 1}</span>
+                      <span className="text-xs text-gray-500 truncate flex-1 min-w-0">{p.x}</span>
+                      <div className="w-20 h-1 bg-gray-100 rounded-full overflow-hidden shrink-0">
                         <div
-                          className="h-full rounded-full transition-all duration-500"
-                          style={{ width: `${(p.y / maxPages) * 100}%`, backgroundColor: PAGE_COLORS[i % PAGE_COLORS.length] }}
+                          className="h-full bg-[#448834] rounded-full"
+                          style={{ width: `${(p.y / maxPages) * 100}%`, opacity: 1 - i * 0.07 }}
                         />
                       </div>
+                      <span className="text-xs text-gray-400 w-5 text-right shrink-0">{p.y}</span>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <MetricList title="Trafik Kaynakları" icon={Link2} items={referrers} emptyText="Kaynak verisi yok" />
           </div>
-        </>
+
+          {/* Cihaz / Tarayıcı / OS / Ülke */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <MetricList title="Cihazlar" icon={Smartphone} items={devices} />
+            <MetricList title="Tarayıcılar" icon={Monitor} items={browsers} />
+            <MetricList title="İşletim Sistemi" icon={Monitor} items={os} />
+            <MetricList title="Ülkeler" icon={Globe} items={countries} />
+          </div>
+
+        </div>
       )}
     </main>
   )

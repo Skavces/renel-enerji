@@ -48,15 +48,16 @@ function SortableRow({ p, coverPhoto, onDelete, deletingId }) {
       </td>
       <td className="px-3 py-5">
         <div className="flex items-center gap-4">
-          {coverPhoto(p) ? (
-            <img
-              src={coverPhoto(p)}
-              alt=""
-              className="w-14 h-14 rounded-xl object-cover shrink-0 bg-gray-100"
-            />
-          ) : (
-            <div className="w-14 h-14 rounded-xl bg-gray-100 shrink-0" />
-          )}
+          <div className="w-14 h-14 rounded-xl shrink-0 overflow-hidden bg-gray-100">
+            {coverPhoto(p) && (
+              <img
+                src={coverPhoto(p)}
+                alt=""
+                className="w-full h-full object-cover"
+                onError={(e) => { e.currentTarget.style.display = 'none' }}
+              />
+            )}
+          </div>
           <div>
             <p className="font-semibold text-gray-900 text-base leading-tight">{p.name}</p>
             <p className="text-sm text-gray-400 mt-0.5">{p.date}</p>
@@ -64,11 +65,6 @@ function SortableRow({ p, coverPhoto, onDelete, deletingId }) {
         </div>
       </td>
       <td className="px-5 py-5 text-sm text-gray-500 hidden sm:table-cell">{p.location}</td>
-      <td className="px-5 py-5 hidden md:table-cell">
-        <span className="bg-green-50 text-green-700 text-sm font-medium px-3 py-1 rounded-full">
-          {p.category}
-        </span>
-      </td>
       <td className="px-5 py-5 text-sm font-semibold text-[#448834] hidden sm:table-cell">
         {p.kw} kW
       </td>
@@ -199,7 +195,6 @@ export default function ProjelerAdmin() {
                   <th className="px-4 py-4 w-8" />
                   <th className="text-left px-3 py-4 font-medium">Proje</th>
                   <th className="text-left px-5 py-4 font-medium hidden sm:table-cell">Konum</th>
-                  <th className="text-left px-5 py-4 font-medium hidden md:table-cell">Kategori</th>
                   <th className="text-left px-5 py-4 font-medium hidden sm:table-cell">Güç</th>
                   <th className="text-left px-5 py-4 font-medium">Durum</th>
                   <th className="px-5 py-4" />

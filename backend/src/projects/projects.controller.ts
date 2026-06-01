@@ -7,6 +7,7 @@ import {
   Patch,
   Post,
   UseGuards,
+  HttpCode,
 } from '@nestjs/common'
 import { ProjectsService } from './projects.service'
 import { CreateProjectDto } from './dto/create-project.dto'
@@ -36,21 +37,28 @@ export class ProjectsController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Post('admin/parse-instagram')
+  @HttpCode(200)
+  parseInstagram(@Body() body: { text: string }) {
+    return this.service.parseInstagram(body.text)
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Post()
   create(@Body() dto: CreateProjectDto) {
     return this.service.create(dto)
   }
 
   @UseGuards(JwtAuthGuard)
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateProjectDto) {
-    return this.service.update(id, dto)
-  }
-
-  @UseGuards(JwtAuthGuard)
   @Patch('reorder')
   reorderProjects(@Body() body: { orderedIds: string[] }) {
     return this.service.reorderProjects(body.orderedIds)
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() dto: UpdateProjectDto) {
+    return this.service.update(id, dto)
   }
 
   @UseGuards(JwtAuthGuard)

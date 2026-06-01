@@ -12,6 +12,11 @@ const Referanslar = lazy(() => import('./pages/Referanslar'))
 const Iletisim = lazy(() => import('./pages/Iletisim'))
 const Projelerimiz = lazy(() => import('./pages/Projelerimiz'))
 const ProjeDetay = lazy(() => import('./pages/projeler/ProjeDetay'))
+const NedenBizDetay = lazy(() => import('./pages/neden-biz/NedenBizDetay'))
+const Blog = lazy(() => import('./pages/Blog'))
+const BlogDetay = lazy(() => import('./pages/BlogDetay'))
+const SSS = lazy(() => import('./pages/SSS'))
+const NotFound = lazy(() => import('./pages/NotFound'))
 
 const AdminLogin = lazy(() => import('./pages/admin/AdminLogin'))
 const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'))
@@ -20,8 +25,11 @@ const ProjelerAdmin = lazy(() => import('./pages/admin/ProjelerAdmin'))
 const ProjeForm = lazy(() => import('./pages/admin/ProjeForm'))
 const ReferanslarAdmin = lazy(() => import('./pages/admin/ReferanslarAdmin'))
 const ReferansForm = lazy(() => import('./pages/admin/ReferansForm'))
+const BlogAdmin = lazy(() => import('./pages/admin/BlogAdmin'))
+const BlogForm = lazy(() => import('./pages/admin/BlogForm'))
+const SSSAdmin = lazy(() => import('./pages/admin/SSSAdmin'))
 const Analitik = lazy(() => import('./pages/admin/Analitik'))
-const TwoFactorSetup = lazy(() => import('./pages/admin/TwoFactorSetup'))
+const Guvenlik = lazy(() => import('./pages/admin/Guvenlik'))
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -29,22 +37,9 @@ function ScrollToTop() {
   return null
 }
 
-function isTokenValid(token) {
-  if (!token) return false
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]))
-    return payload.exp * 1000 > Date.now()
-  } catch {
-    return false
-  }
-}
-
 function ProtectedRoute({ children }) {
-  const { token, logout } = useAdminAuth()
-  if (!isTokenValid(token)) {
-    if (token) logout()
-    return <Navigate to="/admin/login" replace />
-  }
+  const { isAuth } = useAdminAuth()
+  if (!isAuth) return <Navigate to="/admin/login" replace />
   return children
 }
 
@@ -65,8 +60,13 @@ function PublicLayout() {
             <Route path="/kurumsal" element={<Kurumsal />} />
             <Route path="/projelerimiz" element={<Projelerimiz />} />
             <Route path="/projelerimiz/:slug" element={<ProjeDetay />} />
+            <Route path="/neden-biz/:slug" element={<NedenBizDetay />} />
             <Route path="/referanslar" element={<Referanslar />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/:slug" element={<BlogDetay />} />
+            <Route path="/sss" element={<SSS />} />
             <Route path="/iletisim" element={<Iletisim />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
       </main>
@@ -90,8 +90,12 @@ function AdminRoutes() {
             <Route path="referanslar" element={<ReferanslarAdmin />} />
             <Route path="referanslar/yeni" element={<ReferansForm />} />
             <Route path="referanslar/:id/duzenle" element={<ReferansForm />} />
+            <Route path="blog" element={<BlogAdmin />} />
+            <Route path="blog/yeni" element={<BlogForm />} />
+            <Route path="blog/:id/duzenle" element={<BlogForm />} />
+            <Route path="sss" element={<SSSAdmin />} />
             <Route path="analitik" element={<Analitik />} />
-            <Route path="2fa" element={<TwoFactorSetup />} />
+            <Route path="guvenlik" element={<Guvenlik />} />
           </Route>
         </Routes>
       </Suspense>

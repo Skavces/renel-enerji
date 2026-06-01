@@ -18,7 +18,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { fetchAllReferences, deleteReference, reorderReferences } from '../../api/admin'
 import { useAdminAuth } from '../../contexts/AdminAuthContext'
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+const API = import.meta.env.VITE_API_URL || ''
 
 function SortableRow({ r, onDelete, deletingId }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =

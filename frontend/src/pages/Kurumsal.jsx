@@ -37,7 +37,7 @@ const values = [
 
 
 const stats = [
-  { value: '100+', label: 'Tamamlanan Proje' },
+  { value: '9+', label: 'Tamamlanan Proje' },
   { value: '25 Yıl', label: 'Panel Garantisi' },
   { value: '4', label: 'Hizmet Alanı' },
   { value: '0₺', label: 'Keşif Ücreti' },

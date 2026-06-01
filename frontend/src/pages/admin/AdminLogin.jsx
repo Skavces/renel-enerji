@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, ShieldCheck } from 'lucide-react'
-import { login, verify2FA } from '../../api/admin'
+import { login, verify2FA, logout as apiLogout } from '../../api/admin'
 import { useAdminAuth } from '../../contexts/AdminAuthContext'
 import Logo from '../../components/Logo'
 
@@ -47,7 +47,7 @@ export default function AdminLogin() {
       } else {
         if (remember) localStorage.setItem('admin_remember_user', form.username)
         else localStorage.removeItem('admin_remember_user')
-        saveToken(data.access_token)
+        saveToken()
         navigate('/admin')
       }
     } catch (err) {
@@ -64,10 +64,10 @@ export default function AdminLogin() {
     setError('')
     setLoading(true)
     try {
-      const data = await verify2FA(preAuthToken, otpCode)
+      await verify2FA(preAuthToken, otpCode)
       if (remember) localStorage.setItem('admin_remember_user', form.username)
       else localStorage.removeItem('admin_remember_user')
-      saveToken(data.access_token)
+      saveToken()
       navigate('/admin')
     } catch (err) {
       if (err.status === 429) handleRateLimit()

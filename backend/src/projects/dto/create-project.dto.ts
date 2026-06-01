@@ -32,10 +32,6 @@ export class CreateProjectDto {
 
   @IsString()
   @IsNotEmpty()
-  category: string
-
-  @IsString()
-  @IsNotEmpty()
   description: string
 
   @IsOptional()

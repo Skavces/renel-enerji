@@ -7,4 +7,10 @@ export class AdminConfig {
 
   @Column({ nullable: true, type: 'text' })
   totpSecret: string | null
+
+  @Column({ nullable: true, type: 'text' })
+  username: string | null
+
+  @Column({ nullable: true, type: 'text' })
+  passwordHash: string | null
 }

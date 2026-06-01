@@ -26,15 +26,15 @@ export class ReferencesController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateReferenceDto) {
-    return this.service.update(id, dto)
-  }
-
-  @UseGuards(JwtAuthGuard)
   @Patch('reorder')
   reorder(@Body() body: { orderedIds: string[] }) {
     return this.service.reorder(body.orderedIds)
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() dto: UpdateReferenceDto) {
+    return this.service.update(id, dto)
   }
 
   @UseGuards(JwtAuthGuard)

@@ -1,4 +1,4 @@
-const API = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+const API = import.meta.env.VITE_API_URL || ''
 
 export async function fetchReferences() {
   const res = await fetch(`${API}/api/references`)

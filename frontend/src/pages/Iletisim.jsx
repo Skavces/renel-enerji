@@ -12,14 +12,24 @@ const services = [
 ]
 
 export default function Iletisim() {
-  const [form, setForm] = useState({ name: '', phone: '', email: '', service: '', message: '' })
+  const [form, setForm] = useState({ name: '', phone: '', service: '', message: '' })
   const [sent, setSent] = useState(false)
 
   const handleSubmit = (e) => {
     e.preventDefault()
+    const lines = [
+      '🌿 *Yeni Teklif Talebi*',
+      '',
+      `👤 *Ad Soyad:* ${form.name}`,
+      `📞 *Telefon:* ${form.phone}`,
+      form.email ? `📧 *E-posta:* ${form.email}` : null,
+      form.service ? `⚡ *Hizmet:* ${form.service}` : null,
+      form.message ? `💬 *Mesaj:* ${form.message}` : null,
+    ].filter(Boolean).join('\n')
+    window.open(`https://wa.me/905543796004?text=${encodeURIComponent(lines)}`, '_blank')
     setSent(true)
     setTimeout(() => setSent(false), 5000)
-    setForm({ name: '', phone: '', email: '', service: '', message: '' })
+    setForm({ name: '', phone: '', service: '', message: '' })
   }
 
   return (
@@ -148,15 +158,6 @@ export default function Iletisim() {
                     className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#448834] focus:ring-2 focus:ring-[#448834]/15 transition-all"
                   />
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">E-posta</label>
-                <input
-                  type="email" placeholder="ornek@mail.com"
-                  value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#448834] focus:ring-2 focus:ring-[#448834]/15 transition-all"
-                />
               </div>
 
               <div>

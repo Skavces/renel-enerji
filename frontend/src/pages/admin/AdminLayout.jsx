@@ -4,19 +4,24 @@ import {
   FolderOpen,
   Star,
   BarChart2,
-  ShieldCheck,
+  Shield,
   ExternalLink,
   LogOut,
+  BookOpen,
+  HelpCircle,
 } from 'lucide-react'
 import { useAdminAuth } from '../../contexts/AdminAuthContext'
+import { logout as apiLogout } from '../../api/admin'
 import Logo from '../../components/Logo'
 
 const NAV = [
   { to: '/admin', label: 'Ana Sayfa', icon: LayoutDashboard, match: (p) => p === '/admin' },
   { to: '/admin/projeler', label: 'Projeler', icon: FolderOpen, match: (p) => p.startsWith('/admin/projeler') },
   { to: '/admin/referanslar', label: 'Referanslar', icon: Star, match: (p) => p.startsWith('/admin/referanslar') },
+  { to: '/admin/blog', label: 'Blog', icon: BookOpen, match: (p) => p.startsWith('/admin/blog') },
+  { to: '/admin/sss', label: 'S.S.S.', icon: HelpCircle, match: (p) => p.startsWith('/admin/sss') },
   { to: '/admin/analitik', label: 'Analitik', icon: BarChart2, match: (p) => p.startsWith('/admin/analitik') },
-  { to: '/admin/2fa', label: '2FA', icon: ShieldCheck, match: (p) => p.startsWith('/admin/2fa') },
+  { to: '/admin/guvenlik', label: 'Güvenlik', icon: Shield, match: (p) => p.startsWith('/admin/guvenlik') },
 ]
 
 export default function AdminLayout() {
@@ -24,7 +29,8 @@ export default function AdminLayout() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await apiLogout().catch(() => {}) // cookie'yi sunucuda temizle (blacklist dahil)
     logout()
     navigate('/admin/login')
   }
@@ -32,7 +38,7 @@ export default function AdminLayout() {
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-gray-50">
       {/* Navbar */}
-      <header className="bg-transparent shrink-0">
+      <header className="bg-white shadow-lg shrink-0">
         <div className="max-w-6xl mx-auto flex items-center h-24 px-6 gap-8">
           {/* Logo */}
           <Link to="/admin" className="shrink-0">
@@ -47,13 +53,13 @@ export default function AdminLayout() {
                 <Link
                   key={to}
                   to={to}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
+                  className={`flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 whitespace-nowrap ${
                     active
                       ? 'bg-[#448834] text-white'
                       : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                   }`}
                 >
-                  <Icon size={17} className="shrink-0" />
+                  <Icon size={16} className="shrink-0" />
                   <span>{label}</span>
                 </Link>
               )
@@ -81,7 +87,6 @@ export default function AdminLayout() {
           </div>
         </div>
       </header>
-      <div className="h-1.5 bg-gradient-to-r from-[#f5ce31] via-[#448834] to-[#f5ce31] shrink-0" />
 
       {/* Content */}
       <div className="flex-1 overflow-auto">

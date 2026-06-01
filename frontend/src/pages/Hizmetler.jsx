@@ -1,6 +1,11 @@
-import { Link } from 'react-router-dom'
-import { Droplets, Home, Battery, Car, ArrowRight, CheckCircle, Phone } from 'lucide-react'
+import { Droplets, Home, Battery, Car, ArrowRight, CheckCircle } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
+
+const WA_NUMBER = '905543796004'
+
+function waLink(message) {
+  return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(message)}`
+}
 
 const services = [
   {
@@ -23,6 +28,7 @@ const services = [
     badge: 'Tarımsal Çözüm',
     badgeColor: 'bg-blue-100 text-blue-700',
     photo: '/tarimsal-sulama-sistemleri-gunes-enerjisi.webp',
+    waMessage: 'Merhaba, tarımsal sulama GES sistemi hakkında teklif almak istiyorum. Arazim için güneş enerjili sulama sistemi kurulumu hakkında bilgi verir misiniz?',
   },
   {
     icon: Home,
@@ -41,10 +47,9 @@ const services = [
     color: 'from-orange-500 to-amber-400',
     iconBg: 'bg-orange-100',
     iconColor: 'text-orange-600',
-    badge: 'En Popüler',
-    badgeColor: 'bg-orange-100 text-orange-700',
     photo: '/arazi-cati-tipi-ges.webp',
     highlight: true,
+    waMessage: 'Merhaba, arazi/çatı tipi GES kurulumu için teklif almak istiyorum. Kurulum yeri ve kapasite hakkında bilgi almak istiyorum.',
   },
   {
     icon: Battery,
@@ -66,6 +71,7 @@ const services = [
     badge: 'Off-Grid',
     badgeColor: 'bg-green-100 text-green-700',
     photo: '/bag-evi-ges.webp',
+    waMessage: 'Merhaba, bağ evi / off-grid GES sistemi için teklif almak istiyorum. Bataryalı güneş enerjisi sistemi hakkında bilgi alabilir miyim?',
   },
   {
     icon: Car,
@@ -87,6 +93,7 @@ const services = [
     badge: 'E-Mobilite',
     badgeColor: 'bg-purple-100 text-purple-700',
     photo: '/elektrikli-arac-sarj-istasyonu.webp',
+    waMessage: 'Merhaba, elektrikli araç şarj istasyonu kurulumu için teklif almak istiyorum. Güneş enerjili EV şarj sistemi hakkında bilgi alabilir miyim?',
   },
 ]
 
@@ -134,12 +141,6 @@ export default function Hizmetler() {
                   <div className="absolute bottom-0 left-0 right-0 p-7">
                     <Icon size={24} className="text-white mb-4" />
                     <h2 className="text-2xl sm:text-3xl font-bold text-white leading-tight">{s.title}</h2>
-                    {s.highlight && (
-                      <p className="text-[#f5ce31] text-xs font-semibold mt-2 flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#f5ce31] inline-block" />
-                        En Çok Tercih Edilen Hizmet
-                      </p>
-                    )}
                   </div>
                 </div>
 
@@ -154,13 +155,15 @@ export default function Hizmetler() {
                       </li>
                     ))}
                   </ul>
-                  <Link
-                    to="/iletisim"
+                  <a
+                    href={waLink(s.waMessage)}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 bg-[#448834] hover:bg-[#357228] text-white font-semibold px-6 py-3 rounded-xl transition-colors w-fit text-sm shadow-md shadow-green-900/20"
                   >
                     Teklif Al
                     <ArrowRight size={15} />
-                  </Link>
+                  </a>
                 </div>
               </div>
             )

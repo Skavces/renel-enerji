@@ -1,22 +1,30 @@
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useState, useEffect } from 'react'
 
+const API = import.meta.env.VITE_API_URL || ''
 const AdminAuthContext = createContext(null)
 
 export function AdminAuthProvider({ children }) {
-  const [token, setToken] = useState(() => localStorage.getItem('admin_token'))
+  const [isAuth, setIsAuth] = useState(false)
+  const [checking, setChecking] = useState(true)
 
-  const saveToken = (t) => {
-    localStorage.setItem('admin_token', t)
-    setToken(t)
-  }
+  useEffect(() => {
+    fetch(`${API}/api/auth/me`, { credentials: 'include' })
+      .then((r) => { if (r.ok) setIsAuth(true) })
+      .catch(() => {})
+      .finally(() => setChecking(false))
+  }, [])
+
+  const saveToken = () => setIsAuth(true)
 
   const logout = () => {
+    setIsAuth(false)
     localStorage.removeItem('admin_token')
-    setToken(null)
   }
 
+  if (checking) return null
+
   return (
-    <AdminAuthContext.Provider value={{ token, saveToken, logout, isAuth: !!token }}>
+    <AdminAuthContext.Provider value={{ saveToken, logout, isAuth }}>
       {children}
     </AdminAuthContext.Provider>
   )

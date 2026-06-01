@@ -2,12 +2,12 @@ import { Link } from 'react-router-dom'
 import { Award, Wrench, Leaf, BarChart3, HeartHandshake, CheckCircle } from 'lucide-react'
 
 const reasons = [
-  { icon: Award, title: 'Mühendislik Altyapısı', desc: 'Elektrik-Elektronik Mühendisi liderliğinde her proje teknik standartlara uygun tasarlanır ve kurulur.' },
-  { icon: Wrench, title: 'Anahtar Teslim Hizmet', desc: 'Fizibilite çalışmasından lisanslama, montaj ve devreye almaya kadar her adımı biz üstleniyoruz.' },
-  { icon: Leaf, title: 'Sürdürülebilir Enerji', desc: 'Karbon ayak izinizi azaltırken enerji maliyetlerinizi düşürün. Geleceğe yatırım yapın.' },
-  { icon: BarChart3, title: 'Verimlilik Odaklı', desc: 'Simülasyon ve yerinde analiz ile maksimum enerji üretimini sağlayan optimum sistem tasarımı.' },
-  { icon: HeartHandshake, title: 'Yerel ve Güvenilir', desc: 'Soma/Manisa merkezli ekibimizle kurulum sonrası bakım, arıza ve izleme hizmetleri yanınızda.' },
-  { icon: CheckCircle, title: 'Onaylı Ekipmanlar', desc: 'Yalnızca sertifikalı ve garantili paneller, invertörler ve montaj sistemleri kullanıyoruz.' },
+  { icon: Award, title: 'Mühendislik Altyapısı', slug: 'muhendislik-altyapisi', desc: 'Elektrik-Elektronik Mühendisi liderliğinde her proje teknik standartlara uygun tasarlanır ve kurulur.' },
+  { icon: Wrench, title: 'Anahtar Teslim Hizmet', slug: 'anahtar-teslim-hizmet', desc: 'Fizibilite çalışmasından lisanslama, montaj ve devreye almaya kadar her adımı biz üstleniyoruz.' },
+  { icon: Leaf, title: 'Sürdürülebilir Enerji', slug: 'surdurulebilir-enerji', desc: 'Karbon ayak izinizi azaltırken enerji maliyetlerinizi düşürün. Geleceğe yatırım yapın.' },
+  { icon: BarChart3, title: 'Verimlilik Odaklı', slug: 'verimlilik-odakli', desc: 'Simülasyon ve yerinde analiz ile maksimum enerji üretimini sağlayan optimum sistem tasarımı.' },
+  { icon: HeartHandshake, title: 'Yerel ve Güvenilir', slug: 'yerel-ve-guvenilir', desc: 'Soma/Manisa merkezli ekibimizle kurulum sonrası bakım, arıza ve izleme hizmetleri yanınızda.' },
+  { icon: CheckCircle, title: 'Onaylı Ekipmanlar', slug: 'onayli-ekipmanlar', desc: 'Yalnızca sertifikalı ve garantili paneller, invertörler ve montaj sistemleri kullanıyoruz.' },
 ]
 
 export default function WhyUs() {
@@ -32,14 +32,14 @@ export default function WhyUs() {
           </div>
 
           {/* Row 1 cards — ilk 3 */}
-          {reasons.slice(0, 3).map(({ icon, title, desc }) => {
+          {reasons.slice(0, 3).map(({ icon, title, slug, desc }) => {
             const Icon = icon
             return (
             <div key={title} className="col-span-1 bg-white rounded-2xl border border-gray-100 border-b-4 border-b-transparent hover:border-b-[#448834] p-7 flex flex-col gap-3 shadow-sm hover:shadow-lg hover:-translate-y-2 transition-all duration-300 group">
               <Icon size={28} className="text-[#448834]" />
               <h4 className="font-bold text-gray-900 text-lg">{title}</h4>
               <p className="text-gray-500 text-base leading-relaxed flex-1">{desc}</p>
-              <Link to="/iletisim" className="text-[#448834] text-sm font-semibold flex items-center gap-1 hover:gap-2 transition-all w-fit">
+              <Link to={`/neden-biz/${slug}`} className="text-[#448834] text-sm font-semibold flex items-center gap-1 hover:gap-2 transition-all w-fit">
                 Detaylı Bilgi <span>›</span>
               </Link>
             </div>
@@ -47,14 +47,14 @@ export default function WhyUs() {
           })}
 
           {/* Row 2 cards — son 3 */}
-          {reasons.slice(3).map(({ icon, title, desc }) => {
+          {reasons.slice(3).map(({ icon, title, slug, desc }) => {
             const Icon = icon
             return (
             <div key={title} className="col-span-1 bg-white rounded-2xl border border-gray-100 border-b-4 border-b-transparent hover:border-b-[#448834] p-7 flex flex-col gap-3 shadow-sm hover:shadow-lg hover:-translate-y-2 transition-all duration-300 group">
               <Icon size={28} className="text-[#448834]" />
               <h4 className="font-bold text-gray-900 text-lg">{title}</h4>
               <p className="text-gray-500 text-base leading-relaxed flex-1">{desc}</p>
-              <Link to="/iletisim" className="text-[#448834] text-sm font-semibold flex items-center gap-1 hover:gap-2 transition-all w-fit">
+              <Link to={`/neden-biz/${slug}`} className="text-[#448834] text-sm font-semibold flex items-center gap-1 hover:gap-2 transition-all w-fit">
                 Detaylı Bilgi <span>›</span>
               </Link>
             </div>

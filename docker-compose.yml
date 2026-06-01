@@ -35,11 +35,24 @@ services:
       UMAMI_WEBSITE_ID: ${UMAMI_WEBSITE_ID}
       UMAMI_USER: ${UMAMI_USER:-admin}
       UMAMI_PASS: ${UMAMI_PASS}
+      OPENWEATHER_API_KEY: ${OPENWEATHER_API_KEY}
+      REDIS_URL: redis://redis:6379
     volumes:
       - uploads:/app/uploads
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_started
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redisdata:/data
+    command: redis-server --appendonly yes
 
   frontend:
     build:
@@ -73,7 +86,7 @@ services:
     image: ghcr.io/umami-software/umami:postgresql-latest
     restart: unless-stopped
     ports:
-      - "3002:3000"
+      - "127.0.0.1:3002:3000"
     environment:
       DATABASE_URL: postgresql://umami:${UMAMI_DB_PASS}@umami-db:5432/umami
       APP_SECRET: ${UMAMI_APP_SECRET}
@@ -85,3 +98,4 @@ volumes:
   pgdata:
   uploads:
   umami_pgdata:
+  redisdata:

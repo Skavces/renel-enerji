@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { fetchReferences } from '../api/references'
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+const API = import.meta.env.VITE_API_URL || ''
 
 export default function References() {
   const [refs, setRefs] = useState([])
@@ -16,9 +16,9 @@ export default function References() {
     <section id="referanslar" className="py-24 bg-gray-50">
       <div className="max-w-6xl mx-auto px-6">
         <div className="text-center mb-16">
-          <span className="inline-block bg-[#f97316]/10 text-[#f97316] font-semibold text-sm px-4 py-1.5 rounded-full mb-4">
+          <p className="text-[#448834] font-semibold text-xs uppercase tracking-widest mb-4">
             REFERANSLARIMIZ
-          </span>
+          </p>
           <h2 className="text-3xl sm:text-4xl font-bold text-[#0f2744] mb-4">
             Bizi Tercih Edenler
           </h2>
@@ -33,12 +33,12 @@ export default function References() {
               key={r.id}
               className="bg-white rounded-2xl border border-gray-100 hover:shadow-md hover:border-[#448834]/20 transition-all duration-200 p-5 flex flex-col items-center gap-3"
             >
-              <div className="w-full h-16 flex items-center justify-center">
+              <div className="w-full h-44 flex items-center justify-center">
                 {r.logo ? (
                   <img
                     src={`${API}${r.logo}`}
                     alt={r.name}
-                    className="max-h-14 max-w-full object-contain"
+                    className="max-h-40 max-w-full object-contain"
                   />
                 ) : (
                   <div className="w-12 h-12 rounded-full bg-[#448834]/10 flex items-center justify-center">

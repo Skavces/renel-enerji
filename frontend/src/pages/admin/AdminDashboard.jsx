@@ -1,11 +1,49 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Zap, Eye, FolderOpen, Star, Plus, EyeOff, ArrowRight } from 'lucide-react'
+import { Zap, FolderOpen, Star, Plus, SunMedium, Handshake, TrendingUp, Wind, Droplets, Thermometer } from 'lucide-react'
 import { fetchAllProjects, fetchAllReferences } from '../../api/admin'
 import { useAdminAuth } from '../../contexts/AdminAuthContext'
-import { mediaUrl } from '../../api/projects'
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+const API = import.meta.env.VITE_API_URL || ''
+
+function estimateProduction(data) {
+  if (!data) return { wPerKwp: 0, rate: 0, label: 'Veri yok', color: 'bg-gray-200', text: 'text-gray-400' }
+
+  const now = data.dt
+  const sunrise = data.sys?.sunrise
+  const sunset = data.sys?.sunset
+
+  if (!sunrise || !sunset || now < sunrise || now > sunset) {
+    return { wPerKwp: 0, rate: 0, label: 'Gece — Üretim Yok', color: 'bg-gray-200', text: 'text-gray-400' }
+  }
+
+  // Güneş pozisyonu — öğlen = 1.0, doğuş/batış = 0
+  const solarNoon = sunrise + (sunset - sunrise) / 2
+  const halfDay = (sunset - sunrise) / 2
+  const solarFactor = Math.max(0, Math.cos(((now - solarNoon) / halfDay) * (Math.PI / 2)))
+
+  // Kasten bulut zayıflaması: 1 - 0.75 × (bulut/100)^3.4
+  const cloudFraction = (data.clouds?.all ?? 0) / 100
+  const cloudAttenuation = 1 - 0.75 * Math.pow(cloudFraction, 3.4)
+
+  // Sıcaklık düzeltmesi: 25°C üzeri her derece için %0.4 kayıp
+  const temp = data.main?.temp ?? 25
+  const tempFactor = temp > 25 ? 1 - 0.004 * (temp - 25) : 1
+
+  const rate = Math.min(1, solarFactor * cloudAttenuation * tempFactor)
+  const pct = Math.round(rate * 100)
+  // 1 kWp standart koşulda 1000 W üretir → anlık W/kWp
+  const wPerKwp = Math.round(rate * 1000)
+
+  let label, color, text
+  if (pct >= 80) { label = 'Tam Verimli'; color = 'bg-green-400'; text = 'text-green-500' }
+  else if (pct >= 55) { label = 'Verimli'; color = 'bg-green-300'; text = 'text-green-400' }
+  else if (pct >= 30) { label = 'Orta Verimli'; color = 'bg-amber-400'; text = 'text-amber-500' }
+  else if (pct >= 10) { label = 'Düşük Verim'; color = 'bg-orange-400'; text = 'text-orange-500' }
+  else { label = 'Minimal Verim'; color = 'bg-red-400'; text = 'text-red-400' }
+
+  return { wPerKwp, rate: pct, label, color, text }
+}
 
 export default function AdminDashboard() {
   const navigate = useNavigate()
@@ -13,6 +51,7 @@ export default function AdminDashboard() {
   const [projects, setProjects] = useState([])
   const [refs, setRefs] = useState([])
   const [loading, setLoading] = useState(true)
+  const [weather, setWeather] = useState({})
 
   useEffect(() => {
     Promise.all([fetchAllProjects(), fetchAllReferences()])
@@ -26,142 +65,191 @@ export default function AdminDashboard() {
       .finally(() => setLoading(false))
   }, [])
 
+  useEffect(() => {
+    if (projects.length === 0) return
+    const cities = [...new Set(projects.map((p) => p.location?.split(/[\/,]/)[0].trim()).filter(Boolean))]
+    Promise.all(
+      cities.map((city) =>
+        fetch(`${API}/api/weather?city=${encodeURIComponent(city)}`, { credentials: 'include' })
+          .then((r) => r.json())
+          .then((data) => ({ city, data }))
+          .catch(() => ({ city, data: null }))
+      )
+    ).then((results) => {
+      const map = {}
+      results.forEach(({ city, data }) => { map[city] = data })
+      setWeather(map)
+    })
+  }, [projects])
+
   const publishedProjects = projects.filter((p) => p.published)
   const publishedRefs = refs.filter((r) => r.published)
-  const totalProjectKw = projects.reduce((s, p) => s + parseFloat(p.kw || 0), 0)
+  const totalKw = projects.reduce((s, p) => s + parseFloat(p.kw || 0), 0)
+  const totalKwStr = totalKw % 1 === 0 ? totalKw : totalKw.toFixed(1)
 
-  const coverPhoto = (p) => {
-    const first = p.media?.find((m) => m.type === 'image')
-    return first ? mediaUrl(first.src) : null
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="w-5 h-5 border-2 border-[#448834] border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
   }
 
-  const stats = [
-    { label: 'Toplam Proje', value: projects.length, sub: `${publishedProjects.length} yayında`, icon: FolderOpen, color: 'text-blue-600 bg-blue-50' },
-    { label: 'Toplam Referans', value: refs.length, sub: `${publishedRefs.length} yayında`, icon: Star, color: 'text-orange-500 bg-orange-50' },
-    { label: 'Kurulu Güç', value: `${totalProjectKw % 1 === 0 ? totalProjectKw : totalProjectKw.toFixed(1)} kW`, sub: 'tüm projeler', icon: Zap, color: 'text-green-600 bg-green-50' },
-    { label: 'Gizli İçerik', value: (projects.length - publishedProjects.length) + (refs.length - publishedRefs.length), sub: 'yayınlanmayan', icon: EyeOff, color: 'text-gray-500 bg-gray-100' },
-  ]
-
   return (
-    <main className="max-w-5xl mx-auto px-6 py-8 space-y-6">
+    <div>
+      {/* Hero Banner — tam genişlik */}
+      <div className="relative overflow-hidden w-full flex items-center justify-center py-8"
+        style={{ backgroundImage: 'url(/adminbanner.png)', backgroundSize: 'cover', backgroundPosition: 'center 85%' }}>
+        <div className="absolute inset-0 bg-black/45" />
+        <div className="relative z-10 text-center">
+          <p className="text-white/70 text-lg mb-2 drop-shadow-md tracking-widest uppercase">Yönetim Paneli</p>
+          <h1 className="text-white text-6xl font-bold drop-shadow-lg">Hoş geldiniz</h1>
+          <p className="text-white/60 text-xl mt-3 drop-shadow-md">RenEl Enerji Mühendislik</p>
+        </div>
+      </div>
 
-      {loading ? (
-        <div className="text-center py-20 text-gray-400">Yükleniyor...</div>
-      ) : (
-        <>
-          {/* Stats */}
+    <main className="max-w-5xl mx-auto px-6 py-8 space-y-8">
+
+      {/* İstatistik Kartı */}
+      <div>
+        <p className="text-sm font-semibold text-gray-500 mb-3 flex items-center gap-2">
+          <FolderOpen size={14} className="text-[#448834]" />
+          Genel İstatistikler
+        </p>
+      <div className="relative bg-white rounded-2xl border border-gray-100 shadow-md overflow-hidden flex items-center">
+        <img src="/statsbanner.png" alt="" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[25%] w-full h-auto opacity-10 pointer-events-none" />
+        <div className="relative flex-1 px-7 py-6 overflow-hidden">
+          <div className="relative z-10">
+            <p className="text-5xl font-bold text-[#448834] font-['Rajdhani'] drop-shadow-sm">{projects.length}</p>
+            <p className="text-base text-gray-400 mt-0.5 drop-shadow-sm">Toplam Proje</p>
+            {projects.length - publishedProjects.length > 0 && (
+              <p className="text-xs text-amber-400 mt-0.5">{projects.length - publishedProjects.length} gizli</p>
+            )}
+          </div>
+        </div>
+
+        <div className="w-0.5 bg-gray-400 self-stretch my-4 rounded-full" />
+
+        <div className="relative flex-1 px-7 py-6 overflow-hidden">
+          <div className="relative z-10">
+            <p className="text-5xl font-bold text-[#448834] font-['Rajdhani'] drop-shadow-sm">{refs.length}</p>
+            <p className="text-base text-gray-400 mt-0.5 drop-shadow-sm">Toplam Referans</p>
+            {refs.length - publishedRefs.length > 0 && (
+              <p className="text-xs text-amber-400 mt-0.5">{refs.length - publishedRefs.length} gizli</p>
+            )}
+          </div>
+        </div>
+
+        <div className="w-0.5 bg-gray-400 self-stretch my-4 rounded-full" />
+
+        <div className="relative flex-1 px-7 py-6 overflow-hidden">
+          <div className="relative z-10">
+            <p className="text-5xl font-bold text-[#448834] font-['Rajdhani'] drop-shadow-sm">
+              {totalKwStr} <span className="text-base font-semibold text-gray-400">kW</span>
+            </p>
+            <p className="text-base text-gray-400 mt-0.5 drop-shadow-sm">Kurulu Güç</p>
+          </div>
+        </div>
+      </div>
+      </div>
+
+
+      {/* Hızlı Aksiyonlar */}
+      <div>
+        <p className="text-sm font-semibold text-gray-500 mb-3 flex items-center gap-2">
+          <Zap size={14} className="text-[#448834]" />
+          Hızlı İşlemler
+        </p>
+      <div className="grid grid-cols-3 gap-4">
+        <Link
+          to="/admin/projeler/yeni"
+          className="group relative bg-white hover:bg-gray-50 rounded-2xl overflow-hidden flex items-center px-6 py-5 min-h-[90px] transition-all duration-200 border border-gray-100 border-l-4 border-l-[#448834] shadow-md hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+        >
+          <img src="/yeni_proje.jpg" alt="" className="absolute w-44 h-44 object-contain shrink-0 opacity-10" style={{ right: -30, bottom: -47 }} />
+          <div className="relative z-10">
+            <div className="flex items-center gap-1.5">
+              <p className="text-gray-800 font-bold text-base">Yeni Proje</p>
+              <Plus size={16} className="text-gray-800" />
+            </div>
+            <p className="text-gray-400 text-sm mt-0.5">Ekle ve yayınla</p>
+          </div>
+        </Link>
+
+        <Link
+          to="/admin/referanslar/yeni"
+          className="group relative bg-white hover:bg-gray-50 rounded-2xl overflow-hidden flex items-center px-6 py-5 min-h-[90px] transition-all duration-200 border border-gray-100 border-l-4 border-l-[#448834] shadow-md hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+        >
+          <img src="/yeni_referans.jpg" alt="" className="absolute w-36 h-36 object-contain shrink-0 opacity-10" style={{ right: -25, bottom: -30 }} />
+          <div className="relative z-10">
+            <div className="flex items-center gap-1.5">
+              <p className="text-gray-800 font-bold text-base">Yeni Referans</p>
+              <Plus size={16} className="text-gray-800" />
+            </div>
+            <p className="text-gray-400 text-sm mt-0.5">Logo ekle</p>
+          </div>
+        </Link>
+
+        <Link
+          to="/admin/analitik"
+          className="group relative bg-white hover:bg-gray-50 rounded-2xl overflow-hidden flex items-center px-6 py-5 min-h-[90px] transition-all duration-200 border border-gray-100 border-l-4 border-l-[#448834] shadow-md hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+        >
+          <img src="/analitik_banner.jpg" alt="" className="absolute w-36 h-36 object-contain shrink-0 opacity-10" style={{ right: -25, bottom: -35 }} />
+          <div className="relative z-10">
+            <p className="text-gray-800 font-bold text-base">Analitik</p>
+            <p className="text-gray-400 text-sm mt-0.5">Ziyaret istatistikleri</p>
+          </div>
+        </Link>
+      </div>
+      </div>
+
+      {/* Hava Durumu & Üretim Tahmini */}
+      {Object.keys(weather).length > 0 && (
+        <div>
+          <p className="text-sm font-semibold text-gray-500 mb-3 flex items-center gap-2">
+            <Zap size={14} className="text-[#448834]" />
+            Proje Lokasyonları — Anlık Hava & Tahmini Üretim
+          </p>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {stats.map((s) => (
-              <div key={s.label} className="bg-white rounded-xl border border-gray-100 p-5 flex items-center gap-4">
-                <div className={`inline-flex shrink-0 ${s.color}`}>
-                  <s.icon size={20} />
+            {Object.entries(weather).map(([city, data]) => {
+              if (!data || data.cod !== 200) return (
+                <div key={city} className="bg-white rounded-2xl border border-gray-100 px-6 py-6 shadow-md">
+                  <p className="text-base font-semibold text-gray-700 truncate">{city}</p>
+                  <p className="text-sm text-gray-300 mt-1">Veri alınamadı</p>
                 </div>
-                <div>
-                  <p className="text-2xl font-bold text-gray-900 leading-none">{s.value}</p>
-                  <p className="text-sm text-gray-400 mt-1">{s.label}</p>
+              )
+              const prod = estimateProduction(data)
+              return (
+                <div key={city} className="bg-white rounded-2xl border border-gray-100 px-6 py-6 shadow-md flex flex-col justify-between h-full">
+                  <div className="flex items-center justify-between">
+                    <p className="text-base font-semibold text-gray-700 truncate">{city}</p>
+                    <img
+                      src={`https://openweathermap.org/img/wn/${data.weather[0]?.icon}@2x.png`}
+                      alt=""
+                      className="w-12 h-12 -my-1"
+                    />
+                  </div>
+                  <p className="text-sm text-gray-400 capitalize -mt-2">{data.weather[0]?.description}</p>
+                  <div className="flex items-center gap-3 text-sm text-gray-500">
+                    <span className="flex items-center gap-1"><Thermometer size={13} /> {Math.round(data.main.temp)}°C</span>
+                    <span className="flex items-center gap-1"><Droplets size={13} /> %{data.main.humidity}</span>
+                    <span className="flex items-center gap-1"><Wind size={13} /> {Math.round(data.wind.speed)} m/s</span>
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-sm mb-1.5">
+                      <span className={`font-medium ${prod.text}`}>{prod.label}</span>
+                      <span className="text-gray-400">~{prod.wPerKwp} W/kWp</span>
+                    </div>
+                    <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div className={`h-full rounded-full transition-all ${prod.color}`} style={{ width: `${prod.rate}%` }} />
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
-
-          {/* Hızlı aksiyonlar */}
-          <div className="grid sm:grid-cols-2 gap-4">
-            <Link
-              to="/admin/projeler/yeni"
-              className="group bg-white hover:bg-green-50/40 border border-gray-100 rounded-xl p-6 flex items-center justify-between transition-colors border-l-4 border-l-[#448834]"
-            >
-              <div>
-                <p className="font-semibold text-base text-gray-800">Yeni Proje Ekle</p>
-                <p className="text-gray-400 text-sm mt-0.5">Fotoğraf ve detaylarla yeni proje oluştur</p>
-              </div>
-              <Plus size={22} className="text-[#448834] opacity-60 group-hover:opacity-100 transition-opacity" />
-            </Link>
-            <Link
-              to="/admin/referanslar/yeni"
-              className="group bg-white hover:bg-yellow-50/40 border border-gray-100 rounded-xl p-6 flex items-center justify-between transition-colors border-l-4 border-l-[#f5ce31]"
-            >
-              <div>
-                <p className="font-semibold text-base text-gray-800">Yeni Referans Ekle</p>
-                <p className="text-gray-400 text-sm mt-0.5">Tamamlanan müşteri projesini kaydet</p>
-              </div>
-              <Plus size={22} className="text-[#f5ce31] opacity-60 group-hover:opacity-100 transition-opacity" />
-            </Link>
-          </div>
-
-          {/* Son içerikler */}
-          <div className="grid lg:grid-cols-2 gap-4">
-
-            {/* Son projeler */}
-            <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-50 flex items-center justify-between">
-                <h3 className="text-base font-semibold text-gray-800">Son Projeler</h3>
-                <Link to="/admin/projeler" className="text-sm text-[#448834] hover:underline flex items-center gap-1">
-                  Tümü <ArrowRight size={13} />
-                </Link>
-              </div>
-              {projects.length === 0 ? (
-                <p className="text-center text-gray-400 py-10">Henüz proje yok</p>
-              ) : (
-                <ul className="divide-y divide-gray-50">
-                  {projects.slice(0, 5).map((p) => (
-                    <li key={p.id} className="px-6 py-4 flex items-center gap-4 hover:bg-gray-50/60 transition-colors">
-                      {coverPhoto(p) ? (
-                        <img src={coverPhoto(p)} alt="" className="w-11 h-11 rounded-lg object-cover shrink-0 bg-gray-100" />
-                      ) : (
-                        <div className="w-11 h-11 rounded-lg bg-gray-100 shrink-0" />
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-800 truncate">{p.name}</p>
-                        <p className="text-xs text-gray-400 mt-0.5">{p.kw} kW</p>
-                      </div>
-                      {p.published
-                        ? <Eye size={14} className="text-green-500 shrink-0" />
-                        : <EyeOff size={14} className="text-gray-300 shrink-0" />
-                      }
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-
-            {/* Son referanslar */}
-            <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-50 flex items-center justify-between">
-                <h3 className="text-base font-semibold text-gray-800">Son Referanslar</h3>
-                <Link to="/admin/referanslar" className="text-sm text-[#448834] hover:underline flex items-center gap-1">
-                  Tümü <ArrowRight size={13} />
-                </Link>
-              </div>
-              {refs.length === 0 ? (
-                <div className="text-center py-10">
-                  <p className="text-gray-400 mb-1">Henüz referans yok</p>
-                  <Link to="/admin/referanslar/yeni" className="text-sm text-[#448834] hover:underline">İlk referansı ekle</Link>
-                </div>
-              ) : (
-                <ul className="divide-y divide-gray-50">
-                  {refs.slice(0, 5).map((r) => (
-                    <li key={r.id} className="px-6 py-4 flex items-center gap-4 hover:bg-gray-50/60 transition-colors">
-                      <div className="w-11 h-11 shrink-0 flex items-center justify-center">
-                        {r.logo
-                          ? <img src={`${API}${r.logo}`} alt={r.name} className="w-full h-full object-contain" />
-                          : <Star size={16} className="text-orange-400" />
-                        }
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-800 truncate">{r.name}</p>
-                      </div>
-                      {r.published
-                        ? <Eye size={14} className="text-green-500 shrink-0" />
-                        : <EyeOff size={14} className="text-gray-300 shrink-0" />
-                      }
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div>
-        </>
+        </div>
       )}
     </main>
+    </div>
   )
 }

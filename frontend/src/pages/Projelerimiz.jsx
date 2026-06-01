@@ -16,10 +16,9 @@ export default function Projelerimiz() {
   }, [])
 
   const totalKw = projects.reduce((sum, p) => sum + Number(p.kw), 0)
-  const categories = new Set(projects.map((p) => p.category)).size
 
   const coverPhoto = (p) => {
-    const sorted = [...(p.media || [])].sort((a, b) => a.sortOrder - b.sortOrder)
+    const sorted = [...(p.media || [])].sort((a, b) => b.sortOrder - a.sortOrder)
     const first = sorted.find((m) => m.type === 'image')
     return first ? mediaUrl(first.src) : null
   }
@@ -42,11 +41,10 @@ export default function Projelerimiz() {
 
       {/* Stats */}
       <section className="bg-gray-50 border-b border-gray-100 py-10">
-        <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 sm:grid-cols-4 divide-x divide-gray-100">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-3 divide-x divide-gray-100">
           {[
             { v: projects.length.toString(), l: 'Tamamlanan Proje' },
             { v: `${Math.round(totalKw * 10) / 10} kW`, l: 'Toplam Kurulu Güç' },
-            { v: categories.toString(), l: 'Farklı Sistem Türü' },
             { v: 'Manisa', l: 'Hizmet Bölgesi' },
           ].map(({ v, l }) => (
             <div key={l} className="text-center px-6 py-4">
@@ -76,14 +74,20 @@ export default function Projelerimiz() {
                     {coverPhoto(p) ? (
                       <img
                         src={coverPhoto(p)}
-                        alt={p.name}
+                        alt={`${p.name} - ${p.location} güneş enerjisi sistemi`}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none'
+                          e.currentTarget.nextElementSibling.style.display = 'flex'
+                        }}
                       />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-300">
-                        <Zap size={32} />
-                      </div>
-                    )}
+                    ) : null}
+                    <div
+                      className="w-full h-full items-center justify-center text-gray-300"
+                      style={{ display: coverPhoto(p) ? 'none' : 'flex' }}
+                    >
+                      <Zap size={32} />
+                    </div>
                   </div>
 
                   <div className="p-5 flex flex-col flex-1">

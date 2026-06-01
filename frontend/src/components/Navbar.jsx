@@ -9,6 +9,8 @@ const navLinks = [
   { label: 'Hizmetler', to: '/hizmetler' },
   { label: 'Projelerimiz', to: '/projelerimiz' },
   { label: 'Referanslar', to: '/referanslar' },
+  { label: 'Blog', to: '/blog' },
+  { label: 'S.S.S.', to: '/sss' },
   { label: 'İletişim', to: '/iletisim' },
 ]
 

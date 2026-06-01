@@ -1,8 +1,17 @@
-import { Body, Controller, Delete, Get, Post, UseGuards } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Patch, Post, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common'
+import { Response } from 'express'
 import { Throttle } from '@nestjs/throttler'
 import { AuthService } from './auth.service'
 import { JwtAuthGuard } from './jwt-auth.guard'
 import { LoginDto } from './dto/login.dto'
+import { ChangeCredentialsDto } from './dto/change-credentials.dto'
+
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'strict' as const,
+  maxAge: 8 * 60 * 60 * 1000, // 8 saat
+}
 
 @Controller('auth')
 export class AuthController {
@@ -10,14 +19,65 @@ export class AuthController {
 
   @Throttle({ default: { ttl: 60000, limit: 5 } })
   @Post('login')
-  login(@Body() dto: LoginDto) {
-    return this.authService.login(dto.username, dto.password)
+  async login(@Body() dto: LoginDto, @Res() res: Response) {
+    const data = await this.authService.login(dto.username, dto.password)
+    if (data.requires2fa) {
+      // Pre-auth flow — token goes in body so frontend can pass it to 2fa/verify
+      return res.json(data)
+    }
+    res.cookie('admin_token', data.access_token, COOKIE_OPTIONS)
+    return res.json({ success: true })
   }
 
   @Throttle({ default: { ttl: 60000, limit: 10 } })
   @Post('2fa/verify')
-  verify2fa(@Body() body: { preAuthToken: string; code: string }) {
-    return this.authService.verify2FA(body.preAuthToken, body.code)
+  async verify2fa(@Body() body: { preAuthToken: string; code: string }, @Res() res: Response) {
+    const data = await this.authService.verify2FA(body.preAuthToken, body.code)
+    res.cookie('admin_token', data.access_token, COOKIE_OPTIONS)
+    return res.json({ success: true })
+  }
+
+  // O-03: Logout endpoint — token'ı blacklist'e alır ve cookie'yi temizler
+  @UseGuards(JwtAuthGuard)
+  @Post('logout')
+  async logout(@Req() req: any, @Res() res: Response) {
+    const jti = req.user?.jti
+    if (!jti) throw new UnauthorizedException('Token kimliği bulunamadı')
+    await this.authService.blacklistToken(jti)
+    res.clearCookie('admin_token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+    })
+    return res.json({ ok: true })
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('me')
+  me(@Req() req: any) {
+    return { ok: true, username: req.user?.username }
+  }
+
+  // Kimlik bilgisi değiştirme — mevcut şifre + 2FA (aktifse) zorunlu, oturum kapatılır
+  @Throttle({ default: { ttl: 60000, limit: 3 } })
+  @UseGuards(JwtAuthGuard)
+  @Patch('credentials')
+  async changeCredentials(@Body() dto: ChangeCredentialsDto, @Req() req: any, @Res() res: Response) {
+    await this.authService.changeCredentials(
+      dto.currentPassword,
+      dto.totpCode,
+      dto.newUsername,
+      dto.newPassword,
+    )
+    // Kimlik bilgisi değişikliği sonrası mevcut oturumu kapat
+    const jti = req.user?.jti
+    if (jti) await this.authService.blacklistToken(jti)
+    res.clearCookie('admin_token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+    })
+    return res.json({ ok: true })
   }
 
   @UseGuards(JwtAuthGuard)

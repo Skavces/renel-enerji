@@ -65,4 +65,11 @@ export class AnalyticsService {
       `/api/websites/${this.websiteId}/metrics?startAt=${startAt}&endAt=${endAt}&type=path&limit=10`,
     )
   }
+
+  async getMetrics(type: string, startAt: number, endAt: number) {
+    if (!this.websiteId) return []
+    return this.fetch(
+      `/api/websites/${this.websiteId}/metrics?startAt=${startAt}&endAt=${endAt}&type=${type}&limit=8`,
+    )
+  }
 }

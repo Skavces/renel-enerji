@@ -21,7 +21,7 @@ import { AdminConfigService } from './admin-config.service'
         if (!secret) throw new Error('JWT_SECRET env değişkeni set edilmeli')
         return {
           secret,
-          signOptions: { expiresIn: cfg.get('JWT_EXPIRES_IN', '7d') },
+          signOptions: { expiresIn: cfg.get('JWT_EXPIRES_IN', '8h') },
         }
       },
     }),

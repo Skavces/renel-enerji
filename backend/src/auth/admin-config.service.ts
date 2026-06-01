@@ -26,4 +26,12 @@ export class AdminConfigService {
   async removeTotpSecret(): Promise<void> {
     await this.repo.upsert({ id: 1, totpSecret: null }, ['id'])
   }
+
+  async setUsername(username: string): Promise<void> {
+    await this.repo.upsert({ id: 1, username }, ['id'])
+  }
+
+  async setPasswordHash(passwordHash: string): Promise<void> {
+    await this.repo.upsert({ id: 1, passwordHash }, ['id'])
+  }
 }

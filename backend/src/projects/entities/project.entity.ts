@@ -28,7 +28,7 @@ export class Project {
   @Column()
   date: string
 
-  @Column()
+  @Column({ nullable: true })
   category: string
 
   @Column('text')

@@ -3,8 +3,9 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 import { AnalyticsService } from './analytics.service'
 
 const ALLOWED_UNITS = new Set(['hour', 'day', 'month', 'year'])
+const ALLOWED_METRICS = new Set(['referrer', 'browser', 'os', 'device', 'country', 'language'])
 
-@Controller('analytics')
+@Controller('dash')
 @UseGuards(JwtAuthGuard)
 export class AnalyticsController {
   constructor(private readonly service: AnalyticsService) {}
@@ -42,5 +43,18 @@ export class AnalyticsController {
   getPages(@Query('startAt') startAt: string, @Query('endAt') endAt: string) {
     const [start, end] = this.parseDateRange(startAt, endAt)
     return this.service.getTopPages(start, end)
+  }
+
+  @Get('metrics')
+  getMetrics(
+    @Query('startAt') startAt: string,
+    @Query('endAt') endAt: string,
+    @Query('type') type: string,
+  ) {
+    const [start, end] = this.parseDateRange(startAt, endAt)
+    if (!type || !ALLOWED_METRICS.has(type)) {
+      throw new BadRequestException(`type must be one of: ${[...ALLOWED_METRICS].join(', ')}`)
+    }
+    return this.service.getMetrics(type, start, end)
   }
 }

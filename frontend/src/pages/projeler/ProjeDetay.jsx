@@ -45,7 +45,7 @@ export default function ProjeDetay() {
     )
   }
 
-  const media = [...(project.media || [])].sort((a, b) => a.sortOrder - b.sortOrder)
+  const media = [...(project.media || [])].sort((a, b) => b.sortOrder - a.sortOrder)
   const item = media[current] || null
 
   const prev = () => setCurrent((i) => (i - 1 + media.length) % media.length)
@@ -78,7 +78,7 @@ export default function ProjeDetay() {
                   </>
                 ) : (
                   <>
-                    <img src={mediaUrl(item.src)} alt={`${project.name} - ${current + 1}`} className="w-full h-full object-cover" />
+                    <img src={mediaUrl(item.src)} alt={`${project.name} - ${project.location} güneş enerjisi sistemi kurulumu`} className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
                       <span className="opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs font-semibold bg-black/40 px-3 py-1 rounded-full">Büyüt</span>
                     </div>
@@ -115,7 +115,7 @@ export default function ProjeDetay() {
                           </div>
                         </>
                       ) : (
-                        <img src={mediaUrl(m.src)} alt="" className="w-full h-full object-cover" />
+                        <img src={mediaUrl(m.src)} alt={`${project.name} kurulum fotoğrafı ${i + 1}`} className="w-full h-full object-cover" />
                       )}
                     </button>
                   ))}

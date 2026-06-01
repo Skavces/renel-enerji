@@ -1,5 +1,7 @@
-import { Link } from 'react-router-dom'
 import { Droplets, Home, Battery, Car, ArrowRight } from 'lucide-react'
+
+const WA_NUMBER = '905543796004'
+const waLink = (msg) => `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`
 
 const services = [
   {
@@ -12,6 +14,7 @@ const services = [
     iconColor: 'text-blue-600',
     photo: '/tarimsal-sulama-sistemleri-gunes-enerjisi.webp',
     ring: 'ring-2 ring-[#448834]/30',
+    waMessage: 'Merhaba, tarımsal sulama GES sistemi hakkında teklif almak istiyorum. Arazim için güneş enerjili sulama sistemi kurulumu hakkında bilgi verir misiniz?',
   },
   {
     icon: Home,
@@ -23,6 +26,7 @@ const services = [
     iconColor: 'text-[#448834]',
     photo: '/arazi-cati-tipi-ges.webp',
     highlight: true,
+    waMessage: 'Merhaba, arazi/çatı tipi GES kurulumu için teklif almak istiyorum. Kurulum yeri ve kapasite hakkında bilgi almak istiyorum.',
   },
   {
     icon: Battery,
@@ -34,6 +38,7 @@ const services = [
     iconColor: 'text-amber-600',
     photo: '/bag-evi-ges.webp',
     ring: 'ring-2 ring-[#448834]/30',
+    waMessage: 'Merhaba, bağ evi / off-grid GES sistemi için teklif almak istiyorum. Bataryalı güneş enerjisi sistemi hakkında bilgi alabilir miyim?',
   },
   {
     icon: Car,
@@ -45,6 +50,7 @@ const services = [
     iconColor: 'text-purple-600',
     photo: '/elektrikli-arac-sarj-istasyonu.webp',
     ring: 'ring-2 ring-[#448834]/30',
+    waMessage: 'Merhaba, elektrikli araç şarj istasyonu kurulumu için teklif almak istiyorum. Güneş enerjili EV şarj sistemi hakkında bilgi alabilir miyim?',
   },
 ]
 
@@ -78,12 +84,6 @@ export default function Services() {
                 key={s.title}
                 className={`relative rounded-2xl border border-gray-100 overflow-hidden flex flex-col hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group ${s.highlight ? 'ring-2 ring-[#448834]/30' : s.ring || ''}`}
               >
-                {s.highlight && (
-                  <div className="absolute top-3 left-3 z-10">
-                    <span className="bg-[#448834] text-white text-xs font-bold px-3 py-1 rounded-full">Popüler</span>
-                  </div>
-                )}
-
                 {/* Photo */}
                 <div className="h-36 overflow-hidden">
                   <img
@@ -111,13 +111,15 @@ export default function Services() {
                     ))}
                   </ul>
 
-                  <Link
-                    to="/iletisim"
+                  <a
+                    href={waLink(s.waMessage)}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 text-[#448834] font-semibold text-sm group-hover:gap-3 transition-all"
                   >
                     Teklif Al
                     <ArrowRight size={15} />
-                  </Link>
+                  </a>
                 </div>
               </div>
             )
