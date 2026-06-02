@@ -36,25 +36,25 @@ export default function Hero() {
       </div>
 
       {/* Content */}
-      <div className="relative max-w-7xl mx-auto px-6 pt-[100px] sm:pt-[132px] lg:pt-[164px] pb-24 w-full flex items-center justify-between gap-12">
+      <div className="relative max-w-7xl mx-auto px-6 pt-[100px] sm:pt-[132px] lg:pt-[164px] pb-24 w-full flex items-center justify-between gap-8 xl:gap-12">
 
         {/* Left — text */}
-        <div className="max-w-xl shrink-0">
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-white leading-[1.05] mb-6 drop-shadow-[0_1px_3px_rgba(0,0,0,0.3)]">
+        <div className="w-full max-w-xl min-w-0">
+          <h1 className="text-4xl sm:text-5xl lg:text-5xl xl:text-7xl font-bold text-white leading-[1.05] mb-5 sm:mb-6 drop-shadow-[0_1px_3px_rgba(0,0,0,0.3)]">
             Şebekeden<br />
             <span className="text-[#f5ce31]">Güneşe,</span><br />
             Gücün Her<br />
             <span className="text-[#f5ce31]">Noktasında.</span>
           </h1>
 
-          <p className="text-white/75 text-lg leading-relaxed mb-10 max-w-lg drop-shadow-[0_1px_2px_rgba(0,0,0,0.25)]">
+          <p className="text-white/75 text-base sm:text-lg leading-relaxed mb-8 sm:mb-10 max-w-lg drop-shadow-[0_1px_2px_rgba(0,0,0,0.25)]">
             Tarımsal sulamadan çatı tipi sistemlere, depolamalı kurulumlardan EV şarj istasyonlarına kadar
             güneş enerjisinde tam kapsamlı mühendislik hizmeti.
           </p>
 
           <Link
             to="/projelerimiz"
-            className="inline-flex items-center gap-2 bg-[#448834] hover:bg-[#357228] text-white font-bold px-7 py-3.5 rounded-xl transition-colors shadow-lg shadow-black/30"
+            className="inline-flex items-center gap-2 bg-[#448834] hover:bg-[#357228] text-white font-bold px-6 sm:px-7 py-3 sm:py-3.5 rounded-xl transition-colors shadow-lg shadow-black/30"
           >
             Projelerimizi Gör
             <ArrowRight size={17} />
@@ -63,7 +63,7 @@ export default function Hero() {
 
         {/* Right — auto-rotating project card */}
         {projects.length > 0 && project && (
-          <div className="hidden lg:block shrink-0 w-[400px] border-2 border-[#f5ce31]/60 rounded-3xl p-3">
+          <div className="hidden lg:block shrink-0 w-[300px] xl:w-[400px] border-2 border-[#f5ce31]/60 rounded-3xl p-3">
             <p className="text-white/80 text-sm font-semibold mb-3">
               Son Projeler
             </p>
