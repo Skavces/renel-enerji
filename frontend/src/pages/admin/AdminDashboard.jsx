@@ -98,13 +98,13 @@ export default function AdminDashboard() {
   return (
     <div>
       {/* Hero Banner — tam genişlik */}
-      <div className="relative overflow-hidden w-full flex items-center justify-center py-8"
+      <div className="relative overflow-hidden w-full flex items-center justify-center py-6 sm:py-8"
         style={{ backgroundImage: 'url(/adminbanner.webp)', backgroundSize: 'cover', backgroundPosition: 'center 85%' }}>
         <div className="absolute inset-0 bg-black/45" />
         <div className="relative z-10 text-center">
-          <p className="text-white/70 text-lg mb-2 drop-shadow-md tracking-widest uppercase">Yönetim Paneli</p>
-          <h1 className="text-white text-6xl font-bold drop-shadow-lg">Hoş geldiniz</h1>
-          <p className="text-white/60 text-xl mt-3 drop-shadow-md">RenEl Enerji Mühendislik</p>
+          <p className="text-white/70 text-sm sm:text-lg mb-2 drop-shadow-md tracking-widest uppercase">Yönetim Paneli</p>
+          <h1 className="text-white text-4xl sm:text-6xl font-bold drop-shadow-lg">Hoş geldiniz</h1>
+          <p className="text-white/60 text-base sm:text-xl mt-3 drop-shadow-md">RenEl Enerji Mühendislik</p>
         </div>
       </div>
 
@@ -116,9 +116,9 @@ export default function AdminDashboard() {
           <FolderOpen size={14} className="text-[#448834]" />
           Genel İstatistikler
         </p>
-      <div className="relative bg-white rounded-2xl border border-gray-100 shadow-md overflow-hidden flex items-center">
+      <div className="relative bg-white rounded-2xl border border-gray-100 shadow-md overflow-hidden flex flex-col sm:flex-row">
         <img src="/statsbanner.webp" alt="" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[25%] w-full h-auto opacity-10 pointer-events-none" />
-        <div className="relative flex-1 px-7 py-6 overflow-hidden">
+        <div className="relative flex-1 px-6 sm:px-7 py-5 sm:py-6 overflow-hidden border-b sm:border-b-0 sm:border-r border-gray-100">
           <div className="relative z-10">
             <p className="text-5xl font-bold text-[#448834] font-['Rajdhani'] drop-shadow-sm">{projects.length}</p>
             <p className="text-base text-gray-400 mt-0.5 drop-shadow-sm">Toplam Proje</p>
@@ -128,9 +128,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <div className="w-0.5 bg-gray-400 self-stretch my-4 rounded-full" />
-
-        <div className="relative flex-1 px-7 py-6 overflow-hidden">
+        <div className="relative flex-1 px-6 sm:px-7 py-5 sm:py-6 overflow-hidden border-b sm:border-b-0 sm:border-r border-gray-100">
           <div className="relative z-10">
             <p className="text-5xl font-bold text-[#448834] font-['Rajdhani'] drop-shadow-sm">{refs.length}</p>
             <p className="text-base text-gray-400 mt-0.5 drop-shadow-sm">Toplam Referans</p>
@@ -140,9 +138,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <div className="w-0.5 bg-gray-400 self-stretch my-4 rounded-full" />
-
-        <div className="relative flex-1 px-7 py-6 overflow-hidden">
+        <div className="relative flex-1 px-6 sm:px-7 py-5 sm:py-6 overflow-hidden">
           <div className="relative z-10">
             <p className="text-5xl font-bold text-[#448834] font-['Rajdhani'] drop-shadow-sm">
               {totalKwStr} <span className="text-base font-semibold text-gray-400">kW</span>
@@ -160,7 +156,7 @@ export default function AdminDashboard() {
           <Zap size={14} className="text-[#448834]" />
           Hızlı İşlemler
         </p>
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Link
           to="/admin/projeler/yeni"
           className="group relative bg-white hover:bg-gray-50 rounded-2xl overflow-hidden flex items-center px-6 py-5 min-h-[90px] transition-all duration-200 border border-gray-100 border-l-4 border-l-[#448834] shadow-md hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"

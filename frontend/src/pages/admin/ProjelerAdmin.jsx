@@ -189,6 +189,7 @@ export default function ProjelerAdmin() {
           </div>
         ) : (
           <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+            <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-100 text-xs text-gray-400 uppercase tracking-wide">
@@ -216,6 +217,7 @@ export default function ProjelerAdmin() {
                 </SortableContext>
               </DndContext>
             </table>
+            </div>
           </div>
         )}
     </main>

@@ -136,12 +136,12 @@ export default function Analitik() {
     <main className="max-w-6xl mx-auto px-6 py-8">
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Analitik</h2>
           <p className="text-sm text-gray-400 mt-1">Site ziyaretçi istatistikleri</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <div className="flex bg-gray-100 rounded-xl p-1 gap-0.5">
             {RANGES.map((r, i) => (
               <button
