@@ -48,7 +48,7 @@ export default function AdminLayout() {
         <div className="max-w-6xl mx-auto flex items-center h-16 lg:h-24 px-4 lg:px-6 gap-4 lg:gap-8">
           {/* Logo */}
           <Link to="/admin" className="shrink-0">
-            <Logo className="h-11 lg:h-20 w-auto" />
+            <Logo className="h-14 lg:h-20 w-auto" />
           </Link>
 
           {/* Nav links — desktop only */}
