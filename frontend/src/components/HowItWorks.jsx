@@ -70,7 +70,9 @@ export default function HowItWorks() {
         </div>
 
       </div>
-      <div className="absolute bottom-0 left-0 right-0 h-1 animate-[shimmer_12s_linear_infinite]" style={{background: 'linear-gradient(90deg, #448834, #f5ce31, #448834, #f5ce31, #448834)', backgroundSize: '200% auto'}} />
+      <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#448834] overflow-hidden">
+        <div className="absolute inset-0 w-1/4 animate-[shimmer_12s_linear_infinite]" style={{background: 'linear-gradient(90deg, transparent, #f5ce31, transparent)'}} />
+      </div>
     </section>
   )
 }

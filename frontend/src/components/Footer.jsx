@@ -11,7 +11,7 @@ export default function Footer() {
           {/* Brand */}
           <div className="lg:col-span-2">
             <div className="mb-4 -ml-3">
-              <img src="/renel-enerji.svg" alt="RenEl Enerji Mühendislik" className="h-20 w-auto brightness-0 invert" loading="lazy" />
+              <img src="/renel-enerji.svg" alt="RenEl Enerji Mühendislik" className="h-20 w-auto brightness-0 invert" width="220" height="80" loading="lazy" />
             </div>
             <p className="text-[#f5ce31] font-semibold italic mb-3">"Şebekeden Güneşe, Gücün Her Noktasında."</p>
             <p className="text-sm leading-relaxed max-w-sm mb-6">
