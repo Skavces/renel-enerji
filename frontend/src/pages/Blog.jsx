@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Calendar, ArrowRight } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
+import SEO from '../components/SEO'
 
 const API = import.meta.env.VITE_API_URL || ''
 
@@ -22,6 +23,10 @@ export default function Blog() {
 
   return (
     <>
+      <SEO
+        title="Blog"
+        description="Güneş enerjisi, GES kurulumu, tarımsal sulama sistemleri ve yenilenebilir enerji hakkında bilgi, haber ve makaleler. RenEL Enerji Mühendislik blogu."
+      />
       <PageHeader title="Blog" />
 
       <section className="bg-gray-50 border-b border-gray-100 pt-20 pb-12">

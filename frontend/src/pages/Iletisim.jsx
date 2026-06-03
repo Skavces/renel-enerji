@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Phone, Mail, MapPin, Send, Clock } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
+import SEO from '../components/SEO'
 
 const services = [
   'Akıllı Tarımsal Sulama GES',
@@ -34,6 +35,10 @@ export default function Iletisim() {
 
   return (
     <>
+      <SEO
+        title="İletişim"
+        description="RenEL Enerji Mühendislik ile iletişime geçin. Güneş enerjisi sistemi teklifi, proje danışmanlığı ve kurulum için Soma/Manisa ofisimizi arayın veya yazın."
+      />
       <PageHeader title="İletişim" />
 
       {/* Main section */}

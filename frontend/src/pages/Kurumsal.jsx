@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { CheckCircle, Award, Wrench, HeartHandshake, Leaf, BarChart3, ArrowRight, Phone } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
+import SEO from '../components/SEO'
 
 const values = [
   {
@@ -53,6 +54,10 @@ const collagePhotos = [
 export default function Kurumsal() {
   return (
     <>
+      <SEO
+        title="Kurumsal"
+        description="RenEL Enerji Mühendislik hakkında. Elektrik-Elektronik Mühendisi liderliğinde, Soma/Manisa'da anahtar teslim güneş enerjisi çözümleri sunan mühendislik firması."
+      />
       <PageHeader title="Kurumsal" />
 
       {/* Hero split: photo collage left, content right */}

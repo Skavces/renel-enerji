@@ -1,5 +1,5 @@
 import { NestFactory } from '@nestjs/core'
-import { ValidationPipe } from '@nestjs/common'
+import { ValidationPipe, RequestMethod } from '@nestjs/common'
 import { NestExpressApplication } from '@nestjs/platform-express'
 import { join } from 'path'
 import helmet from 'helmet'
@@ -25,7 +25,9 @@ async function bootstrap() {
   })
 
   app.useStaticAssets(join(__dirname, '..', 'uploads'), { prefix: '/uploads' })
-  app.setGlobalPrefix('api')
+  app.setGlobalPrefix('api', {
+    exclude: [{ path: 'sitemap.xml', method: RequestMethod.GET }],
+  })
 
   const port = process.env.PORT || 3001
   await app.listen(port)

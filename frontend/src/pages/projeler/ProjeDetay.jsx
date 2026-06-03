@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, CheckCircle2, X, Play, Zap } from 'lucide-react'
 import PageHeader from '../../components/PageHeader'
 import { fetchProjectBySlug, mediaUrl } from '../../api/projects'
+import SEO from '../../components/SEO'
 
 export default function ProjeDetay() {
   const { slug } = useParams()
@@ -53,8 +54,22 @@ export default function ProjeDetay() {
   const lightboxPrev = (e) => { e.stopPropagation(); setLightbox((i) => (i - 1 + media.length) % media.length) }
   const lightboxNext = (e) => { e.stopPropagation(); setLightbox((i) => (i + 1) % media.length) }
 
+  const coverImg = item?.type === 'image' ? `https://renelenerji.com${mediaUrl(item.url)}` : undefined
+  const projectDesc = [
+    project.location && `${project.location}'da`,
+    project.kw && `${project.kw} kWp`,
+    project.type,
+    'güneş enerjisi projesi.',
+    project.description,
+  ].filter(Boolean).join(' ')
+
   return (
     <>
+      <SEO
+        title={project.name}
+        description={projectDesc.slice(0, 160)}
+        image={coverImg}
+      />
       <PageHeader title={project.name} parent={{ label: 'Projelerimiz', to: '/projelerimiz' }} />
 
       <section className="py-16 bg-gray-50">

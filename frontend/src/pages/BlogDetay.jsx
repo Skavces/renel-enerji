@@ -3,6 +3,7 @@ import { Link, useParams, useNavigate } from 'react-router-dom'
 import { Calendar, ArrowLeft } from 'lucide-react'
 import DOMPurify from 'dompurify'
 import PageHeader from '../components/PageHeader'
+import SEO from '../components/SEO'
 
 const API = import.meta.env.VITE_API_URL || ''
 
@@ -36,8 +37,40 @@ export default function BlogDetay() {
   const formatDate = (dateStr) =>
     new Date(dateStr).toLocaleDateString('tr-TR', { day: '2-digit', month: 'long', year: 'numeric' })
 
+  const API_URL = import.meta.env.VITE_API_URL || ''
+  const absoluteImage = post.coverImage
+    ? `https://renelenerji.com${post.coverImage}`
+    : undefined
+
+  const blogSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: post.title,
+    description: post.excerpt || post.title,
+    image: absoluteImage,
+    datePublished: post.publishedAt || post.createdAt,
+    dateModified: post.updatedAt || post.publishedAt || post.createdAt,
+    author: {
+      '@type': 'Organization',
+      name: 'RenEL Enerji Mühendislik',
+      url: 'https://renelenerji.com',
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'RenEL Enerji Mühendislik',
+      logo: { '@type': 'ImageObject', url: 'https://renelenerji.com/renel-logo.svg' },
+    },
+  }
+
   return (
     <>
+      <SEO
+        title={post.title}
+        description={post.excerpt || post.title}
+        image={absoluteImage}
+        type="article"
+        jsonLd={blogSchema}
+      />
       <PageHeader title={post.title} parent={{ to: '/blog', label: 'Blog' }} />
 
       <article className="max-w-3xl mx-auto px-6 py-16">

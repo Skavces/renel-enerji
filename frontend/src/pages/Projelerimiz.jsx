@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { ArrowRight, MapPin, Zap, Calendar } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
 import { fetchProjects, mediaUrl } from '../api/projects'
+import SEO from '../components/SEO'
 
 export default function Projelerimiz() {
   const [projects, setProjects] = useState([])
@@ -25,6 +26,10 @@ export default function Projelerimiz() {
 
   return (
     <>
+      <SEO
+        title="Projelerimiz"
+        description="RenEL Enerji'nin tamamladığı güneş enerjisi projeleri. Tarımsal sulama GES, off-grid çözümler, çatı tipi GES ve hibrit sistemler — Soma, Manisa ve çevre illerde."
+      />
       <PageHeader title="Projelerimiz" />
 
       {/* Intro */}

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ChevronDown, ArrowRight } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
+import SEO from '../components/SEO'
 
 const API = import.meta.env.VITE_API_URL || ''
 
@@ -42,8 +43,25 @@ export default function SSS() {
 
   const toggle = (id) => setOpenId((prev) => (prev === id ? null : id))
 
+  const faqSchema = faqs.length > 0
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: faqs.map((f) => ({
+          '@type': 'Question',
+          name: f.question,
+          acceptedAnswer: { '@type': 'Answer', text: f.answer },
+        })),
+      }
+    : null
+
   return (
     <>
+      <SEO
+        title="Sık Sorulan Sorular"
+        description="Güneş enerjisi, GES kurulumu, maliyet, süreç ve teşvik hakkında sık sorulan sorular. RenEL Enerji Mühendislik uzmanlarından doğrudan cevaplar."
+        jsonLd={faqSchema}
+      />
       <PageHeader title="Sık Sorulan Sorular" />
 
       <section className="bg-gray-50 border-b border-gray-100 pt-20 pb-12">

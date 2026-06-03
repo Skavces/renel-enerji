@@ -1,5 +1,6 @@
 import { Droplets, Home, Battery, Car, ArrowRight, CheckCircle } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
+import SEO from '../components/SEO'
 
 const WA_NUMBER = '905543796004'
 
@@ -100,6 +101,10 @@ const services = [
 export default function Hizmetler() {
   return (
     <>
+      <SEO
+        title="Hizmetler"
+        description="Güneş enerjisi hizmetlerimiz: tarımsal sulama GES, çatı ve arazi tipi GES, bağ evi depolamalı GES, elektrikli araç şarj istasyonu kurulum ve mühendislik danışmanlığı."
+      />
       <PageHeader title="Hizmetler" />
 
       {/* Intro bar */}
