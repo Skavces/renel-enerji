@@ -29,6 +29,8 @@ export default function Hero() {
           src="/hero.webp"
           alt="Güneş enerjisi"
           className="w-full h-full object-cover animate-[kenburns_18s_ease-in-out_infinite_alternate]"
+          width="1440"
+          height="810"
           fetchpriority="high"
           decoding="async"
         />
