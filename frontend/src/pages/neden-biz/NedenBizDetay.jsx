@@ -144,12 +144,36 @@ export default function NedenBizDetay() {
         parent={{ to: '/kurumsal', label: 'Neden Biz?' }}
       />
 
-      <section className="py-14 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-6">
+      {/* Mobile: yatay chip navigasyon */}
+      <div className="lg:hidden bg-white border-b border-gray-100 sticky top-16 z-30">
+        <div className="flex gap-2 overflow-x-auto px-4 py-3 scrollbar-none">
+          {pages.map((p) => {
+            const PIcon = p.icon
+            const active = p.slug === slug
+            return (
+              <Link
+                key={p.slug}
+                to={`/neden-biz/${p.slug}`}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap shrink-0 transition-colors ${
+                  active
+                    ? 'bg-[#448834] text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                <PIcon size={12} />
+                {p.title}
+              </Link>
+            )
+          })}
+        </div>
+      </div>
+
+      <section className="py-8 lg:py-14 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex gap-7 items-start">
 
-            {/* Sidebar */}
-            <aside className="w-64 shrink-0 sticky top-24">
+            {/* Sidebar — sadece desktop */}
+            <aside className="hidden lg:block w-64 shrink-0 sticky top-24">
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                 <div className="bg-[#448834] px-5 py-4">
                   <p className="text-white font-bold text-sm">Neden RenEl?</p>
@@ -196,32 +220,32 @@ export default function NedenBizDetay() {
             <div className="flex-1 min-w-0">
 
               {/* Hero image */}
-              <div className="relative rounded-2xl overflow-hidden h-72 sm:h-96 mb-8 shadow-md">
+              <div className="relative rounded-2xl overflow-hidden h-56 sm:h-72 lg:h-96 mb-6 shadow-md">
                 <img
                   src={page.photo}
                   alt={page.title}
                   className="w-full h-full object-cover" loading="lazy" />
                 <div className="absolute inset-0 bg-linear-to-t from-black/65 via-black/15 to-transparent" />
-                <div className="absolute bottom-0 left-0 p-7">
+                <div className="absolute bottom-0 left-0 p-5 sm:p-7">
                   <span className="inline-flex items-center gap-1.5 bg-[#448834] text-white text-xs font-bold px-3 py-1 rounded-full mb-3">
                     <Icon size={11} />
                     NEDEN RenEl?
                   </span>
-                  <h1 className="text-2xl sm:text-3xl font-bold text-white leading-tight">{page.subtitle}</h1>
+                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white leading-tight">{page.subtitle}</h1>
                 </div>
               </div>
 
               {/* Text content */}
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 mb-6">
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-8 mb-4 sm:mb-6">
                 <p className="text-[#448834] font-semibold text-xs uppercase tracking-widest mb-3">RenEl Enerji Mühendislik</p>
-                <h2 className="text-2xl font-bold text-gray-900 mb-5">{page.title}</h2>
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-5">{page.title}</h2>
                 <p className="text-gray-600 leading-relaxed mb-4">{page.description}</p>
                 <p className="text-gray-600 leading-relaxed">{page.description2}</p>
               </div>
 
               {/* Features */}
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 mb-6">
-                <h3 className="font-bold text-gray-900 text-base mb-5">Öne Çıkan Özellikler</h3>
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-8 mb-4 sm:mb-6">
+                <h3 className="font-bold text-gray-900 text-base mb-4 sm:mb-5">Öne Çıkan Özellikler</h3>
                 <div className="grid sm:grid-cols-2 gap-3">
                   {page.features.map((f) => (
                     <div key={f} className="flex items-start gap-3">
@@ -230,6 +254,20 @@ export default function NedenBizDetay() {
                     </div>
                   ))}
                 </div>
+              </div>
+
+              {/* Mobile CTA */}
+              <div className="lg:hidden bg-[#448834] rounded-2xl p-5 text-center mb-6">
+                <p className="text-white font-bold text-sm mb-1">Ücretsiz Keşif</p>
+                <p className="text-white/75 text-xs mb-4 leading-relaxed">Projeniz için saha analizi ve fizibilite ücretsizdir.</p>
+                <a
+                  href={waLink(page.waMessage)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block bg-white text-[#448834] font-bold text-sm px-4 py-2.5 rounded-xl hover:bg-gray-50 transition-colors"
+                >
+                  Teklif Al
+                </a>
               </div>
 
             </div>
