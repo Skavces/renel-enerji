@@ -35,7 +35,7 @@ export default function LogoMarquee() {
               <img
                 src={`${API}${r.logo}`}
                 alt={r.name}
-                className="h-20 w-auto max-w-[160px] object-contain grayscale hover:grayscale-0 opacity-70 hover:opacity-100 transition-all duration-300"
+                className="h-28 w-auto max-w-[200px] object-contain grayscale hover:grayscale-0 opacity-75 hover:opacity-100 transition-all duration-300"
                 loading="lazy"
               />
             ) : (
