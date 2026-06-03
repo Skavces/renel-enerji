@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { useParams, Link, Navigate } from 'react-router-dom'
 import { Award, Wrench, Leaf, BarChart3, HeartHandshake, CheckCircle, ChevronRight } from 'lucide-react'
 import PageHeader from '../../components/PageHeader'
@@ -136,6 +137,11 @@ export default function NedenBizDetay() {
   if (!page) return <Navigate to="/" replace />
 
   const Icon = page.icon
+  const activeChipRef = useRef(null)
+
+  useEffect(() => {
+    activeChipRef.current?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' })
+  }, [slug])
 
   return (
     <>
@@ -153,6 +159,7 @@ export default function NedenBizDetay() {
             return (
               <Link
                 key={p.slug}
+                ref={active ? activeChipRef : null}
                 to={`/neden-biz/${p.slug}`}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap shrink-0 transition-colors ${
                   active
@@ -226,7 +233,7 @@ export default function NedenBizDetay() {
                   alt={page.title}
                   className="w-full h-full object-cover" loading="lazy" />
                 <div className="absolute inset-0 bg-linear-to-t from-black/65 via-black/15 to-transparent" />
-                <div className="absolute bottom-0 left-0 p-5 sm:p-7">
+                <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-7">
                   <span className="inline-flex items-center gap-1.5 bg-[#448834] text-white text-xs font-bold px-3 py-1 rounded-full mb-3">
                     <Icon size={11} />
                     NEDEN RenEl?
