@@ -145,7 +145,7 @@ export default function NedenBizDetay() {
       />
 
       {/* Mobile: yatay chip navigasyon */}
-      <div className="lg:hidden bg-white border-b border-gray-100 sticky top-16 z-30">
+      <div className="lg:hidden bg-white border-b border-gray-100 sticky top-24 z-40">
         <div className="flex gap-2 overflow-x-auto px-4 py-3 scrollbar-none">
           {pages.map((p) => {
             const PIcon = p.icon
