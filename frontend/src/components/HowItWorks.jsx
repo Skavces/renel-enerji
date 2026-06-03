@@ -36,7 +36,7 @@ export default function HowItWorks() {
 
       <div className="relative max-w-7xl mx-auto px-6">
         <div className="text-center mb-16">
-          <span className="inline-block text-[#448834] font-semibold text-base mb-4">
+          <span className="inline-block text-[#357228] font-semibold text-base mb-4">
             NASIL ÇALIŞIRIZ
           </span>
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
@@ -59,7 +59,7 @@ export default function HowItWorks() {
                 <div className="aspect-square overflow-hidden rounded-xl">
                   <img src={s.img} alt={s.title} className="w-full h-full object-cover" loading="lazy" />
                 </div>
-                <div className="absolute top-0 left-0 w-12 h-12 rounded-full bg-[#448834] flex items-center justify-center shadow-md z-10">
+                <div className="absolute top-0 left-0 w-12 h-12 rounded-full bg-[#357228] flex items-center justify-center shadow-md z-10">
                   <span className="text-white font-bold text-base font-['Rajdhani']">{s.num}</span>
                 </div>
               </div>

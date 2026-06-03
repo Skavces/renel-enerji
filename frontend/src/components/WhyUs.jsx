@@ -31,7 +31,7 @@ export default function WhyUs() {
 
           {/* Header — sadece desktop'ta grid içinde */}
           <div className="hidden lg:flex flex-col justify-center py-4 pr-4 text-center">
-            <span className="block text-[#448834] font-semibold text-sm mb-3">NEDEN RenEl?</span>
+            <span className="block text-[#357228] font-semibold text-sm mb-3">NEDEN RenEl?</span>
             <h2 className="text-2xl font-bold text-gray-900 leading-tight mb-3">
               Güneş Enerjisinde Güvenilir Ortağınız
             </h2>
@@ -46,9 +46,9 @@ export default function WhyUs() {
             return (
               <div key={title} className="bg-white rounded-2xl border border-gray-100 border-b-4 border-b-transparent hover:border-b-[#448834] p-7 flex flex-col gap-3 shadow-sm hover:shadow-lg hover:-translate-y-2 transition-all duration-300">
                 <Icon size={28} className="text-[#448834]" />
-                <h4 className="font-bold text-gray-900 text-lg">{title}</h4>
+                <h3 className="font-bold text-gray-900 text-lg">{title}</h3>
                 <p className="text-gray-500 text-base leading-relaxed flex-1">{desc}</p>
-                <Link to={`/neden-biz/${slug}`} className="text-[#448834] text-sm font-semibold flex items-center gap-1 hover:gap-2 transition-all w-fit">
+                <Link to={`/neden-biz/${slug}`} className="text-[#357228] text-sm font-semibold flex items-center gap-1 hover:gap-2 transition-all w-fit">
                   Detaylı Bilgi <span>›</span>
                 </Link>
               </div>

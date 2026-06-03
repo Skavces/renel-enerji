@@ -174,7 +174,7 @@ export default function Stats() {
                 )}
                 <Counter value={value} suffix={suffix} />
                 <p className="text-gray-800 font-bold mt-1 text-sm">{label}</p>
-                <p className="text-gray-400 text-xs">{sub}</p>
+                <p className="text-gray-500 text-xs">{sub}</p>
               </div>
             ))}
           </div>

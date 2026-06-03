@@ -64,7 +64,7 @@ export default function Services() {
       <div className="max-w-[1400px] mx-auto px-6">
         {/* Header */}
         <div className="text-center mb-16">
-          <span className="inline-block text-[#448834] font-semibold text-base mb-4">
+          <span className="inline-block text-[#357228] font-semibold text-base mb-4">
             HİZMETLERİMİZ
           </span>
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
@@ -114,7 +114,8 @@ export default function Services() {
                     href={waLink(s.waMessage)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-[#448834] font-semibold text-sm group-hover:gap-3 transition-all"
+                    aria-label={`${s.title} için teklif al`}
+                    className="inline-flex items-center gap-1.5 text-[#357228] font-semibold text-sm group-hover:gap-3 transition-all"
                   >
                     Teklif Al
                     <ArrowRight size={15} />
