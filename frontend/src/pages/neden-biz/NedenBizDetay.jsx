@@ -135,9 +135,13 @@ export default function NedenBizDetay() {
   const page = pages.find((p) => p.slug === slug)
 
   const activeChipRef = useRef(null)
+  const chipContainerRef = useRef(null)
 
   useEffect(() => {
-    activeChipRef.current?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' })
+    const container = chipContainerRef.current
+    const chip = activeChipRef.current
+    if (!container || !chip) return
+    container.scrollLeft = chip.offsetLeft - container.offsetWidth / 2 + chip.offsetWidth / 2
   }, [slug])
 
   if (!page) return <Navigate to="/" replace />
@@ -153,7 +157,7 @@ export default function NedenBizDetay() {
 
       {/* Mobile: yatay chip navigasyon */}
       <div className="lg:hidden bg-white border-b border-gray-100 sticky top-24 z-40">
-        <div className="flex gap-2 overflow-x-auto px-4 py-3 scrollbar-none">
+        <div ref={chipContainerRef} className="flex gap-2 overflow-x-auto px-4 py-3 scrollbar-none">
           {pages.map((p) => {
             const PIcon = p.icon
             const active = p.slug === slug
