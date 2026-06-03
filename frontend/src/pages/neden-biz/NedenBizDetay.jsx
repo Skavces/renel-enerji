@@ -134,14 +134,15 @@ export default function NedenBizDetay() {
   const { slug } = useParams()
   const page = pages.find((p) => p.slug === slug)
 
-  if (!page) return <Navigate to="/" replace />
-
-  const Icon = page.icon
   const activeChipRef = useRef(null)
 
   useEffect(() => {
     activeChipRef.current?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' })
   }, [slug])
+
+  if (!page) return <Navigate to="/" replace />
+
+  const Icon = page.icon
 
   return (
     <>
