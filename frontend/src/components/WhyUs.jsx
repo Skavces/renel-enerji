@@ -18,7 +18,7 @@ export default function WhyUs() {
       <div className="relative z-10 max-w-7xl mx-auto px-6">
         {/* Header */}
         <div className="text-center mb-10 lg:hidden">
-          <span className="block text-[#448834] font-semibold text-sm mb-3">NEDEN RenEl?</span>
+          <span className="block text-[#357228] font-semibold text-sm mb-3">NEDEN RenEl?</span>
           <h2 className="text-2xl font-bold text-gray-900 leading-tight mb-3">
             Güneş Enerjisinde Güvenilir Ortağınız
           </h2>
@@ -44,8 +44,8 @@ export default function WhyUs() {
           {reasons.map(({ icon, title, slug, desc }) => {
             const Icon = icon
             return (
-              <div key={title} className="bg-white rounded-2xl border border-gray-100 border-b-4 border-b-transparent hover:border-b-[#448834] p-7 flex flex-col gap-3 shadow-sm hover:shadow-lg hover:-translate-y-2 transition-all duration-300">
-                <Icon size={28} className="text-[#448834]" />
+              <div key={title} className="bg-white rounded-2xl border border-gray-100 border-b-4 border-b-transparent hover:border-b-[#357228] p-7 flex flex-col gap-3 shadow-sm hover:shadow-lg hover:-translate-y-2 transition-all duration-300">
+                <Icon size={28} className="text-[#357228]" />
                 <h3 className="font-bold text-gray-900 text-lg">{title}</h3>
                 <p className="text-gray-500 text-base leading-relaxed flex-1">{desc}</p>
                 <Link to={`/neden-biz/${slug}`} className="text-[#357228] text-sm font-semibold flex items-center gap-1 hover:gap-2 transition-all w-fit">
@@ -61,7 +61,7 @@ export default function WhyUs() {
               Projenizi Birlikte Hayata Geçirelim
             </h3>
             <p className="text-gray-500 text-base">Size özel çözüm için bizimle iletişime geçin.</p>
-            <Link to="/iletisim" className="inline-flex items-center justify-center bg-[#448834] text-white font-semibold text-sm px-5 py-2.5 rounded-full hover:bg-[#357228] transition-colors">
+            <Link to="/iletisim" className="inline-flex items-center justify-center bg-[#357228] text-white font-semibold text-sm px-5 py-2.5 rounded-full hover:bg-[#2d6124] transition-colors">
               Teklif Al
             </Link>
           </div>

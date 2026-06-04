@@ -44,7 +44,7 @@ export default function WhatsAppWidget() {
         >
 
           {/* Header — WhatsApp koyu yeşil */}
-          <div className="px-4 py-3 flex items-center justify-between" style={{background: '#1a9e50'}}>
+          <div className="px-4 py-3 flex items-center justify-between" style={{background: '#1a7a3a'}}>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shrink-0 overflow-hidden p-1">
                 <img src="/renel-logo.svg" alt="RenEl Logo" className="w-full h-full object-contain" loading="lazy" />
@@ -87,7 +87,7 @@ export default function WhatsAppWidget() {
             <button
               onClick={handleSend}
               className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-colors"
-              style={{background: '#1a9e50'}}
+              style={{background: '#1a7a3a'}}
             >
               <Send size={17} className="text-white" />
             </button>
@@ -99,7 +99,7 @@ export default function WhatsAppWidget() {
       <button
         onClick={() => setOpen(o => !o)}
         className="flex items-center gap-2.5 text-white shadow-lg shadow-black/15 px-5 py-3 rounded-full transition-all hover:scale-105"
-        style={{background: '#1a9e50'}}
+        style={{background: '#1a7a3a'}}
         aria-label="WhatsApp"
       >
         {open ? <X size={20} /> : <MessageCircle size={20} />}
