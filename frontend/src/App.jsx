@@ -60,7 +60,7 @@ function PublicLayout() {
   return (
     <>
       <ScrollToTop />
-      <Navbar onTeklifClick={() => openChat(setChatOpen)} />
+      <Navbar />
       <main>
         <Suspense fallback={<PageLoader />}>
           <Routes>

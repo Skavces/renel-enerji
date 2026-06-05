@@ -14,7 +14,7 @@ const navLinks = [
   { label: 'İletişim', to: '/iletisim' },
 ]
 
-export default function Navbar({ onTeklifClick }) {
+export default function Navbar() {
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const { pathname } = useLocation()
@@ -66,12 +66,6 @@ export default function Navbar({ onTeklifClick }) {
           {/* CTA + mobile menu */}
           <div className="flex items-center gap-4">
             <button
-              onClick={onTeklifClick}
-              className="hidden lg:inline-flex items-center gap-2 bg-[#448834] hover:bg-[#357228] text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors"
-            >
-              Teklif Al
-            </button>
-            <button
               className="lg:hidden p-2 text-gray-700"
               onClick={() => { setOpen(o => !o); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
               aria-label="Menü"
@@ -97,9 +91,6 @@ export default function Navbar({ onTeklifClick }) {
                 {l.label}
               </NavLink>
             ))}
-            <button onClick={() => { setOpen(false); onTeklifClick() }} className="bg-[#448834] text-white text-center py-2.5 rounded-lg font-semibold mt-2 w-full">
-              Teklif Al
-            </button>
           </div>
         )}
       </nav>
