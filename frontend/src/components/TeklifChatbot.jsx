@@ -137,7 +137,7 @@ export default function TeklifChatbot({ onClose, messages: initialMessages, onMe
 
           {/* Hızlı seçim kartları */}
           {messages.length === 1 && !loading && (
-            <div className="pl-9 flex flex-col gap-2">
+            <div className="flex flex-col gap-2">
               {QUICK_REPLIES.map(qr => {
                 const Icon = qr.icon
                 return (
@@ -146,9 +146,7 @@ export default function TeklifChatbot({ onClose, messages: initialMessages, onMe
                     onClick={() => send(qr.value)}
                     className="flex items-center gap-3 w-full text-left px-4 py-3 bg-white border border-gray-200 hover:border-[#448834] hover:bg-[#f5fbf3] rounded-xl transition-colors shadow-sm group"
                   >
-                    <div className="w-8 h-8 bg-[#f0f9ee] group-hover:bg-[#448834] rounded-lg flex items-center justify-center shrink-0 transition-colors">
-                      <Icon size={15} className="text-[#448834] group-hover:text-white transition-colors" />
-                    </div>
+                    <Icon size={16} className="text-[#448834] shrink-0" />
                     <div>
                       <p className="text-sm font-medium text-gray-800">{qr.label}</p>
                       <p className="text-xs text-gray-400">{qr.desc}</p>
