@@ -98,12 +98,35 @@ const services = [
   },
 ]
 
+const hizmetlerJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebPage',
+  name: 'Hizmetler | RenEL Enerji Mühendislik',
+  url: 'https://renelenerji.com/hizmetler',
+  description: 'Güneş enerjisi hizmetlerimiz: tarımsal sulama GES, çatı ve arazi tipi GES, bağ evi depolamalı GES, elektrikli araç şarj istasyonu kurulum ve mühendislik danışmanlığı.',
+  mainEntity: {
+    '@type': 'ItemList',
+    itemListElement: services.map((s, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      item: {
+        '@type': 'Service',
+        name: s.title,
+        description: s.description,
+        provider: { '@type': 'Organization', name: 'RenEL Enerji Mühendislik', url: 'https://renelenerji.com' },
+        areaServed: { '@type': 'Place', name: 'Soma, Manisa, Türkiye' },
+      },
+    })),
+  },
+}
+
 export default function Hizmetler() {
   return (
     <>
       <SEO
         title="Hizmetler"
         description="Güneş enerjisi hizmetlerimiz: tarımsal sulama GES, çatı ve arazi tipi GES, bağ evi depolamalı GES, elektrikli araç şarj istasyonu kurulum ve mühendislik danışmanlığı."
+        jsonLd={hizmetlerJsonLd}
       />
       <PageHeader title="Hizmetler" />
 

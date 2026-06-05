@@ -33,11 +33,40 @@ export default function Iletisim() {
     setForm({ name: '', phone: '', service: '', message: '' })
   }
 
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'LocalBusiness',
+    name: 'RenEL Enerji Mühendislik',
+    url: 'https://renelenerji.com',
+    telephone: '+90-554-379-60-04',
+    email: 'mertcan.yilmaz@renelenerji.com',
+    image: 'https://renelenerji.com/og-image.webp',
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: 'Kurtuluş, İnkılap Sk. no:4 D:J',
+      addressLocality: 'Soma',
+      addressRegion: 'Manisa',
+      postalCode: '45500',
+      addressCountry: 'TR',
+    },
+    geo: { '@type': 'GeoCoordinates', latitude: 39.188, longitude: 27.613 },
+    openingHoursSpecification: [
+      { '@type': 'OpeningHoursSpecification', dayOfWeek: ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'], opens: '08:00', closes: '18:00' },
+    ],
+    contactPoint: {
+      '@type': 'ContactPoint',
+      telephone: '+90-554-379-60-04',
+      contactType: 'customer service',
+      availableLanguage: 'Turkish',
+    },
+  }
+
   return (
     <>
       <SEO
         title="İletişim"
         description="RenEL Enerji Mühendislik ile iletişime geçin. Güneş enerjisi sistemi teklifi, proje danışmanlığı ve kurulum için Soma/Manisa ofisimizi arayın veya yazın."
+        jsonLd={jsonLd}
       />
       <PageHeader title="İletişim" />
 

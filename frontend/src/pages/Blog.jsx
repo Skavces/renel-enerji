@@ -21,11 +21,29 @@ export default function Blog() {
   const formatDate = (dateStr) =>
     new Date(dateStr).toLocaleDateString('tr-TR', { day: '2-digit', month: 'long', year: 'numeric' })
 
+  const jsonLd = posts.length > 0 ? {
+    '@context': 'https://schema.org',
+    '@type': 'Blog',
+    name: 'RenEL Enerji Blog',
+    url: 'https://renelenerji.com/blog',
+    description: 'Güneş enerjisi, GES kurulumu, tarımsal sulama sistemleri ve yenilenebilir enerji hakkında bilgi, haber ve makaleler.',
+    publisher: { '@type': 'Organization', name: 'RenEL Enerji Mühendislik', url: 'https://renelenerji.com' },
+    blogPost: posts.map((p) => ({
+      '@type': 'BlogPosting',
+      headline: p.title,
+      url: `https://renelenerji.com/blog/${p.slug}`,
+      datePublished: p.publishedAt || p.createdAt,
+      description: p.excerpt || p.title,
+      ...(p.coverImage ? { image: `https://renelenerji.com${p.coverImage}` } : {}),
+    })),
+  } : undefined
+
   return (
     <>
       <SEO
         title="Blog"
         description="Güneş enerjisi, GES kurulumu, tarımsal sulama sistemleri ve yenilenebilir enerji hakkında bilgi, haber ve makaleler. RenEL Enerji Mühendislik blogu."
+        jsonLd={jsonLd}
       />
       <PageHeader title="Blog" />
 

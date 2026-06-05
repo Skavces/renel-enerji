@@ -52,11 +52,42 @@ const collagePhotos = [
 ]
 
 export default function Kurumsal() {
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'AboutPage',
+    url: 'https://renelenerji.com/kurumsal',
+    name: 'Kurumsal | RenEL Enerji Mühendislik',
+    description: 'RenEL Enerji Mühendislik hakkında. Elektrik-Elektronik Mühendisi liderliğinde, Soma/Manisa\'da anahtar teslim güneş enerjisi çözümleri sunan mühendislik firması.',
+    mainEntity: {
+      '@type': 'Organization',
+      name: 'RenEL Enerji Mühendislik',
+      url: 'https://renelenerji.com',
+      logo: 'https://renelenerji.com/renel-logo.svg',
+      telephone: '+90-554-379-60-04',
+      email: 'mertcan.yilmaz@renelenerji.com',
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: 'Kurtuluş, İnkılap Sk. no:4 D:J',
+        addressLocality: 'Soma',
+        addressRegion: 'Manisa',
+        postalCode: '45500',
+        addressCountry: 'TR',
+      },
+      founder: {
+        '@type': 'Person',
+        name: 'Mertcan Yılmaz',
+        jobTitle: 'Elektrik-Elektronik Mühendisi',
+      },
+      knowsAbout: ['Güneş Enerjisi Sistemleri', 'GES Kurulumu', 'Tarımsal Sulama GES', 'Off-Grid Sistemler', 'EV Şarj İstasyonu'],
+    },
+  }
+
   return (
     <>
       <SEO
         title="Kurumsal"
         description="RenEL Enerji Mühendislik hakkında. Elektrik-Elektronik Mühendisi liderliğinde, Soma/Manisa'da anahtar teslim güneş enerjisi çözümleri sunan mühendislik firması."
+        jsonLd={jsonLd}
       />
       <PageHeader title="Kurumsal" />
 

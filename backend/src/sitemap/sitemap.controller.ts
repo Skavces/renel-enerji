@@ -16,6 +16,12 @@ const STATIC_URLS = [
   { loc: '/blog', priority: '0.8', changefreq: 'weekly' },
   { loc: '/sss', priority: '0.7', changefreq: 'monthly' },
   { loc: '/iletisim', priority: '0.6', changefreq: 'yearly' },
+  { loc: '/neden-biz/muhendislik-altyapisi', priority: '0.6', changefreq: 'monthly' },
+  { loc: '/neden-biz/anahtar-teslim-hizmet', priority: '0.6', changefreq: 'monthly' },
+  { loc: '/neden-biz/surdurulebilir-enerji', priority: '0.6', changefreq: 'monthly' },
+  { loc: '/neden-biz/verimlilik-odakli', priority: '0.6', changefreq: 'monthly' },
+  { loc: '/neden-biz/yerel-ve-guvenilir', priority: '0.6', changefreq: 'monthly' },
+  { loc: '/neden-biz/onayli-ekipmanlar', priority: '0.6', changefreq: 'monthly' },
 ]
 
 @Controller('sitemap.xml')
