@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useParams, Link, Navigate } from 'react-router-dom'
 import { Award, Wrench, Leaf, BarChart3, HeartHandshake, CheckCircle, ChevronRight } from 'lucide-react'
 import PageHeader from '../../components/PageHeader'
+import SEO from '../../components/SEO'
 
 const WA_NUMBER = '905543796004'
 const waLink = (msg) => `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`
@@ -148,8 +149,22 @@ export default function NedenBizDetay() {
 
   const Icon = page.icon
 
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: `${page.title} | RenEL Enerji Mühendislik`,
+    description: page.description,
+    url: `https://renelenerji.com/neden-biz/${page.slug}`,
+    publisher: { '@type': 'Organization', name: 'RenEL Enerji Mühendislik', url: 'https://renelenerji.com' },
+  }
+
   return (
     <>
+      <SEO
+        title={page.title}
+        description={`${page.subtitle} ${page.description}`.slice(0, 160)}
+        jsonLd={jsonLd}
+      />
       <PageHeader
         title={page.title}
         parent={{ to: '/kurumsal', label: 'Neden Biz?' }}
