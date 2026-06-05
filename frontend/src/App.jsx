@@ -54,7 +54,16 @@ function openChat(setChatOpen) {
 
 function PublicLayout() {
   const [chatOpen, setChatOpen] = useState(false)
+  const [chatClosing, setChatClosing] = useState(false)
   const [chatMessages, setChatMessages] = useState(null)
+
+  function handleCloseChat() {
+    setChatClosing(true)
+    setTimeout(() => {
+      setChatOpen(false)
+      setChatClosing(false)
+    }, 220)
+  }
 
   return (
     <>
@@ -88,7 +97,8 @@ function PublicLayout() {
       </button>
       {chatOpen && (
         <TeklifChatbot
-          onClose={() => setChatOpen(false)}
+          onClose={handleCloseChat}
+          closing={chatClosing}
           messages={chatMessages}
           onMessagesChange={setChatMessages}
         />

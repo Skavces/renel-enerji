@@ -14,7 +14,7 @@ const QUICK_REPLIES = [
 
 const WHATSAPP_NUMBER = '905543796004'
 
-export default function TeklifChatbot({ onClose, messages: initialMessages, onMessagesChange }) {
+export default function TeklifChatbot({ onClose, closing, messages: initialMessages, onMessagesChange }) {
   const [messages, setMessages] = useState(
     initialMessages ?? [{ role: 'assistant', content: GREETING }]
   )
@@ -96,9 +96,9 @@ export default function TeklifChatbot({ onClose, messages: initialMessages, onMe
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:inset-auto sm:bottom-20 sm:right-6">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm sm:hidden" onClick={onClose} />
+      <div className={`absolute inset-0 bg-black/50 backdrop-blur-sm sm:hidden ${closing ? 'backdrop-exit' : 'backdrop-enter'}`} onClick={onClose} />
 
-      <div className="relative w-full sm:w-[400px] h-[85vh] sm:h-[560px] bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+      <div className={`relative w-full sm:w-[400px] h-[85vh] sm:h-[560px] bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden origin-bottom sm:origin-bottom-right ${closing ? 'chatbot-exit' : 'chatbot-enter'}`}>
         {/* Header */}
         <div className="bg-[#448834] px-5 py-4 flex items-center gap-3 shrink-0">
           <Bot size={26} className="text-white" />

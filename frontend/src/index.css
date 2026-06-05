@@ -25,6 +25,27 @@
   100% { transform: scale(1.12) translateX(-2%)   translateY(-1.5%); }
 }
 
+@keyframes chatbot-in {
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+@keyframes chatbot-out {
+  from { opacity: 1; transform: translateY(0)    scale(1); }
+  to   { opacity: 0; transform: translateY(20px) scale(0.95); }
+}
+@keyframes backdrop-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes backdrop-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+.chatbot-enter   { animation: chatbot-in  0.28s cubic-bezier(0.16,1,0.3,1) both; }
+.chatbot-exit    { animation: chatbot-out 0.22s ease-in both; }
+.backdrop-enter  { animation: backdrop-in  0.28s ease both; }
+.backdrop-exit   { animation: backdrop-out 0.22s ease-in both; }
+
 .scrollbar-none {
   scrollbar-width: none;
   -ms-overflow-style: none;
