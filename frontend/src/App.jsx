@@ -5,8 +5,7 @@ import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import TeklifChatbot from './components/TeklifChatbot'
 import { AdminAuthProvider, useAdminAuth } from './contexts/AdminAuthContext'
-
-const Home = lazy(() => import('./pages/Home'))
+import Home from './pages/Home'
 const Hizmetler = lazy(() => import('./pages/Hizmetler'))
 const Kurumsal = lazy(() => import('./pages/Kurumsal'))
 const Referanslar = lazy(() => import('./pages/Referanslar'))

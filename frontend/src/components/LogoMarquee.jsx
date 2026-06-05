@@ -28,11 +28,13 @@ export default function LogoMarquee() {
         style={{ animation: 'marquee 30s linear infinite', width: 'max-content' }}
       >
         {doubled.map((r, i) => (
-          <div key={i} className="shrink-0">
-            {r.logo ? (
+          <div key={i} className="shrink-0 flex items-center justify-center" style={{ minWidth: 120, height: 112 }}>
+            {r.logo?.trim() ? (
               <img
-                src={`${API}${r.logo}`}
+                src={`${API}${r.logo.trim()}`}
                 alt={r.name}
+                width={200}
+                height={112}
                 className="h-28 w-auto max-w-[200px] object-contain grayscale hover:grayscale-0 opacity-75 hover:opacity-100 transition-all duration-300"
                 loading="lazy"
               />
