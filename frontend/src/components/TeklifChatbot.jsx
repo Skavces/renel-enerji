@@ -98,9 +98,7 @@ export default function TeklifChatbot({ onClose, messages: initialMessages, onMe
       <div className="relative w-full sm:w-[400px] h-[85vh] sm:h-[560px] bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden">
         {/* Header */}
         <div className="bg-[#448834] px-5 py-4 flex items-center gap-3 shrink-0">
-          <div className="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center">
-            <Bot size={18} className="text-white" />
-          </div>
+          <Bot size={20} className="text-white" />
           <div className="flex-1">
             <p className="text-white font-semibold text-sm leading-tight">RenEl Enerji Danışmanı</p>
             <p className="text-white/70 text-xs">Size en uygun sistemi belirleyelim</p>
