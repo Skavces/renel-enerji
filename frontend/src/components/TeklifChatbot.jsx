@@ -92,7 +92,7 @@ export default function TeklifChatbot({ onClose, messages: initialMessages, onMe
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center sm:inset-auto sm:top-4 sm:right-6">
+    <div className="fixed inset-0 z-50 flex items-end justify-center sm:inset-auto sm:bottom-20 sm:right-6">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm sm:hidden" onClick={onClose} />
 
       <div className="relative w-full sm:w-[400px] h-[85vh] sm:h-[560px] bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden">
