@@ -1,8 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
-import { X, Send, Bot, Loader2 } from 'lucide-react'
-import { sendChatMessage } from '../api/chat'
+import { X, Send, Bot, Loader2, MessageCircle } from 'lucide-react'
+import { sendChatMessage, generateWhatsappSummary } from '../api/chat'
 
-const GREETING = 'Merhaba! Ben RenEl Enerji\'nin yapay zeka asistanıyım. Size en uygun güneş enerjisi sistemini bulmak için birkaç soru sormak istiyorum. Hazır mısınız?'
+const GREETING = 'Merhaba, RenEl Enerji Mühendislik\'e hoş geldiniz. Size en uygun güneş enerjisi sistemini belirlemek için birkaç soru sormak istiyorum. Hangi konuda bilgi almak istersiniz?'
+
+const QUICK_REPLIES = [
+  { label: 'Çatı Tipi GES', value: 'Çatı tipi güneş enerjisi sistemi hakkında bilgi almak istiyorum.' },
+  { label: 'Tarımsal Sulama GES', value: 'Tarımsal sulama için güneş enerjisi sistemi hakkında bilgi almak istiyorum.' },
+  { label: 'EV Şarj İstasyonu', value: 'Elektrikli araç şarj istasyonu hakkında bilgi almak istiyorum.' },
+  { label: 'Off-Grid Sistem', value: 'Şebekeden bağımsız off-grid sistem hakkında bilgi almak istiyorum.' },
+  { label: 'Hibrit GES', value: 'Bataryalı hibrit güneş enerjisi sistemi hakkında bilgi almak istiyorum.' },
+]
+
+const WHATSAPP_NUMBER = '905543796004'
 
 export default function TeklifChatbot({ onClose }) {
   const [messages, setMessages] = useState([
@@ -10,8 +20,12 @@ export default function TeklifChatbot({ onClose }) {
   ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [summaryLoading, setSummaryLoading] = useState(false)
   const bottomRef = useRef(null)
   const inputRef = useRef(null)
+
+  const userMessageCount = messages.filter(m => m.role === 'user').length
+  const showWhatsapp = userMessageCount >= 2
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -21,36 +35,52 @@ export default function TeklifChatbot({ onClose }) {
     inputRef.current?.focus()
   }, [])
 
-  async function handleSend() {
-    const text = input.trim()
-    if (!text || loading) return
+  async function send(text) {
+    const trimmed = text.trim()
+    if (!trimmed || loading) return
 
-    const userMessage = { role: 'user', content: text }
+    const userMessage = { role: 'user', content: trimmed }
     const updated = [...messages, userMessage]
     setMessages(updated)
     setInput('')
     setLoading(true)
 
     try {
-      const { reply } = await sendChatMessage(
-        updated.filter(m => m.role !== 'assistant' || m.content !== GREETING ? true : false)
-          .map(m => ({ role: m.role, content: m.content }))
+      const history = updated.filter(
+        m => !(m.role === 'assistant' && m.content === GREETING)
       )
+      const { reply } = await sendChatMessage(history)
       setMessages(prev => [...prev, { role: 'assistant', content: reply }])
     } catch {
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: 'Üzgünüm, şu anda yanıt veremiyorum. Lütfen doğrudan iletişime geçin: 0554 379 60 04',
+        content: 'Üzgünüz, şu anda yanıt veremiyoruz. Lütfen doğrudan iletişime geçin: 0554 379 60 04',
       }])
     } finally {
       setLoading(false)
     }
   }
 
+  async function handleWhatsapp() {
+    setSummaryLoading(true)
+    try {
+      const history = messages.filter(
+        m => !(m.role === 'assistant' && m.content === GREETING)
+      )
+      const { text } = await generateWhatsappSummary(history)
+      const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`
+      window.open(url, '_blank', 'noopener,noreferrer')
+    } catch {
+      window.open(`https://wa.me/${WHATSAPP_NUMBER}`, '_blank', 'noopener,noreferrer')
+    } finally {
+      setSummaryLoading(false)
+    }
+  }
+
   function handleKey(e) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
-      handleSend()
+      send(input)
     }
   }
 
@@ -65,8 +95,8 @@ export default function TeklifChatbot({ onClose }) {
             <Bot size={18} className="text-white" />
           </div>
           <div className="flex-1">
-            <p className="text-white font-semibold text-sm leading-tight">RenEl Enerji Asistanı</p>
-            <p className="text-white/70 text-xs">Size en uygun sistemi bulalım</p>
+            <p className="text-white font-semibold text-sm leading-tight">RenEl Enerji Danışmanı</p>
+            <p className="text-white/70 text-xs">Size en uygun sistemi belirleyelim</p>
           </div>
           <button
             onClick={onClose}
@@ -98,6 +128,21 @@ export default function TeklifChatbot({ onClose }) {
             </div>
           ))}
 
+          {/* Quick reply buttons — sadece ilk mesajdan sonra göster */}
+          {messages.length === 1 && !loading && (
+            <div className="flex flex-wrap gap-2 pl-9">
+              {QUICK_REPLIES.map(qr => (
+                <button
+                  key={qr.label}
+                  onClick={() => send(qr.value)}
+                  className="text-xs px-3 py-1.5 rounded-full border border-[#448834] text-[#448834] hover:bg-[#448834] hover:text-white transition-colors bg-white"
+                >
+                  {qr.label}
+                </button>
+              ))}
+            </div>
+          )}
+
           {loading && (
             <div className="flex justify-start">
               <div className="w-7 h-7 bg-[#448834] rounded-full flex items-center justify-center shrink-0 mr-2 mt-0.5">
@@ -112,8 +157,25 @@ export default function TeklifChatbot({ onClose }) {
           <div ref={bottomRef} />
         </div>
 
+        {/* WhatsApp butonu */}
+        {showWhatsapp && (
+          <div className="px-4 pt-3 bg-white border-t border-gray-100 shrink-0">
+            <button
+              onClick={handleWhatsapp}
+              disabled={summaryLoading}
+              className="w-full flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20bd5a] disabled:opacity-60 text-white font-semibold text-sm py-2.5 rounded-xl transition-colors"
+            >
+              {summaryLoading
+                ? <Loader2 size={16} className="animate-spin" />
+                : <MessageCircle size={16} />
+              }
+              {summaryLoading ? 'Hazırlanıyor...' : 'WhatsApp\'tan Teklif Al'}
+            </button>
+          </div>
+        )}
+
         {/* Input */}
-        <div className="px-4 py-3 bg-white border-t border-gray-100 shrink-0">
+        <div className="px-4 py-3 bg-white shrink-0">
           <div className="flex items-end gap-2">
             <textarea
               ref={inputRef}
@@ -123,10 +185,9 @@ export default function TeklifChatbot({ onClose }) {
               placeholder="Mesajınızı yazın..."
               rows={1}
               className="flex-1 resize-none px-4 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#448834] transition-colors max-h-24 leading-relaxed"
-              style={{ overflowY: input.split('\n').length > 3 ? 'auto' : 'hidden' }}
             />
             <button
-              onClick={handleSend}
+              onClick={() => send(input)}
               disabled={!input.trim() || loading}
               className="w-10 h-10 bg-[#448834] hover:bg-[#357228] disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl flex items-center justify-center transition-colors shrink-0"
               aria-label="Gönder"
@@ -134,16 +195,6 @@ export default function TeklifChatbot({ onClose }) {
               <Send size={16} />
             </button>
           </div>
-          <p className="text-xs text-gray-400 mt-2 text-center">
-            Gerçek teklif için{' '}
-            <a href="https://wa.me/905543796004" target="_blank" rel="noopener noreferrer" className="text-[#448834] hover:underline">
-              WhatsApp
-            </a>
-            {' '}veya{' '}
-            <a href="mailto:mertcan.yilmaz@renelenerji.com" className="text-[#448834] hover:underline">
-              e-posta
-            </a>
-          </p>
         </div>
       </div>
     </div>

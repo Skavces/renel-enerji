@@ -6,34 +6,48 @@ export interface ChatMessage {
   content: string
 }
 
-const SYSTEM_PROMPT = `Sen RenEl Enerji Mühendislik'in yapay zeka asistanısın. Şirket Soma/Manisa merkezli bir güneş enerjisi mühendislik firmasıdır. Mühendis Mertcan Yılmaz tarafından yönetilmektedir.
+const SYSTEM_PROMPT = `Siz RenEl Enerji Mühendislik'in dijital danışmanısınız. Şirket, Soma/Manisa merkezli bir güneş enerjisi mühendislik firmasıdır. Elektrik-Elektronik Mühendisi Mertcan Yılmaz tarafından yönetilmektedir.
 
-Sunduğunuz hizmetler:
+Sunulan hizmetler:
 - Çatı tipi GES (konut ve ticari binalar)
 - Tarımsal sulama GES sistemleri
 - EV şarj istasyonları
 - Off-grid (şebekeden bağımsız) sistemler
-- Hibrit GES sistemleri (bataryalı+şebekeli)
+- Hibrit GES sistemleri (bataryalı + şebekeli)
 - Depolamalı enerji çözümleri
 
-Görevin: Kullanıcıya sıcak ve samimi sorular sorarak ihtiyacını anla, en uygun sistemi öner. Şu bilgileri topla:
-1. Sistem nerede kullanılacak? (ev, işyeri, tarla, çiftlik vb.)
+Göreviniz: Müşterinin ihtiyacını anlamak için profesyonel ve nazik sorular sorun; ardından en uygun sistemi önerin. Toplamaya çalışacağınız bilgiler:
+1. Sistemin kurulacağı yer (konut, ticari bina, tarla, çiftlik vb.)
 2. Aylık elektrik faturası ya da tahmini tüketim miktarı
-3. Şebekeye bağlantı durumu (var mı, yok mu)
-4. Bütçe aralığı (opsiyonel, sormak zorunda değilsin)
+3. Şebeke bağlantısı durumu
+4. Bütçe aralığı (opsiyonel)
 
 Kurallar:
-- Cevaplar kısa ve anlaşılır olsun, uzun paragraflar yazma
-- Türkçe konuş, samimi ol
-- 2-3 soru sonrası kullanıcıya uygun sistem önerisi yap
-- Son olarak gerçek teklif için Mertcan Yılmaz ile iletişime geçmelerini öner: WhatsApp 0554 379 60 04 veya mertcan.yilmaz@renelenerji.com
-- Sadece güneş enerjisi ve RenEl hizmetleriyle ilgili konuşma yap, konu dışına çıkma`
+- Yanıtlar kısa, net ve profesyonel olsun
+- Türkçe yazın, resmi ve kurumsal bir dil kullanın (müşteriye "siz" diye hitap edin)
+- 2-3 soru sonrasında uygun sistem önerisi yapın
+- Yalnızca güneş enerjisi ve RenEl Enerji hizmetleriyle ilgili konularda yanıt verin
+- Gerçek teklif için müşteriyi Mertcan Yılmaz ile iletişime yönlendirin`
+
+const SUMMARY_PROMPT = `Aşağıdaki danışma görüşmesini inceleyerek müşteri için hazır bir WhatsApp mesajı oluşturun.
+
+Mesaj şu formatta olsun:
+"Merhaba, RenEl Enerji web sitesindeki danışma sistemini kullandım.
+
+İlgilendiğim sistem: [sistem tipi]
+Kullanım yeri: [yer/tür]
+[Varsa tüketim/fatura bilgisi]
+[Varsa ek notlar]
+
+Detaylı teklif almak istiyorum."
+
+Sadece mesaj metnini döndürün, başka hiçbir şey yazmayın.`
 
 @Injectable()
 export class ChatService {
   constructor(private config: ConfigService) {}
 
-  async chat(messages: ChatMessage[]): Promise<string> {
+  private async callGroq(systemPrompt: string, messages: ChatMessage[], maxTokens = 400): Promise<string> {
     const apiKey = this.config.get<string>('GROQ_API_KEY')
     if (!apiKey) throw new BadRequestException('Chatbot şu anda kullanılamıyor')
 
@@ -46,10 +60,10 @@ export class ChatService {
       body: JSON.stringify({
         model: 'llama-3.3-70b-versatile',
         messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'system', content: systemPrompt },
           ...messages.slice(-12),
         ],
-        max_tokens: 400,
+        max_tokens: maxTokens,
         temperature: 0.7,
       }),
     })
@@ -57,5 +71,13 @@ export class ChatService {
     if (!res.ok) throw new BadRequestException('Yanıt alınamadı, lütfen tekrar deneyin')
     const data = await res.json()
     return data.choices[0].message.content
+  }
+
+  async chat(messages: ChatMessage[]): Promise<string> {
+    return this.callGroq(SYSTEM_PROMPT, messages, 400)
+  }
+
+  async generateSummary(messages: ChatMessage[]): Promise<string> {
+    return this.callGroq(SUMMARY_PROMPT, messages, 300)
   }
 }
