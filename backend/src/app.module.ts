@@ -11,6 +11,7 @@ import { AnalyticsModule } from './analytics/analytics.module'
 import { BlogModule } from './blog/blog.module'
 import { FaqModule } from './faq/faq.module'
 import { SitemapModule } from './sitemap/sitemap.module'
+import { ChatModule } from './chat/chat.module'
 import { WeatherController } from './weather/weather.controller'
 
 @Module({
@@ -38,6 +39,7 @@ import { WeatherController } from './weather/weather.controller'
     BlogModule,
     FaqModule,
     SitemapModule,
+    ChatModule,
   ],
   controllers: [WeatherController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

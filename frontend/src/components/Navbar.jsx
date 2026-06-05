@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import { Menu, X } from 'lucide-react'
 import Logo from './Logo'
+import TeklifChatbot from './TeklifChatbot'
 
 const navLinks = [
   { label: 'Anasayfa', to: '/' },
@@ -16,6 +17,7 @@ const navLinks = [
 
 export default function Navbar() {
   const [open, setOpen] = useState(false)
+  const [chatOpen, setChatOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const { pathname } = useLocation()
   const isHome = pathname === '/'
@@ -65,12 +67,12 @@ export default function Navbar() {
 
           {/* CTA + mobile menu */}
           <div className="flex items-center gap-4">
-            <Link
-              to="/iletisim"
+            <button
+              onClick={() => setChatOpen(true)}
               className="hidden lg:inline-flex items-center gap-2 bg-[#448834] hover:bg-[#357228] text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors"
             >
               Teklif Al
-            </Link>
+            </button>
             <button
               className="lg:hidden p-2 text-gray-700"
               onClick={() => setOpen(o => !o)}
@@ -97,12 +99,13 @@ export default function Navbar() {
                 {l.label}
               </NavLink>
             ))}
-            <Link to="/iletisim" onClick={() => setOpen(false)} className="bg-[#448834] text-white text-center py-2.5 rounded-lg font-semibold mt-2">
+            <button onClick={() => { setOpen(false); setChatOpen(true) }} className="bg-[#448834] text-white text-center py-2.5 rounded-lg font-semibold mt-2 w-full">
               Teklif Al
-            </Link>
+            </button>
           </div>
         )}
       </nav>
+      {chatOpen && <TeklifChatbot onClose={() => setChatOpen(false)} />}
     </>
   )
 }
