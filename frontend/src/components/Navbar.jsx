@@ -67,7 +67,7 @@ export default function Navbar() {
           <div className="flex items-center gap-4">
             <button
               className="lg:hidden p-2 text-gray-700"
-              onClick={() => setOpen(o => !o)}
+              onClick={() => { setOpen(o => !o); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
               aria-label="Menü"
             >
               {open ? <X size={24} /> : <Menu size={24} />}
