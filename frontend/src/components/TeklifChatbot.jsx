@@ -21,7 +21,7 @@ export default function TeklifChatbot({ onClose, messages: initialMessages, onMe
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [summaryLoading, setSummaryLoading] = useState(false)
-  const bottomRef = useRef(null)
+  const messagesRef = useRef(null)
   const inputRef = useRef(null)
 
   function saveMessages(next) {
@@ -33,7 +33,8 @@ export default function TeklifChatbot({ onClose, messages: initialMessages, onMe
   const showWhatsapp = userMessageCount >= 2
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    if (messagesRef.current)
+      messagesRef.current.scrollTop = messagesRef.current.scrollHeight
   }, [messages, loading])
 
   useEffect(() => {
@@ -114,7 +115,7 @@ export default function TeklifChatbot({ onClose, messages: initialMessages, onMe
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-gray-50">
+        <div ref={messagesRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-gray-50">
           {messages.map((m, i) => (
             <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               {m.role === 'assistant' && (
@@ -167,7 +168,6 @@ export default function TeklifChatbot({ onClose, messages: initialMessages, onMe
             </div>
           )}
 
-          <div ref={bottomRef} />
         </div>
 
         {/* WhatsApp butonu */}
