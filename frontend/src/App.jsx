@@ -49,7 +49,6 @@ function PageLoader() {
 }
 
 function openChat(setChatOpen) {
-  window.scrollTo(0, 0)
   setChatOpen(true)
 }
 

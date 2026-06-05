@@ -37,6 +37,7 @@ export default function TeklifChatbot({ onClose, messages: initialMessages, onMe
   }, [messages, loading])
 
   useEffect(() => {
+    window.scrollTo(0, 0)
     inputRef.current?.focus()
   }, [])
 
