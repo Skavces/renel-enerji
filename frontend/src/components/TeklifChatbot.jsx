@@ -14,14 +14,22 @@ const QUICK_REPLIES = [
 
 const WHATSAPP_NUMBER = '905543796004'
 
-export default function TeklifChatbot({ onClose }) {
-  const [messages, setMessages] = useState([
-    { role: 'assistant', content: GREETING },
-  ])
+export default function TeklifChatbot({ onClose, messages: initialMessages, onMessagesChange }) {
+  const [messages, setMessages] = useState(
+    initialMessages ?? [{ role: 'assistant', content: GREETING }]
+  )
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [summaryLoading, setSummaryLoading] = useState(false)
   const bottomRef = useRef(null)
+
+  function updateMessages(updater) {
+    updateMessages(prev => {
+      const next = typeof updater === 'function' ? updater(prev) : updater
+      onMessagesChange?.(next)
+      return next
+    })
+  }
   const inputRef = useRef(null)
 
   const userMessageCount = messages.filter(m => m.role === 'user').length
@@ -41,7 +49,7 @@ export default function TeklifChatbot({ onClose }) {
 
     const userMessage = { role: 'user', content: trimmed }
     const updated = [...messages, userMessage]
-    setMessages(updated)
+    updateMessages(updated)
     setInput('')
     setLoading(true)
 
@@ -50,9 +58,9 @@ export default function TeklifChatbot({ onClose }) {
         m => !(m.role === 'assistant' && m.content === GREETING)
       )
       const { reply } = await sendChatMessage(history)
-      setMessages(prev => [...prev, { role: 'assistant', content: reply }])
+      updateMessages(prev => [...prev, { role: 'assistant', content: reply }])
     } catch {
-      setMessages(prev => [...prev, {
+      updateMessages(prev => [...prev, {
         role: 'assistant',
         content: 'Üzgünüz, şu anda yanıt veremiyoruz. Lütfen doğrudan iletişime geçin: 0554 379 60 04',
       }])

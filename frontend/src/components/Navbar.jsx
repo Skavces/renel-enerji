@@ -18,6 +18,7 @@ const navLinks = [
 export default function Navbar() {
   const [open, setOpen] = useState(false)
   const [chatOpen, setChatOpen] = useState(false)
+  const [chatMessages, setChatMessages] = useState(null)
   const [scrolled, setScrolled] = useState(false)
   const { pathname } = useLocation()
   const isHome = pathname === '/'
@@ -105,7 +106,7 @@ export default function Navbar() {
           </div>
         )}
       </nav>
-      {chatOpen && <TeklifChatbot onClose={() => setChatOpen(false)} />}
+      {chatOpen && <TeklifChatbot onClose={() => setChatOpen(false)} messages={chatMessages} onMessagesChange={setChatMessages} />}
     </>
   )
 }
