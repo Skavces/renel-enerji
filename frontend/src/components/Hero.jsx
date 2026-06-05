@@ -31,7 +31,7 @@ export default function Hero() {
           className="w-full h-full object-cover animate-[kenburns_18s_ease-in-out_infinite_alternate]"
           width="1440"
           height="810"
-          fetchpriority="high"
+          fetchPriority="high"
           decoding="async"
         />
         <div className="absolute inset-0 bg-linear-to-r from-black/50 via-black/25 to-black/10" />
