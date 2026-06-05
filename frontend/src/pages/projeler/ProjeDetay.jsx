@@ -54,7 +54,7 @@ export default function ProjeDetay() {
   const lightboxPrev = (e) => { e.stopPropagation(); setLightbox((i) => (i - 1 + media.length) % media.length) }
   const lightboxNext = (e) => { e.stopPropagation(); setLightbox((i) => (i + 1) % media.length) }
 
-  const coverImg = item?.type === 'image' ? `https://renelenerji.com${mediaUrl(item.url)}` : undefined
+  const coverImg = item?.type === 'image' ? `https://renelenerji.com${mediaUrl(item.src)}` : undefined
   const projectDesc = [
     project.location && `${project.location}'da`,
     project.kw && `${project.kw} kWp`,
@@ -63,12 +63,24 @@ export default function ProjeDetay() {
     project.description,
   ].filter(Boolean).join(' ')
 
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: project.name,
+    description: projectDesc.slice(0, 160),
+    image: coverImg,
+    url: `https://renelenerji.com/projelerimiz/${slug}`,
+    author: { '@type': 'Organization', name: 'RenEL Enerji Mühendislik', url: 'https://renelenerji.com' },
+    publisher: { '@type': 'Organization', name: 'RenEL Enerji Mühendislik', url: 'https://renelenerji.com' },
+  }
+
   return (
     <>
       <SEO
         title={project.name}
         description={projectDesc.slice(0, 160)}
         image={coverImg}
+        jsonLd={jsonLd}
       />
       <PageHeader title={project.name} parent={{ label: 'Projelerimiz', to: '/projelerimiz' }} />
 
