@@ -104,46 +104,7 @@ export class ChatService {
     return data.choices[0].message.content
   }
 
-  private async isOnTopic(message: string): Promise<boolean> {
-    const apiKey = this.config.get<string>('GROQ_API_KEY')
-    if (!apiKey) return true
-
-    try {
-      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: 'llama-3.3-70b-versatile',
-          messages: [
-            {
-              role: 'system',
-              content:
-                'Sen bir güneş enerjisi şirketinin chatbot konu sınıflandırıcısısın. Sadece "EVET" veya "HAYIR" yaz.\nEVET: güneş enerjisi, GES, solar panel, elektrik tüketimi/faturası, enerji depolama, batarya, EV şarj, hibrit sistem, off-grid, çatı sistemi, tarımsal sulama, şirket hizmetleri, selamlama.\nHAYIR: kodlama, yazılım, matematik, tarih, yemek, sağlık veya enerjiyle ilgisi olmayan her şey.',
-            },
-            { role: 'user', content: message },
-          ],
-          max_tokens: 5,
-          temperature: 0,
-        }),
-      })
-      if (!res.ok) return true
-      const data = await res.json()
-      return data.choices[0].message.content.trim().toUpperCase().startsWith('EVET')
-    } catch {
-      return true
-    }
-  }
-
   async chat(messages: ChatMessage[]): Promise<string> {
-    const lastUser = [...messages].reverse().find(m => m.role === 'user')
-    if (lastUser) {
-      const onTopic = await this.isOnTopic(lastUser.content)
-      if (!onTopic)
-        return 'Bu konuda yardımcı olamıyorum. Güneş enerjisi sistemleri veya RenEl Enerji hizmetleri hakkında sorularınız için buradayım.'
-    }
     return this.callGroq(SYSTEM_PROMPT, messages, 400)
   }
 
