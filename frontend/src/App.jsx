@@ -1,8 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
-import { useEffect, lazy, Suspense } from 'react'
+import { useEffect, lazy, Suspense, useState } from 'react'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
-import WhatsAppWidget from './components/WhatsAppWidget'
+import TeklifChatbot from './components/TeklifChatbot'
 import { AdminAuthProvider, useAdminAuth } from './contexts/AdminAuthContext'
 
 const Home = lazy(() => import('./pages/Home'))
@@ -48,10 +48,13 @@ function PageLoader() {
 }
 
 function PublicLayout() {
+  const [chatOpen, setChatOpen] = useState(false)
+  const [chatMessages, setChatMessages] = useState(null)
+
   return (
     <>
       <ScrollToTop />
-      <Navbar />
+      <Navbar onTeklifClick={() => setChatOpen(true)} />
       <main>
         <Suspense fallback={<PageLoader />}>
           <Routes>
@@ -71,7 +74,19 @@ function PublicLayout() {
         </Suspense>
       </main>
       <Footer />
-      <WhatsAppWidget />
+      <button
+        onClick={() => setChatOpen(true)}
+        className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 bg-[#448834] hover:bg-[#357228] text-white font-semibold text-sm px-5 py-3 rounded-full shadow-lg shadow-black/15 transition-all hover:scale-105"
+      >
+        Teklif Al
+      </button>
+      {chatOpen && (
+        <TeklifChatbot
+          onClose={() => setChatOpen(false)}
+          messages={chatMessages}
+          onMessagesChange={setChatMessages}
+        />
+      )}
     </>
   )
 }
