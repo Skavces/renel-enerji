@@ -173,7 +173,7 @@ export default function Iletisim() {
       </section>
 
       {/* Map */}
-      <section className="py-16 bg-gray-50">
+      <section className="pt-6 pb-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-6">
           <div className="overflow-hidden rounded-2xl border border-gray-200 shadow-sm h-[260px] sm:h-[360px] lg:h-[420px]">
             <iframe
