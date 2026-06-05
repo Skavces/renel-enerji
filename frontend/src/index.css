@@ -41,9 +41,9 @@
   from { opacity: 1; }
   to   { opacity: 0; }
 }
-.chatbot-enter   { animation: chatbot-in  0.28s cubic-bezier(0.16,1,0.3,1) both; }
+.chatbot-enter   { animation: chatbot-in  0.42s cubic-bezier(0.22,1,0.36,1) both; }
 .chatbot-exit    { animation: chatbot-out 0.22s ease-in both; }
-.backdrop-enter  { animation: backdrop-in  0.28s ease both; }
+.backdrop-enter  { animation: backdrop-in  0.42s ease both; }
 .backdrop-exit   { animation: backdrop-out 0.22s ease-in both; }
 
 .scrollbar-none {
