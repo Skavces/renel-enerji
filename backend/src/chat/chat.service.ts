@@ -121,7 +121,7 @@ export class ChatService {
             {
               role: 'system',
               content:
-                'Kullanıcı mesajının güneş enerjisi, elektrik tüketimi, enerji sistemleri, GES veya genel selamlama ile ilgili olup olmadığını belirle. Sadece "EVET" ya da "HAYIR" yaz.',
+                'You are a topic classifier for a solar energy company chatbot. Answer only "YES" or "NO".\nClassify as YES if the message is about: solar panels, solar energy systems, GES, electricity consumption or bills, energy storage, EV charging, hybrid energy systems, off-grid systems, general greetings, or asking about the company and its services.\nClassify as NO for everything else (coding, math, history, cooking, etc.).',
             },
             { role: 'user', content: message },
           ],
@@ -131,7 +131,7 @@ export class ChatService {
       })
       if (!res.ok) return true
       const data = await res.json()
-      return data.choices[0].message.content.trim().toUpperCase().startsWith('EVET')
+      return data.choices[0].message.content.trim().toUpperCase().startsWith('YES')
     } catch {
       return true
     }
