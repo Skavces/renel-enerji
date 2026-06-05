@@ -116,12 +116,12 @@ export class ChatService {
           Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: 'llama-3.1-8b-instant',
+          model: 'llama-3.3-70b-versatile',
           messages: [
             {
               role: 'system',
               content:
-                'You are a topic classifier for a solar energy company chatbot. Answer only "YES" or "NO".\nClassify as YES if the message is about: solar panels, solar energy systems, GES, electricity consumption or bills, energy storage, EV charging, hybrid energy systems, off-grid systems, general greetings, or asking about the company and its services.\nClassify as NO for everything else (coding, math, history, cooking, etc.).',
+                'Sen bir güneş enerjisi şirketinin chatbot konu sınıflandırıcısısın. Sadece "EVET" veya "HAYIR" yaz.\nEVET: güneş enerjisi, GES, solar panel, elektrik tüketimi/faturası, enerji depolama, batarya, EV şarj, hibrit sistem, off-grid, çatı sistemi, tarımsal sulama, şirket hizmetleri, selamlama.\nHAYIR: kodlama, yazılım, matematik, tarih, yemek, sağlık veya enerjiyle ilgisi olmayan her şey.',
             },
             { role: 'user', content: message },
           ],
@@ -131,7 +131,7 @@ export class ChatService {
       })
       if (!res.ok) return true
       const data = await res.json()
-      return data.choices[0].message.content.trim().toUpperCase().startsWith('YES')
+      return data.choices[0].message.content.trim().toUpperCase().startsWith('EVET')
     } catch {
       return true
     }
