@@ -48,6 +48,11 @@ function PageLoader() {
   return <div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-2 border-[#448834] border-t-transparent rounded-full animate-spin" /></div>
 }
 
+function openChat(setChatOpen) {
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+  setChatOpen(true)
+}
+
 function PublicLayout() {
   const [chatOpen, setChatOpen] = useState(false)
   const [chatMessages, setChatMessages] = useState(null)
@@ -55,7 +60,7 @@ function PublicLayout() {
   return (
     <>
       <ScrollToTop />
-      <Navbar onTeklifClick={() => setChatOpen(true)} />
+      <Navbar onTeklifClick={() => openChat(setChatOpen)} />
       <main>
         <Suspense fallback={<PageLoader />}>
           <Routes>
@@ -76,7 +81,7 @@ function PublicLayout() {
       </main>
       <Footer />
       <button
-        onClick={() => setChatOpen(true)}
+        onClick={() => openChat(setChatOpen)}
         className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 bg-[#448834] hover:bg-[#357228] text-white font-semibold text-sm px-5 py-3 rounded-full shadow-lg shadow-black/15 transition-all hover:scale-105"
       >
         <Bot size={18} />
