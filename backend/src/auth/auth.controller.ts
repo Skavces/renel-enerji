@@ -6,11 +6,18 @@ import { JwtAuthGuard } from './jwt-auth.guard'
 import { LoginDto } from './dto/login.dto'
 import { ChangeCredentialsDto } from './dto/change-credentials.dto'
 
-const COOKIE_OPTIONS = {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: 'strict' as const,
-  maxAge: 8 * 60 * 60 * 1000, // 8 saat
+const COOKIE_MAX_AGE = {
+  short: 8 * 60 * 60 * 1000,        // 8 saat
+  long: 30 * 24 * 60 * 60 * 1000,   // 30 gün
+}
+
+function cookieOptions(rememberMe: boolean) {
+  return {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict' as const,
+    maxAge: rememberMe ? COOKIE_MAX_AGE.long : COOKIE_MAX_AGE.short,
+  }
 }
 
 @Controller('auth')
@@ -20,12 +27,11 @@ export class AuthController {
   @Throttle({ default: { ttl: 60000, limit: 5 } })
   @Post('login')
   async login(@Body() dto: LoginDto, @Res() res: Response) {
-    const data = await this.authService.login(dto.username, dto.password)
+    const data = await this.authService.login(dto.username, dto.password, dto.rememberMe)
     if (data.requires2fa) {
-      // Pre-auth flow — token goes in body so frontend can pass it to 2fa/verify
       return res.json(data)
     }
-    res.cookie('admin_token', data.access_token, COOKIE_OPTIONS)
+    res.cookie('admin_token', data.access_token, cookieOptions(data.rememberMe))
     return res.json({ success: true })
   }
 
@@ -33,7 +39,7 @@ export class AuthController {
   @Post('2fa/verify')
   async verify2fa(@Body() body: { preAuthToken: string; code: string }, @Res() res: Response) {
     const data = await this.authService.verify2FA(body.preAuthToken, body.code)
-    res.cookie('admin_token', data.access_token, COOKIE_OPTIONS)
+    res.cookie('admin_token', data.access_token, cookieOptions(data.rememberMe))
     return res.json({ success: true })
   }
 

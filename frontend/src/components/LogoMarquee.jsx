@@ -12,10 +12,8 @@ export default function LogoMarquee() {
 
   if (refs.length === 0) return null
 
-  // Logoları ekranı dolduracak kadar çoğalt (en az 12 adet)
   const count = Math.ceil(12 / refs.length)
   const items = Array.from({ length: count }, () => refs).flat()
-  // Seamless loop için 2 kopya
   const doubled = [...items, ...items]
 
   return (

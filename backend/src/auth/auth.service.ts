@@ -111,7 +111,7 @@ export class AuthService implements OnModuleInit {
     }
   }
 
-  async login(username: string, password: string) {
+  async login(username: string, password: string, rememberMe = false) {
     await this.validateCredentials(username, password)
 
     const config = await this.adminConfigService.getConfig()
@@ -119,19 +119,17 @@ export class AuthService implements OnModuleInit {
 
     if (config.totpSecret && !bypass) {
       const preAuthToken = this.jwtService.sign(
-        { username, sub: 'admin', role: 'pre-auth' },
+        { username, sub: 'admin', role: 'pre-auth', rememberMe },
         { expiresIn: '5m' },
       )
       return { requires2fa: true, preAuthToken }
     }
 
-    // O-03: jti (JWT ID) ekle — O-02: fallback 8h
     const jti = crypto.randomUUID()
+    const expiresIn = rememberMe ? '30d' : this.cfg.get('JWT_EXPIRES_IN', '8h')
     return {
-      access_token: this.jwtService.sign(
-        { username, sub: 'admin', jti },
-        { expiresIn: this.cfg.get('JWT_EXPIRES_IN', '8h') },
-      ),
+      access_token: this.jwtService.sign({ username, sub: 'admin', jti }, { expiresIn }),
+      rememberMe,
     }
   }
 
@@ -167,13 +165,15 @@ export class AuthService implements OnModuleInit {
     // O-01: Kodu 60 saniye TTL ile Redis'e kaydet
     await this.redis.set(otpKey, '1', 'EX', 60)
 
-    // O-03: jti ekle — O-02: fallback 8h
+    const rememberMe = !!payload.rememberMe
     const jti = crypto.randomUUID()
+    const expiresIn = rememberMe ? '30d' : this.cfg.get('JWT_EXPIRES_IN', '8h')
     return {
       access_token: this.jwtService.sign(
         { username: payload.username, sub: 'admin', jti },
-        { expiresIn: this.cfg.get('JWT_EXPIRES_IN', '8h') },
+        { expiresIn },
       ),
+      rememberMe,
     }
   }
 

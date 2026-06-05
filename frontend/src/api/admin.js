@@ -11,12 +11,12 @@ function authOptions(extra = {}) {
   }
 }
 
-export async function login(username, password) {
+export async function login(username, password, rememberMe = false) {
   const res = await fetch(`${API}/api/auth/login`, {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, password }),
+    body: JSON.stringify({ username, password, rememberMe }),
   })
   if (res.status === 429) {
     const err = new Error('429')

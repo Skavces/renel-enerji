@@ -40,7 +40,7 @@ export default function AdminLogin() {
     setError('')
     setLoading(true)
     try {
-      const data = await login(form.username, form.password)
+      const data = await login(form.username, form.password, remember)
       if (data.requires2fa) {
         setPreAuthToken(data.preAuthToken)
         setStep('2fa')
