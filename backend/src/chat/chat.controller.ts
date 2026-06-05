@@ -1,6 +1,6 @@
 import { BadRequestException, Body, Controller, Post } from '@nestjs/common'
 import { Throttle } from '@nestjs/throttler'
-import { ChatMessage, ChatService } from './chat.service'
+import { ChatMessage, ChatService, INJECTION_PATTERNS, sanitizeContent } from './chat.service'
 
 interface ChatBody {
   messages: ChatMessage[]
@@ -18,12 +18,18 @@ export class ChatController {
     if (body.messages.length > 20)
       throw new BadRequestException('Çok fazla mesaj')
 
+    if (body.messages[0]?.role !== 'user')
+      throw new BadRequestException('İlk mesaj kullanıcıdan olmalı')
+
     const clean = body.messages.map(m => {
       if (m.role !== 'user' && m.role !== 'assistant')
         throw new BadRequestException('Geçersiz mesaj rolü')
       if (typeof m.content !== 'string' || m.content.length > 1000)
         throw new BadRequestException('Geçersiz mesaj içeriği')
-      return { role: m.role, content: m.content.trim() }
+      const content = sanitizeContent(m.content)
+      if (m.role === 'user' && INJECTION_PATTERNS.some(p => p.test(content)))
+        throw new BadRequestException('Geçersiz mesaj içeriği')
+      return { role: m.role, content }
     })
 
     const reply = await this.chatService.chat(clean)
@@ -41,7 +47,7 @@ export class ChatController {
         throw new BadRequestException('Geçersiz mesaj rolü')
       if (typeof m.content !== 'string' || m.content.length > 1000)
         throw new BadRequestException('Geçersiz mesaj içeriği')
-      return { role: m.role, content: m.content.trim() }
+      return { role: m.role, content: sanitizeContent(m.content) }
     })
 
     const text = await this.chatService.generateSummary(clean)
