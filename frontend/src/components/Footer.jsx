@@ -105,7 +105,6 @@ export default function Footer() {
           <p>© {new Date().getFullYear()} RenEl Enerji Mühendislik. Tüm hakları saklıdır.</p>
           <div className="flex items-center gap-6">
             <p className="text-xs">Tasarım & Kodlama <a href="https://selimkavaklicesme.com" target="_blank" rel="noopener noreferrer" className="text-[#f5ce31] hover:text-[#448834] transition-colors">Selim Kavaklıçeşme</a></p>
-            <p>Soma / Manisa</p>
           </div>
         </div>
       </div>
