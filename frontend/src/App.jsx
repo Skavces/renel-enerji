@@ -90,7 +90,7 @@ function PublicLayout() {
       <Footer />
       <button
         onClick={() => openChat(setChatOpen)}
-        className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 bg-[#448834] hover:bg-[#357228] text-white font-semibold text-sm px-5 py-3 rounded-full shadow-lg shadow-black/15 transition-all hover:scale-105"
+        className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 bg-[#357228] hover:bg-[#2d6124] text-white font-semibold text-sm px-5 py-3 rounded-full shadow-lg shadow-black/15 transition-all hover:scale-105"
       >
         <Bot size={18} />
         Size Nasıl Yardımcı Olabiliriz?

@@ -57,7 +57,7 @@ export default function Footer() {
 
           {/* Navigation */}
           <div>
-            <h4 className="text-white font-bold mb-4">Sayfalar</h4>
+            <p className="text-white font-bold mb-4">Sayfalar</p>
             <ul className="space-y-2">
               <li><Link to="/" className="text-sm hover:text-[#f5ce31] transition-colors">Anasayfa</Link></li>
               <li><Link to="/hizmetler" className="text-sm hover:text-[#f5ce31] transition-colors">Hizmetler</Link></li>
@@ -72,7 +72,7 @@ export default function Footer() {
 
           {/* Contact */}
           <div>
-            <h4 className="text-white font-bold mb-4">İletişim</h4>
+            <p className="text-white font-bold mb-4">İletişim</p>
             <ul className="space-y-3">
               <li className="flex items-start gap-3">
                 <MapPin size={15} className="text-[#f5ce31] shrink-0 mt-0.5" />
