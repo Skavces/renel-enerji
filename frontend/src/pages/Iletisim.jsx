@@ -172,19 +172,23 @@ export default function Iletisim() {
         </div>
       </section>
 
-      {/* Full-width map */}
-      <div className="h-[260px] sm:h-[360px] lg:h-[420px] w-full">
-        <iframe
-          title="RenEl Enerji Konumu"
-          src="https://maps.google.com/maps?q=Renel+Enerji+M%C3%BChendislik&output=embed&hl=tr"
-          width="100%"
-          height="100%"
-          style={{ border: 0 }}
-          allowFullScreen
-          loading="lazy"
-          referrerPolicy="no-referrer-when-downgrade"
-        />
-      </div>
+      {/* Map */}
+      <section className="py-16 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="overflow-hidden rounded-2xl border border-gray-200 shadow-sm h-[260px] sm:h-[360px] lg:h-[420px]">
+            <iframe
+              title="RenEl Enerji Konumu"
+              src="https://maps.google.com/maps?q=Renel+Enerji+M%C3%BChendislik&output=embed&hl=tr"
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+          </div>
+        </div>
+      </section>
     </>
   )
 }
