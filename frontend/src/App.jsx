@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useEffect, lazy, Suspense, useState } from 'react'
+import { Bot } from 'lucide-react'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import TeklifChatbot from './components/TeklifChatbot'
@@ -78,7 +79,8 @@ function PublicLayout() {
         onClick={() => setChatOpen(true)}
         className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 bg-[#448834] hover:bg-[#357228] text-white font-semibold text-sm px-5 py-3 rounded-full shadow-lg shadow-black/15 transition-all hover:scale-105"
       >
-        Teklif Al
+        <Bot size={18} />
+        Size Nasıl Yardımcı Olabiliriz?
       </button>
       {chatOpen && (
         <TeklifChatbot
