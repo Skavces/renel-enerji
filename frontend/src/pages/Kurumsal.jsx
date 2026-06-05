@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { CheckCircle, Award, Wrench, HeartHandshake, Leaf, BarChart3, ArrowRight, Phone } from 'lucide-react'
+import { CheckCircle, Award, Wrench, HeartHandshake, Leaf, BarChart3, ArrowRight } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
 import SEO from '../components/SEO'
 
