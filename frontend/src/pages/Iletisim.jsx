@@ -55,7 +55,7 @@ export default function Iletisim() {
           </div>
 
           {/* Two columns */}
-          <div className="grid lg:grid-cols-2 gap-8 items-stretch">
+          <div className="grid md:grid-cols-2 gap-8 items-stretch">
 
             {/* Left — contact cards */}
             <div className="flex flex-col gap-4 h-full">
