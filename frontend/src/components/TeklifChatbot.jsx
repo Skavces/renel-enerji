@@ -1,15 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
-import { X, Send, Bot, Loader2, MessageCircle } from 'lucide-react'
+import { X, Send, Bot, Loader2, MessageCircle, Zap, Droplets, Car, Wifi, Battery } from 'lucide-react'
 import { sendChatMessage, generateWhatsappSummary } from '../api/chat'
 
 const GREETING = 'Merhaba, RenEl Enerji Mühendislik\'e hoş geldiniz. Size en uygun güneş enerjisi sistemini belirlemek için birkaç soru sormak istiyorum. Hangi konuda bilgi almak istersiniz?'
 
 const QUICK_REPLIES = [
-  { label: 'Çatı Tipi GES', value: 'Çatı tipi güneş enerjisi sistemi hakkında bilgi almak istiyorum.' },
-  { label: 'Tarımsal Sulama GES', value: 'Tarımsal sulama için güneş enerjisi sistemi hakkında bilgi almak istiyorum.' },
-  { label: 'EV Şarj İstasyonu', value: 'Elektrikli araç şarj istasyonu hakkında bilgi almak istiyorum.' },
-  { label: 'Off-Grid Sistem', value: 'Şebekeden bağımsız off-grid sistem hakkında bilgi almak istiyorum.' },
-  { label: 'Hibrit GES', value: 'Bataryalı hibrit güneş enerjisi sistemi hakkında bilgi almak istiyorum.' },
+  { label: 'Çatı Tipi GES', desc: 'Konut veya ticari bina çatısına kurulum', icon: Zap, value: 'Çatı tipi güneş enerjisi sistemi hakkında bilgi almak istiyorum.' },
+  { label: 'Tarımsal Sulama GES', desc: 'Tarla ve bahçe sulama sistemleri', icon: Droplets, value: 'Tarımsal sulama için güneş enerjisi sistemi hakkında bilgi almak istiyorum.' },
+  { label: 'EV Şarj İstasyonu', desc: 'Elektrikli araç şarj altyapısı', icon: Car, value: 'Elektrikli araç şarj istasyonu hakkında bilgi almak istiyorum.' },
+  { label: 'Off-Grid Sistem', desc: 'Şebekeden tamamen bağımsız çözüm', icon: Wifi, value: 'Şebekeden bağımsız off-grid sistem hakkında bilgi almak istiyorum.' },
+  { label: 'Hibrit GES', desc: 'Bataryalı + şebekeli kombinasyon', icon: Battery, value: 'Bataryalı hibrit güneş enerjisi sistemi hakkında bilgi almak istiyorum.' },
 ]
 
 const WHATSAPP_NUMBER = '905543796004'
@@ -22,15 +22,12 @@ export default function TeklifChatbot({ onClose, messages: initialMessages, onMe
   const [loading, setLoading] = useState(false)
   const [summaryLoading, setSummaryLoading] = useState(false)
   const bottomRef = useRef(null)
-
-  function updateMessages(updater) {
-    updateMessages(prev => {
-      const next = typeof updater === 'function' ? updater(prev) : updater
-      onMessagesChange?.(next)
-      return next
-    })
-  }
   const inputRef = useRef(null)
+
+  function saveMessages(next) {
+    setMessages(next)
+    onMessagesChange?.(next)
+  }
 
   const userMessageCount = messages.filter(m => m.role === 'user').length
   const showWhatsapp = userMessageCount >= 2
@@ -49,7 +46,7 @@ export default function TeklifChatbot({ onClose, messages: initialMessages, onMe
 
     const userMessage = { role: 'user', content: trimmed }
     const updated = [...messages, userMessage]
-    updateMessages(updated)
+    saveMessages(updated)
     setInput('')
     setLoading(true)
 
@@ -58,12 +55,14 @@ export default function TeklifChatbot({ onClose, messages: initialMessages, onMe
         m => !(m.role === 'assistant' && m.content === GREETING)
       )
       const { reply } = await sendChatMessage(history)
-      updateMessages(prev => [...prev, { role: 'assistant', content: reply }])
+      const withReply = [...updated, { role: 'assistant', content: reply }]
+      saveMessages(withReply)
     } catch {
-      updateMessages(prev => [...prev, {
+      const withError = [...updated, {
         role: 'assistant',
         content: 'Üzgünüz, şu anda yanıt veremiyoruz. Lütfen doğrudan iletişime geçin: 0554 379 60 04',
-      }])
+      }]
+      saveMessages(withError)
     } finally {
       setLoading(false)
     }
@@ -136,18 +135,27 @@ export default function TeklifChatbot({ onClose, messages: initialMessages, onMe
             </div>
           ))}
 
-          {/* Quick reply buttons — sadece ilk mesajdan sonra göster */}
+          {/* Hızlı seçim kartları */}
           {messages.length === 1 && !loading && (
-            <div className="flex flex-wrap gap-2 pl-9">
-              {QUICK_REPLIES.map(qr => (
-                <button
-                  key={qr.label}
-                  onClick={() => send(qr.value)}
-                  className="text-xs px-3 py-1.5 rounded-full border border-[#448834] text-[#448834] hover:bg-[#448834] hover:text-white transition-colors bg-white"
-                >
-                  {qr.label}
-                </button>
-              ))}
+            <div className="pl-9 flex flex-col gap-2">
+              {QUICK_REPLIES.map(qr => {
+                const Icon = qr.icon
+                return (
+                  <button
+                    key={qr.label}
+                    onClick={() => send(qr.value)}
+                    className="flex items-center gap-3 w-full text-left px-4 py-3 bg-white border border-gray-200 hover:border-[#448834] hover:bg-[#f5fbf3] rounded-xl transition-colors shadow-sm group"
+                  >
+                    <div className="w-8 h-8 bg-[#f0f9ee] group-hover:bg-[#448834] rounded-lg flex items-center justify-center shrink-0 transition-colors">
+                      <Icon size={15} className="text-[#448834] group-hover:text-white transition-colors" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-800">{qr.label}</p>
+                      <p className="text-xs text-gray-400">{qr.desc}</p>
+                    </div>
+                  </button>
+                )
+              })}
             </div>
           )}
 
@@ -173,10 +181,7 @@ export default function TeklifChatbot({ onClose, messages: initialMessages, onMe
               disabled={summaryLoading}
               className="w-full flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20bd5a] disabled:opacity-60 text-white font-semibold text-sm py-2.5 rounded-xl transition-colors"
             >
-              {summaryLoading
-                ? <Loader2 size={16} className="animate-spin" />
-                : <MessageCircle size={16} />
-              }
+              {summaryLoading ? <Loader2 size={16} className="animate-spin" /> : <MessageCircle size={16} />}
               {summaryLoading ? 'Hazırlanıyor...' : 'WhatsApp\'tan Teklif Al'}
             </button>
           </div>
