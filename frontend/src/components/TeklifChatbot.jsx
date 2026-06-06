@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { X, Send, Bot, Loader2, MessageCircle, Zap, Droplets, Car, Wifi, Battery } from 'lucide-react'
+import { X, Send, Loader2, MessageCircle, Zap, Droplets, Car, Wifi, Battery } from 'lucide-react'
 import { sendChatMessage, generateWhatsappSummary } from '../api/chat'
 
 const GREETING = 'Merhaba, RenEl Enerji Mühendislik\'e hoş geldiniz. Size en uygun güneş enerjisi sistemini belirlemek için birkaç soru sormak istiyorum. Hangi konuda bilgi almak istersiniz?'
@@ -101,7 +101,7 @@ export default function TeklifChatbot({ onClose, closing, messages: initialMessa
       <div className={`relative w-full sm:w-[400px] h-[85vh] sm:h-[560px] bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden origin-bottom sm:origin-bottom-right ${closing ? 'chatbot-exit' : 'chatbot-enter'}`}>
         {/* Header */}
         <div className="bg-[#448834] px-5 py-4 flex items-center gap-3 shrink-0">
-          <Bot size={26} className="text-white" />
+          <img src="/renel-logo.svg" alt="RenEl" className="w-10 h-10" style={{ filter: 'brightness(0) invert(1)' }} />
           <div className="flex-1">
             <p className="text-white font-semibold text-sm leading-tight">RenEl Enerji Danışmanı</p>
             <p className="text-white/70 text-xs">Size en uygun sistemi belirleyelim</p>
@@ -116,12 +116,21 @@ export default function TeklifChatbot({ onClose, closing, messages: initialMessa
         </div>
 
         {/* Messages */}
-        <div ref={messagesRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-gray-50">
+        <div
+          ref={messagesRef}
+          className="flex-1 overflow-y-auto px-4 py-4 space-y-3"
+          style={{
+            backgroundImage: 'linear-gradient(rgba(255,255,255,0.72), rgba(255,255,255,0.72)), url(/aichatwallpaper.webp)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+          }}
+        >
           {messages.map((m, i) => (
             <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               {m.role === 'assistant' && (
-                <div className="w-7 h-7 bg-[#448834] rounded-full flex items-center justify-center shrink-0 mr-2 mt-0.5">
-                  <Bot size={13} className="text-white" />
+                <div className="w-9 h-9 bg-white rounded-full flex items-center justify-center shrink-0 mr-2 mt-0.5 shadow-sm border border-gray-100">
+                  <img src="/renel-logo.svg" alt="RenEl" className="w-6 h-6" />
                 </div>
               )}
               <div
