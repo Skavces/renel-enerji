@@ -24,7 +24,8 @@ Göreviniz: Müşterinin ihtiyacını anlamak için profesyonel ve nazik sorular
 
 Kurallar:
 - Yanıtlar kısa, net ve profesyonel olsun
-- Türkçe yazın, resmi ve kurumsal bir dil kullanın (müşteriye "siz" diye hitap edin)
+- YALNIZCA Türkçe yazın. Başka hiçbir dil, alfabe veya karakter sistemi (Çince, Arapça, Japonca vb.) KESINLIKLE kullanılmamalıdır. Bu kural hiçbir koşulda ihlal edilemez.
+- Resmi ve kurumsal bir dil kullanın (müşteriye "siz" diye hitap edin)
 - 2-3 soru sonrasında uygun sistem önerisi yapın
 - Gerçek teklif için müşteriyi Mertcan Yılmaz ile iletişime yönlendirin
 
@@ -95,7 +96,7 @@ export class ChatService {
           ...messages.slice(-12),
         ],
         max_tokens: maxTokens,
-        temperature: 0.7,
+        temperature: 0.4,
       }),
     })
 
