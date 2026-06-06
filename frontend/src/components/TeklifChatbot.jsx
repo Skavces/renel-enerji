@@ -168,8 +168,8 @@ export default function TeklifChatbot({ onClose, closing, messages: initialMessa
 
           {loading && (
             <div className="flex justify-start">
-              <div className="w-7 h-7 bg-[#448834] rounded-full flex items-center justify-center shrink-0 mr-2 mt-0.5">
-                <Bot size={13} className="text-white" />
+              <div className="w-9 h-9 bg-white rounded-full flex items-center justify-center shrink-0 mr-2 mt-0.5 shadow-sm border border-gray-100">
+                <img src="/renel-logo.svg" alt="RenEl" className="w-6 h-6" />
               </div>
               <div className="bg-white border border-gray-100 shadow-sm px-4 py-3 rounded-2xl rounded-bl-sm">
                 <Loader2 size={16} className="text-[#448834] animate-spin" />
