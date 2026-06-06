@@ -18,6 +18,11 @@ export class CreateBlogPostDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(160)
+  metaDescription?: string
+
+  @IsOptional()
+  @IsString()
   content?: string
 
   @IsOptional()

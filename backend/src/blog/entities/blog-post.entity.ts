@@ -20,6 +20,9 @@ export class BlogPost {
   @Column({ nullable: true })
   excerpt: string
 
+  @Column({ nullable: true })
+  metaDescription: string
+
   @Column({ type: 'text', default: '' })
   content: string
 

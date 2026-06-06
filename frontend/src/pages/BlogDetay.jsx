@@ -46,7 +46,7 @@ export default function BlogDetay() {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
     headline: post.title,
-    description: post.excerpt || post.title,
+    description: post.metaDescription || post.excerpt || post.title,
     image: absoluteImage,
     datePublished: post.publishedAt || post.createdAt,
     dateModified: post.updatedAt || post.publishedAt || post.createdAt,
@@ -66,7 +66,7 @@ export default function BlogDetay() {
     <>
       <SEO
         title={post.title}
-        description={post.excerpt || post.title}
+        description={post.metaDescription || post.excerpt || post.title}
         image={absoluteImage}
         type="article"
         jsonLd={blogSchema}

@@ -32,6 +32,7 @@ export default function BlogForm() {
     title: '',
     slug: '',
     excerpt: '',
+    metaDescription: '',
     content: '',
     published: false,
   })
@@ -51,6 +52,7 @@ export default function BlogForm() {
         title: post.title || '',
         slug: post.slug || '',
         excerpt: post.excerpt || '',
+        metaDescription: post.metaDescription || '',
         content: post.content || '',
         published: post.published || false,
       })
@@ -164,6 +166,20 @@ export default function BlogForm() {
             rows={2}
             className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#448834]/30 focus:border-[#448834]"
           />
+        </div>
+
+        {/* Meta Açıklama */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">Meta Açıklama <span className="text-gray-400 font-normal">(Google arama sonucu)</span></label>
+          <textarea
+            value={form.metaDescription}
+            onChange={(e) => set('metaDescription', e.target.value)}
+            placeholder="Boş bırakılırsa kısa özet kullanılır. Maks. 160 karakter önerilir."
+            rows={2}
+            maxLength={160}
+            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#448834]/30 focus:border-[#448834]"
+          />
+          <p className="text-xs text-gray-400 mt-1">{form.metaDescription.length}/160</p>
         </div>
 
         {/* Kapak Görseli */}
