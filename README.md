@@ -20,7 +20,8 @@ renel-enerji/
 │   │   ├── components/    # Shared components
 │   │   ├── pages/         # Pages
 │   │   │   ├── admin/     # Admin panel pages
-│   │   │   └── projeler/  # Project detail pages
+│   │   │   ├── projeler/  # Project detail pages
+│   │   │   └── neden-biz/ # Why Us detail pages
 │   │   ├── api/           # API request functions
 │   │   └── contexts/      # React contexts
 │   └── public/            # Static assets
@@ -29,7 +30,12 @@ renel-enerji/
 │       ├── auth/          # JWT authentication
 │       ├── projects/      # Projects module
 │       ├── references/    # References module
+│       ├── blog/          # Blog module
+│       ├── faq/           # FAQ module
+│       ├── chat/          # AI chatbot module
 │       ├── analytics/     # Umami analytics integration
+│       ├── sitemap/       # Dynamic sitemap generation
+│       ├── weather/       # Weather integration
 │       └── upload/        # File upload
 └── docker-compose.yml # All services
 ```
@@ -99,5 +105,7 @@ Accessible at `/admin`, protected by JWT authentication.
 **Features:**
 - Project management (create, edit, delete, media upload)
 - References management
+- Blog management
+- FAQ management
 - Site analytics (Umami integration)
 - Two-factor authentication (2FA)
