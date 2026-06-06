@@ -138,9 +138,12 @@ export class UploadController {
   ) {
     if (!file) throw new BadRequestException('Geçerli bir görsel yükleyin (JPEG, PNG veya WEBP)')
     await assertMagicBytes(file.path, ALLOWED_IMAGE_MIMES)
+    const post = await this.blogService.findById(id)
     const finalPath = await toWebp(file.path)
-    const filename = finalPath.split('/').pop()
-    const coverImage = `/uploads/${filename}`
+    const seoName = `${post.slug}-gunes-enerjisi-${Date.now()}.webp`
+    const seoPath = `./uploads/${seoName}`
+    renameSync(finalPath, seoPath)
+    const coverImage = `/uploads/${seoName}`
     return this.blogService.update(id, { coverImage })
   }
 }
