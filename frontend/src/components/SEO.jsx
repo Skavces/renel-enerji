@@ -19,7 +19,7 @@ export default function SEO({
   const canonical = `${SITE_URL}${pathname}`
   const fullTitle = title
     ? `${title} | ${SITE_NAME}`
-    : `${SITE_NAME} | Şebekeden Güneşe, Gücün Her Noktasında`
+    : `Soma GES Kurulumu | ${SITE_NAME}`
 
   return (
     <Helmet>

@@ -124,8 +124,8 @@ export default function Hizmetler() {
   return (
     <>
       <SEO
-        title="Hizmetler"
-        description="Güneş enerjisi hizmetlerimiz: tarımsal sulama GES, çatı ve arazi tipi GES, bağ evi depolamalı GES, elektrikli araç şarj istasyonu kurulum ve mühendislik danışmanlığı."
+        title="Soma Güneş Enerjisi Sistemleri"
+        description="Soma ve Manisa'da güneş enerjisi hizmetleri: tarımsal sulama GES, çatı ve arazi tipi GES, bağ evi depolamalı GES, elektrikli araç şarj istasyonu kurulum ve danışmanlık."
         jsonLd={hizmetlerJsonLd}
       />
       <PageHeader title="Hizmetler" />

@@ -64,8 +64,8 @@ export default function Iletisim() {
   return (
     <>
       <SEO
-        title="İletişim"
-        description="RenEL Enerji Mühendislik ile iletişime geçin. Güneş enerjisi sistemi teklifi, proje danışmanlığı ve kurulum için Soma/Manisa ofisimizi arayın veya yazın."
+        title="Soma GES Teklif Al"
+        description="Soma ve Manisa'da güneş enerjisi sistemi teklifi alın. Tarımsal sulama GES, çatı tipi GES ve EV şarj istasyonu kurulumu için RenEL Enerji Mühendislik ile iletişime geçin."
         jsonLd={jsonLd}
       />
       <PageHeader title="İletişim" />
