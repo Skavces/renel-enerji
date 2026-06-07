@@ -4,9 +4,7 @@ import { ArrowLeft, ArrowRight, CheckCircle2, X, Play, Zap } from 'lucide-react'
 import PageHeader from '../../components/PageHeader'
 import { fetchProjectBySlug, mediaUrl } from '../../api/projects'
 import SEO from '../../components/SEO'
-
-const WA_NUMBER = '905543796004'
-const waLink = (msg) => `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`
+import { waLink } from '../../lib/whatsapp'
 
 export default function ProjeDetay() {
   const { slug } = useParams()

@@ -3,9 +3,7 @@ import { useParams, Link, Navigate } from 'react-router-dom'
 import { Award, Wrench, Leaf, BarChart3, HeartHandshake, CheckCircle, ChevronRight } from 'lucide-react'
 import PageHeader from '../../components/PageHeader'
 import SEO from '../../components/SEO'
-
-const WA_NUMBER = '905543796004'
-const waLink = (msg) => `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`
+import { waLink } from '../../lib/whatsapp'
 
 const pages = [
   {

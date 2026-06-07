@@ -1,8 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Droplets, Home, Battery, Car, ArrowRight } from 'lucide-react'
-
-const WA_NUMBER = '905543796004'
-const waLink = (msg) => `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`
+import { waLink } from '../lib/whatsapp'
 
 const services = [
   {

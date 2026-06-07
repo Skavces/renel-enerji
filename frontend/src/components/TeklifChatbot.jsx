@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { X, Send, Loader2, MessageCircle, Zap, Droplets, Car, Wifi, Battery } from 'lucide-react'
 import { sendChatMessage, generateWhatsappSummary } from '../api/chat'
+import { WA_NUMBER, waLink } from '../lib/whatsapp'
 
 const GREETING = 'Merhaba, RenEl Enerji Mühendislik\'e hoş geldiniz. Size en uygun güneş enerjisi sistemini belirlemek için birkaç soru sormak istiyorum. Hangi konuda bilgi almak istersiniz?'
 
@@ -11,8 +12,6 @@ const QUICK_REPLIES = [
   { label: 'Off-Grid Sistem', desc: 'Şebekeden tamamen bağımsız çözüm', icon: Wifi, value: 'Şebekeden bağımsız off-grid sistem hakkında bilgi almak istiyorum.' },
   { label: 'Hibrit GES', desc: 'Bataryalı + şebekeli kombinasyon', icon: Battery, value: 'Bataryalı hibrit güneş enerjisi sistemi hakkında bilgi almak istiyorum.' },
 ]
-
-const WHATSAPP_NUMBER = '905543796004'
 
 export default function TeklifChatbot({ onClose, closing, messages: initialMessages, onMessagesChange }) {
   const [messages, setMessages] = useState(
@@ -77,10 +76,9 @@ export default function TeklifChatbot({ onClose, closing, messages: initialMessa
         m => !(m.role === 'assistant' && m.content === GREETING)
       )
       const { text } = await generateWhatsappSummary(history)
-      const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`
-      window.open(url, '_blank', 'noopener,noreferrer')
+      window.open(waLink(text), '_blank', 'noopener,noreferrer')
     } catch {
-      window.open(`https://wa.me/${WHATSAPP_NUMBER}`, '_blank', 'noopener,noreferrer')
+      window.open(`https://wa.me/${WA_NUMBER}`, '_blank', 'noopener,noreferrer')
     } finally {
       setSummaryLoading(false)
     }

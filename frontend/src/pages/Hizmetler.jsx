@@ -2,12 +2,7 @@ import { Link } from 'react-router-dom'
 import { Droplets, Home, Battery, Car, ArrowRight, CheckCircle } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
 import SEO from '../components/SEO'
-
-const WA_NUMBER = '905543796004'
-
-function waLink(message) {
-  return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(message)}`
-}
+import { waLink } from '../lib/whatsapp'
 
 const services = [
   {

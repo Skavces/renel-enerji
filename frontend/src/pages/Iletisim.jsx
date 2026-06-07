@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Phone, Mail, MapPin, Send, Clock } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
 import SEO from '../components/SEO'
+import { WA_NUMBER, waLink } from '../lib/whatsapp'
 
 const services = [
   'Akıllı Tarımsal Sulama GES',
@@ -27,7 +28,7 @@ export default function Iletisim() {
       form.service ? `⚡ *Hizmet:* ${form.service}` : null,
       form.message ? `💬 *Mesaj:* ${form.message}` : null,
     ].filter(Boolean).join('\n')
-    window.open(`https://wa.me/905543796004?text=${encodeURIComponent(lines)}`, '_blank')
+    window.open(waLink(lines), '_blank')
     setSent(true)
     setTimeout(() => setSent(false), 5000)
     setForm({ name: '', phone: '', service: '', message: '' })
@@ -103,7 +104,7 @@ export default function Iletisim() {
                 </div>
               </a>
 
-              <a href="tel:+905543796004"
+              <a href={`tel:+${WA_NUMBER}`}
                 className="flex items-center gap-4 bg-white border border-gray-200 hover:border-[#448834]/40 rounded-2xl p-7 transition-all group flex-1 border-b-4 border-b-[#448834]"
               >
                 <div className="flex items-center justify-center shrink-0">

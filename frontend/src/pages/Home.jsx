@@ -5,6 +5,7 @@ import WhyUs from '../components/WhyUs'
 import HowItWorks from '../components/HowItWorks'
 import LogoMarquee from '../components/LogoMarquee'
 import SEO from '../components/SEO'
+import { WA_NUMBER } from '../lib/whatsapp'
 
 const homeSchema = {
   '@context': 'https://schema.org',
@@ -26,7 +27,7 @@ const homeSchema = {
         '@type': 'ImageObject',
         url: 'https://renelenerji.com/renel-logo.svg',
       },
-      telephone: '+905543796004',
+      telephone: `+${WA_NUMBER}`,
       email: 'info@renelenerji.com',
       address: {
         '@type': 'PostalAddress',
@@ -43,7 +44,7 @@ const homeSchema = {
       description:
         "Soma/Manisa'da güneş enerjisi mühendislik hizmetleri. Tarımsal sulama GES, çatı ve arazi tipi GES, depolamalı GES, EV şarj istasyonu kurulum ve danışmanlık.",
       url: 'https://renelenerji.com',
-      telephone: '+905543796004',
+      telephone: `+${WA_NUMBER}`,
       email: 'info@renelenerji.com',
       logo: 'https://renelenerji.com/renel-logo.svg',
       image: 'https://renelenerji.com/og-image.webp',
