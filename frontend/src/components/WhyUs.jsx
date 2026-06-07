@@ -51,7 +51,7 @@ export default function WhyUs() {
                 <Icon size={28} className="text-[#357228]" />
                 <h3 className="font-bold text-gray-900 text-lg">{title}</h3>
                 <p className="text-gray-500 text-base leading-relaxed flex-1">{desc}</p>
-                <Link to={`/neden-biz/${slug}`} className="text-[#357228] text-sm font-semibold flex items-center gap-1 hover:gap-2 transition-all w-fit">
+                <Link to={`/neden-biz/${slug}`} aria-label={`${title} hakkında detaylı bilgi`} className="text-[#357228] text-sm font-semibold flex items-center gap-1 hover:gap-2 transition-all w-fit">
                   Detaylı Bilgi <span>›</span>
                 </Link>
               </div>

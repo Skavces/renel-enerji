@@ -56,7 +56,7 @@ export default function Hero() {
 
           <Link
             to="/projelerimiz"
-            className="inline-flex items-center gap-2 bg-[#448834] hover:bg-[#357228] text-white font-bold px-6 sm:px-7 py-3 sm:py-3.5 rounded-xl transition-colors shadow-lg shadow-black/30"
+            className="inline-flex items-center gap-2 bg-[#3d7a2e] hover:bg-[#357228] text-white font-bold px-6 sm:px-7 py-3 sm:py-3.5 rounded-xl transition-colors shadow-lg shadow-black/30"
           >
             Projelerimizi Gör
             <ArrowRight size={17} />

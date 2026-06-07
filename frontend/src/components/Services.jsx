@@ -118,6 +118,7 @@ export default function Services() {
                   <div className="flex items-center justify-between gap-2 pt-1">
                     <Link
                       to={`/hizmetler/${s.slug}`}
+                      aria-label={`${s.title} hakkında detaylı bilgi`}
                       className="text-sm font-semibold text-gray-500 hover:text-[#448834] transition-colors"
                     >
                       Detaylı Bilgi
