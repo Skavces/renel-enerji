@@ -48,7 +48,7 @@ export default function Navbar() {
                 className={({ isActive }) =>
                   `font-medium text-base transition-colors relative group ${
                     transparent
-                      ? isActive ? 'text-[#448834] drop-shadow-[0_1px_2px_rgba(0,0,0,0.25)]' : 'text-white hover:text-[#448834] drop-shadow-[0_1px_2px_rgba(0,0,0,0.25)]'
+                      ? isActive ? 'text-[#448834] drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]' : 'text-white hover:text-[#448834] drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]'
                       : isActive ? 'text-[#448834]' : 'text-gray-700 hover:text-[#448834]'
                   }`
                 }
