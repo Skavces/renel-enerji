@@ -1,7 +1,7 @@
 import './instrument'
 
 import { NestFactory } from '@nestjs/core'
-import { ValidationPipe, RequestMethod } from '@nestjs/common'
+import { Logger, ValidationPipe, RequestMethod } from '@nestjs/common'
 import { NestExpressApplication } from '@nestjs/platform-express'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { join } from 'path'
@@ -46,6 +46,6 @@ async function bootstrap() {
 
   const port = process.env.PORT || 3001
   await app.listen(port)
-  console.log(`Backend running on http://localhost:${port}/api`)
+  new Logger('Bootstrap').log(`Backend running on http://localhost:${port}/api`)
 }
 bootstrap()

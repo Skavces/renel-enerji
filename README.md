@@ -98,6 +98,22 @@ UMAMI_APP_SECRET=    # Umami app secret
 | Umami | 3002 | Analytics dashboard |
 | PostgreSQL | 5432 | Main database (internal) |
 
+## Database Backup & Restore
+
+The main PostgreSQL data lives in the `pgdata` Docker volume. To back it up or restore it:
+
+```bash
+# Backup (creates a timestamped SQL dump on the host)
+docker compose exec -T db pg_dump -U renel renel_enerji > backup_$(date +%Y%m%d_%H%M%S).sql
+
+# Restore (overwrites existing data — stop the backend first to avoid writes mid-restore)
+docker compose stop backend
+cat backup_20260101_120000.sql | docker compose exec -T db psql -U renel renel_enerji
+docker compose start backend
+```
+
+Uploaded files (project/blog media) live in the `uploads` volume — back up the host directory it's bound to (or `docker run --rm -v renel-enerji_uploads:/data -v $(pwd):/backup alpine tar czf /backup/uploads.tar.gz -C /data .`) alongside the database dump.
+
 ## Admin Panel
 
 Accessible at `/admin`, protected by JWT authentication.

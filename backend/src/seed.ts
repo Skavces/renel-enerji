@@ -14,7 +14,6 @@ const ds = new DataSource({
   password: process.env.DB_PASS || 'postgres',
   database: process.env.DB_NAME || 'renel_enerji',
   entities: [Project, ProjectMedia],
-  synchronize: true,
 })
 
 const PROJECTS = [
