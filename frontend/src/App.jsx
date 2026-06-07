@@ -45,6 +45,22 @@ function ProtectedRoute({ children }) {
   return children
 }
 
+// Temporary — Sentry kurulumunu doğrulamak için. Doğrulandıktan sonra kaldırılacak.
+function SentryTestButton() {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <button
+        className="px-6 py-3 bg-red-600 text-white rounded-lg"
+        onClick={() => {
+          throw new Error('This is your first error!')
+        }}
+      >
+        Break the world
+      </button>
+    </div>
+  )
+}
+
 function PageLoader() {
   return <div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-2 border-[#448834] border-t-transparent rounded-full animate-spin" /></div>
 }
@@ -85,6 +101,7 @@ function PublicLayout() {
             <Route path="/blog/:slug" element={<BlogDetay />} />
             <Route path="/sss" element={<SSS />} />
             <Route path="/iletisim" element={<Iletisim />} />
+            <Route path="/sentry-test" element={<SentryTestButton />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
