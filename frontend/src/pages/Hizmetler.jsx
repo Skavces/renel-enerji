@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { Droplets, Home, Battery, Car, ArrowRight, CheckCircle } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
 import SEO from '../components/SEO'
@@ -182,15 +183,24 @@ export default function Hizmetler() {
                       </li>
                     ))}
                   </ul>
-                  <a
-                    href={waLink(s.waMessage)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 bg-[#448834] hover:bg-[#357228] text-white font-semibold px-6 py-3 rounded-xl transition-colors w-fit text-sm shadow-md shadow-green-900/20"
-                  >
-                    Teklif Al
-                    <ArrowRight size={15} />
-                  </a>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <a
+                      href={waLink(s.waMessage)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 bg-[#448834] hover:bg-[#357228] text-white font-semibold px-6 py-3 rounded-xl transition-colors w-fit text-sm shadow-md shadow-green-900/20"
+                    >
+                      Teklif Al
+                      <ArrowRight size={15} />
+                    </a>
+                    <Link
+                      to={`/hizmetler/${s.slug}`}
+                      className="inline-flex items-center gap-1.5 text-[#357228] font-semibold text-sm hover:gap-3 transition-all"
+                    >
+                      Detaylı İncele
+                      <ArrowRight size={15} />
+                    </Link>
+                  </div>
                 </div>
               </div>
             )

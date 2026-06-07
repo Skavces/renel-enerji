@@ -8,6 +8,7 @@ import { AdminAuthProvider, useAdminAuth } from './contexts/AdminAuthContext'
 
 const Home = lazy(() => import('./pages/Home'))
 const Hizmetler = lazy(() => import('./pages/Hizmetler'))
+const HizmetDetay = lazy(() => import('./pages/hizmetler/HizmetDetay'))
 const Kurumsal = lazy(() => import('./pages/Kurumsal'))
 const Referanslar = lazy(() => import('./pages/Referanslar'))
 const Iletisim = lazy(() => import('./pages/Iletisim'))
@@ -74,6 +75,7 @@ function PublicLayout() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/hizmetler" element={<Hizmetler />} />
+            <Route path="/hizmetler/:slug" element={<HizmetDetay />} />
             <Route path="/kurumsal" element={<Kurumsal />} />
             <Route path="/projelerimiz" element={<Projelerimiz />} />
             <Route path="/projelerimiz/:slug" element={<ProjeDetay />} />

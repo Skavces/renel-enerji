@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { Droplets, Home, Battery, Car, ArrowRight } from 'lucide-react'
 
 const WA_NUMBER = '905543796004'
@@ -7,6 +8,7 @@ const services = [
   {
     icon: Droplets,
     title: 'Akıllı Tarımsal Sulama GES',
+    slug: 'sulama',
     description: 'Tarım arazilerinizin sulama ihtiyacını güneş enerjisiyle karşılayın. Elektrik faturanızı sıfıra indirin, verimliliğinizi artırın.',
     features: ['Pompa sistemleri entegrasyonu', 'Otomatik sulama kontrolü', 'Uzaktan izleme'],
     color: 'from-blue-500 to-cyan-400',
@@ -19,6 +21,7 @@ const services = [
   {
     icon: Home,
     title: 'Arazi & Çatı Tipi GES',
+    slug: 'cati-arazi',
     description: 'Evinizin çatısına veya arazinize kurulacak güneş enerji sistemi ile elektrik üretin, şebekeye satın ya da kendi tüketiminizde kullanın.',
     features: ['Konut & ticari çatılar', 'Arazi tipi büyük kurulumlar', 'Şebeke entegrasyonu'],
     color: 'from-[#448834] to-[#6ab84e]',
@@ -31,6 +34,7 @@ const services = [
   {
     icon: Battery,
     title: 'Bağ Evi Depolamalı GES',
+    slug: 'bag-evi',
     description: 'Şebekenin olmadığı veya kesintili olduğu bağ evleri için batarya destekli off-grid ya da hibrit güneş sistemi çözümleri.',
     features: ['Lityum batarya depolama', 'Hibrit & off-grid seçenekler', '7/24 enerji güvencesi'],
     color: 'from-amber-500 to-yellow-400',
@@ -43,6 +47,7 @@ const services = [
   {
     icon: Car,
     title: 'Elektrikli Araç Şarj İstasyonu',
+    slug: 'ev-sarj',
     description: 'Güneş enerjisi destekli EV şarj istasyonu kurulumu ile araçlarınızı güneşten üretilen temiz enerji ile şarj edin.',
     features: ['AC & DC hızlı şarj', 'Güneş + şebeke entegrasyonu', 'Akıllı yük yönetimi'],
     color: 'from-purple-500 to-violet-400',
@@ -110,16 +115,24 @@ export default function Services() {
                     ))}
                   </ul>
 
-                  <a
-                    href={waLink(s.waMessage)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`${s.title} için teklif al`}
-                    className="inline-flex items-center gap-1.5 text-[#357228] font-semibold text-sm group-hover:gap-3 transition-all"
-                  >
-                    Teklif Al
-                    <ArrowRight size={15} />
-                  </a>
+                  <div className="flex items-center justify-between gap-2 pt-1">
+                    <Link
+                      to={`/hizmetler/${s.slug}`}
+                      className="text-sm font-semibold text-gray-500 hover:text-[#448834] transition-colors"
+                    >
+                      Detaylı Bilgi
+                    </Link>
+                    <a
+                      href={waLink(s.waMessage)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`${s.title} için teklif al`}
+                      className="inline-flex items-center gap-1.5 text-[#357228] font-semibold text-sm group-hover:gap-3 transition-all"
+                    >
+                      Teklif Al
+                      <ArrowRight size={15} />
+                    </a>
+                  </div>
                 </div>
               </div>
             )

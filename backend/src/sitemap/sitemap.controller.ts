@@ -10,6 +10,10 @@ const SITE = 'https://renelenerji.com'
 const STATIC_URLS = [
   { loc: '/', priority: '1.0', changefreq: 'weekly' },
   { loc: '/hizmetler', priority: '0.9', changefreq: 'monthly' },
+  { loc: '/hizmetler/sulama', priority: '0.7', changefreq: 'monthly' },
+  { loc: '/hizmetler/cati-arazi', priority: '0.7', changefreq: 'monthly' },
+  { loc: '/hizmetler/bag-evi', priority: '0.7', changefreq: 'monthly' },
+  { loc: '/hizmetler/ev-sarj', priority: '0.7', changefreq: 'monthly' },
   { loc: '/kurumsal', priority: '0.8', changefreq: 'monthly' },
   { loc: '/projelerimiz', priority: '0.8', changefreq: 'weekly' },
   { loc: '/referanslar', priority: '0.7', changefreq: 'weekly' },
