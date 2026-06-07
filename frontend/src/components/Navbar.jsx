@@ -66,7 +66,7 @@ export default function Navbar() {
           {/* CTA + mobile menu */}
           <div className="flex items-center gap-4">
             <button
-              className="lg:hidden p-2 text-gray-700"
+              className={`lg:hidden p-2 transition-colors ${transparent ? 'text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]' : 'text-gray-700'}`}
               onClick={() => { setOpen(o => !o); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
               aria-label="Menü"
             >
