@@ -5,6 +5,9 @@ import PageHeader from '../../components/PageHeader'
 import { fetchProjectBySlug, mediaUrl } from '../../api/projects'
 import SEO from '../../components/SEO'
 
+const WA_NUMBER = '905543796004'
+const waLink = (msg) => `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`
+
 export default function ProjeDetay() {
   const { slug } = useParams()
   const [project, setProject] = useState(null)
@@ -201,13 +204,15 @@ export default function ProjeDetay() {
               </div>
             )}
 
-            <Link
-              to="/iletisim"
+            <a
+              href={waLink(`Merhaba, ${project.name} projeniz gibi bir proje için teklif almak istiyorum. Detaylı bilgi alabilir miyim?`)}
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center gap-2 bg-[#448834] hover:bg-[#357228] text-white font-bold px-7 py-3.5 rounded-xl transition-colors shadow-lg shadow-[#448834]/25"
             >
               {project.ctaText || 'Benzer Proje İçin Teklif Al'}
               <ArrowRight size={17} />
-            </Link>
+            </a>
           </div>
         </div>
       </section>
