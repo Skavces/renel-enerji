@@ -1,6 +1,10 @@
 import { Link } from 'react-router-dom'
 import { Award, Wrench, Leaf, BarChart3, HeartHandshake, CheckCircle } from 'lucide-react'
 
+const WA_NUMBER = '905543796004'
+const WA_MESSAGE = 'Merhaba, güneş enerjisi sistemleri hakkında teklif almak istiyorum. Projem için size özel bir çözüm sunabilir misiniz?'
+const waLink = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(WA_MESSAGE)}`
+
 const reasons = [
   { icon: Award, title: 'Mühendislik Altyapısı', slug: 'muhendislik-altyapisi', desc: 'Elektrik-Elektronik Mühendisi liderliğinde her proje teknik standartlara uygun tasarlanır ve kurulur.' },
   { icon: Wrench, title: 'Anahtar Teslim Hizmet', slug: 'anahtar-teslim-hizmet', desc: 'Fizibilite çalışmasından lisanslama, montaj ve devreye almaya kadar her adımı biz üstleniyoruz.' },
@@ -61,9 +65,14 @@ export default function WhyUs() {
               Projenizi Birlikte Hayata Geçirelim
             </h3>
             <p className="text-gray-500 text-base">Size özel çözüm için bizimle iletişime geçin.</p>
-            <Link to="/iletisim" className="inline-flex items-center justify-center bg-[#357228] text-white font-semibold text-sm px-5 py-2.5 rounded-full hover:bg-[#2d6124] transition-colors">
+            <a
+              href={waLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center bg-[#357228] text-white font-semibold text-sm px-5 py-2.5 rounded-full hover:bg-[#2d6124] transition-colors"
+            >
               Teklif Al
-            </Link>
+            </a>
           </div>
 
         </div>
