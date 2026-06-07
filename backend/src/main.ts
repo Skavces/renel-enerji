@@ -1,6 +1,9 @@
+import './instrument'
+
 import { NestFactory } from '@nestjs/core'
 import { ValidationPipe, RequestMethod } from '@nestjs/common'
 import { NestExpressApplication } from '@nestjs/platform-express'
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { join } from 'path'
 import helmet from 'helmet'
 import * as cookieParser from 'cookie-parser'
@@ -29,6 +32,17 @@ async function bootstrap() {
   app.setGlobalPrefix('api', {
     exclude: [{ path: 'sitemap.xml', method: RequestMethod.GET }],
   })
+
+  if (process.env.NODE_ENV !== 'production') {
+    const config = new DocumentBuilder()
+      .setTitle('Renel Enerji API')
+      .setDescription('Renel Enerji backend API dokümantasyonu')
+      .setVersion('1.0')
+      .addCookieAuth('access_token')
+      .build()
+    const document = SwaggerModule.createDocument(app, config)
+    SwaggerModule.setup('api/docs', app, document)
+  }
 
   const port = process.env.PORT || 3001
   await app.listen(port)

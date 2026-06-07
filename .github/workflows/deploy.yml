@@ -20,3 +20,16 @@ jobs:
             git pull
             docker compose up -d --build
             docker image prune -f
+
+            echo "Sağlık kontrolü yapılıyor..."
+            for i in $(seq 1 10); do
+              if curl -fs http://localhost:8080/api/health > /dev/null; then
+                echo "Backend ayakta, deploy başarılı."
+                exit 0
+              fi
+              echo "Henüz hazır değil, 5sn sonra tekrar denenecek... ($i/10)"
+              sleep 5
+            done
+            echo "HATA: Backend health check'i geçmedi, container loglarına bakılıyor:"
+            docker compose logs --tail=50 backend
+            exit 1

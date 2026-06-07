@@ -37,6 +37,7 @@ services:
       UMAMI_PASS: ${UMAMI_PASS}
       OPENWEATHER_API_KEY: ${OPENWEATHER_API_KEY}
       GROQ_API_KEY: ${GROQ_API_KEY}
+      SENTRY_DSN: ${SENTRY_DSN}
       REDIS_URL: redis://redis:6379
       DB_SYNC: ${DB_SYNC:-false}
     volumes:
@@ -63,6 +64,7 @@ services:
         VITE_API_URL: ${VITE_API_URL}
         VITE_UMAMI_URL: ${VITE_UMAMI_URL}
         VITE_UMAMI_WEBSITE_ID: ${UMAMI_WEBSITE_ID}
+        VITE_SENTRY_DSN: ${VITE_SENTRY_DSN}
     restart: unless-stopped
     ports:
       - "8080:80"

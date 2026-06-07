@@ -2,7 +2,8 @@ import { Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler'
-import { APP_GUARD } from '@nestjs/core'
+import { APP_GUARD, APP_FILTER } from '@nestjs/core'
+import { SentryModule, SentryGlobalFilter } from '@sentry/nestjs/setup'
 import { AuthModule } from './auth/auth.module'
 import { ProjectsModule } from './projects/projects.module'
 import { UploadModule } from './upload/upload.module'
@@ -13,9 +14,11 @@ import { FaqModule } from './faq/faq.module'
 import { SitemapModule } from './sitemap/sitemap.module'
 import { ChatModule } from './chat/chat.module'
 import { WeatherController } from './weather/weather.controller'
+import { HealthController } from './health.controller'
 
 @Module({
   imports: [
+    SentryModule.forRoot(),
     ConfigModule.forRoot({ isGlobal: true }),
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 60 }]),
     TypeOrmModule.forRootAsync({
@@ -41,7 +44,10 @@ import { WeatherController } from './weather/weather.controller'
     SitemapModule,
     ChatModule,
   ],
-  controllers: [WeatherController],
-  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
+  controllers: [WeatherController, HealthController],
+  providers: [
+    { provide: APP_FILTER, useClass: SentryGlobalFilter },
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+  ],
 })
 export class AppModule {}
