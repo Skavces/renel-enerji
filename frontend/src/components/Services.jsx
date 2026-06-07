@@ -90,30 +90,32 @@ export default function Services() {
                 className={`relative rounded-2xl border border-gray-100 overflow-hidden flex flex-col hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group ${s.highlight ? 'ring-2 ring-[#448834]/30' : s.ring || ''}`}
               >
                 {/* Photo */}
-                <div className="h-36 overflow-hidden">
+                <Link to={`/hizmetler/${s.slug}`} className="block h-36 overflow-hidden">
                   <img
                     src={s.photo}
                     alt={s.title}
                     className="w-full h-full object-cover" loading="lazy" />
-                </div>
+                </Link>
 
                 <div className="p-5 flex flex-col gap-3 flex-1 bg-white">
-                  <div className="flex items-center gap-3">
-                    <Icon className="text-[#448834]" size={22} />
-                    <div className="h-0.5 flex-1 rounded-full bg-[#448834]/30" />
-                  </div>
+                  <Link to={`/hizmetler/${s.slug}`} className="contents">
+                    <div className="flex items-center gap-3">
+                      <Icon className="text-[#448834]" size={22} />
+                      <div className="h-0.5 flex-1 rounded-full bg-[#448834]/30" />
+                    </div>
 
-                  <h3 className="font-bold text-gray-900 text-base leading-tight">{s.title}</h3>
-                  <p className="text-gray-500 text-sm leading-relaxed flex-1">{s.description}</p>
+                    <h3 className="font-bold text-gray-900 text-base leading-tight">{s.title}</h3>
+                    <p className="text-gray-500 text-sm leading-relaxed flex-1">{s.description}</p>
 
-                  <ul className="space-y-1.5">
-                    {s.features.map(f => (
-                      <li key={f} className="flex items-center gap-2 text-sm text-gray-600">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#448834] shrink-0" />
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
+                    <ul className="space-y-1.5">
+                      {s.features.map(f => (
+                        <li key={f} className="flex items-center gap-2 text-sm text-gray-600">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#448834] shrink-0" />
+                          {f}
+                        </li>
+                      ))}
+                    </ul>
+                  </Link>
 
                   <div className="flex items-center justify-between gap-2 pt-1">
                     <Link
