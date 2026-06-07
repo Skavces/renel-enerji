@@ -15,7 +15,6 @@ import { SitemapModule } from './sitemap/sitemap.module'
 import { ChatModule } from './chat/chat.module'
 import { WeatherController } from './weather/weather.controller'
 import { HealthController } from './health.controller'
-import { DebugSentryController } from './debug-sentry.controller'
 
 @Module({
   imports: [
@@ -45,7 +44,7 @@ import { DebugSentryController } from './debug-sentry.controller'
     SitemapModule,
     ChatModule,
   ],
-  controllers: [WeatherController, HealthController, DebugSentryController],
+  controllers: [WeatherController, HealthController],
   providers: [
     { provide: APP_FILTER, useClass: SentryGlobalFilter },
     { provide: APP_GUARD, useClass: ThrottlerGuard },
