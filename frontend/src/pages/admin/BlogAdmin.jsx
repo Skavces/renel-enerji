@@ -148,7 +148,7 @@ export default function BlogAdmin() {
   }
 
   return (
-    <main className="max-w-4xl mx-auto px-6 py-8">
+    <main className="max-w-6xl mx-auto px-6 py-8">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl font-bold text-gray-900">Blog Yazıları</h1>
