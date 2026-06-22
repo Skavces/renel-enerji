@@ -207,19 +207,19 @@ export class ProjectsService {
   }
 
   private async importInstagramImages(project: Project, post: any): Promise<void> {
-    const items: { url: string; type: 'image' | 'video' }[] = []
+    const items: { url: string; type: 'image' | 'video' | 'thumbnail' }[] = []
 
     if (post.media_type === 'IMAGE' && post.media_url) {
       items.push({ url: post.media_url, type: 'image' })
     } else if (post.media_type === 'VIDEO' && post.media_url) {
-      if (post.thumbnail_url) items.push({ url: post.thumbnail_url, type: 'image' })
+      if (post.thumbnail_url) items.push({ url: post.thumbnail_url, type: 'thumbnail' })
       items.push({ url: post.media_url, type: 'video' })
     } else if (post.media_type === 'CAROUSEL_ALBUM') {
       for (const child of post.children?.data ?? []) {
         if (child.media_type === 'IMAGE' && child.media_url) {
           items.push({ url: child.media_url, type: 'image' })
         } else if (child.media_type === 'VIDEO' && child.media_url) {
-          if (child.thumbnail_url) items.push({ url: child.thumbnail_url, type: 'image' })
+          if (child.thumbnail_url) items.push({ url: child.thumbnail_url, type: 'thumbnail' })
           items.push({ url: child.media_url, type: 'video' })
         }
       }

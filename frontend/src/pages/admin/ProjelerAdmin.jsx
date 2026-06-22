@@ -190,7 +190,7 @@ export default function ProjelerAdmin() {
   }
 
   const coverPhoto = (p) => {
-    const first = p.media?.find((m) => m.type === 'image')
+    const first = p.media?.find((m) => m.type === 'thumbnail') ?? p.media?.find((m) => m.type === 'image')
     return first ? mediaUrl(first.src) : null
   }
 

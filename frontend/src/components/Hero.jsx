@@ -71,7 +71,7 @@ export default function Hero() {
             </p>
             <Link to={`/projelerimiz/${project.slug}`} className="group block relative rounded-2xl overflow-hidden aspect-3/4">
               {projects.map((p, i) => {
-                const cover = p.media?.find(m => m.type === 'image')
+                const cover = p.media?.find(m => m.type === 'thumbnail') ?? p.media?.find(m => m.type === 'image')
                 return cover ? (
                   <img
                     key={p.id}

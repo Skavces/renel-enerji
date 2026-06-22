@@ -454,7 +454,7 @@ if (parsed.description) { set('description', parsed.description); count++ }
             <div>
               <p className="text-xs font-medium text-gray-500 mb-2 uppercase tracking-wide">Mevcut Medya</p>
               <div className="grid grid-cols-5 sm:grid-cols-7 gap-2">
-                {existingMedia.map((m) => (
+                {existingMedia.filter(m => m.type !== 'thumbnail').map((m) => (
                   <div key={m.id} className="relative group aspect-square rounded-xl overflow-hidden bg-gray-100">
                     {m.type === 'video' ? (
                       <video src={mediaUrl(m.src)} className="w-full h-full object-cover" muted />

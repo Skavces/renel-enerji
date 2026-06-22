@@ -19,6 +19,8 @@ export default function Projelerimiz() {
   const totalKw = projects.reduce((sum, p) => sum + Number(p.kw), 0)
 
   const coverPhoto = (p) => {
+    const thumb = p.media?.find((m) => m.type === 'thumbnail')
+    if (thumb) return mediaUrl(thumb.src)
     const sorted = [...(p.media || [])].sort((a, b) => b.sortOrder - a.sortOrder)
     const first = sorted.find((m) => m.type === 'image')
     return first ? mediaUrl(first.src) : null

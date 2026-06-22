@@ -47,7 +47,7 @@ export default function ProjeDetay() {
     )
   }
 
-  const media = [...(project.media || [])].sort((a, b) => b.sortOrder - a.sortOrder)
+  const media = [...(project.media || [])].filter(m => m.type !== 'thumbnail').sort((a, b) => b.sortOrder - a.sortOrder)
   const item = media[current] || null
 
   const prev = () => setCurrent((i) => (i - 1 + media.length) % media.length)
@@ -55,7 +55,10 @@ export default function ProjeDetay() {
   const lightboxPrev = (e) => { e.stopPropagation(); setLightbox((i) => (i - 1 + media.length) % media.length) }
   const lightboxNext = (e) => { e.stopPropagation(); setLightbox((i) => (i + 1) % media.length) }
 
-  const coverImg = item?.type === 'image' ? `https://renelenerji.com${mediaUrl(item.src)}` : undefined
+  const thumbMedia = project.media?.find(m => m.type === 'thumbnail')
+  const firstImage = media.find(m => m.type === 'image')
+  const coverSrc = thumbMedia ?? firstImage
+  const coverImg = coverSrc ? `https://renelenerji.com${mediaUrl(coverSrc.src)}` : undefined
   const projectDesc = [
     project.location && `${project.location}'da`,
     project.kw && `${project.kw} kWp`,
