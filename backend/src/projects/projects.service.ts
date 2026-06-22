@@ -127,7 +127,7 @@ export class ProjectsService {
 
     const apiUrl =
       `https://graph.instagram.com/v21.0/${userId}/media` +
-      `?fields=id,caption,media_url,media_type,timestamp,children{id,media_url,media_type,thumbnail_url}` +
+      `?fields=id,caption,media_url,thumbnail_url,media_type,timestamp,children{id,media_url,media_type,thumbnail_url}` +
       `&limit=50&access_token=${token}`
 
     const res = await fetch(apiUrl)
@@ -212,12 +212,14 @@ export class ProjectsService {
     if (post.media_type === 'IMAGE' && post.media_url) {
       items.push({ url: post.media_url, type: 'image' })
     } else if (post.media_type === 'VIDEO' && post.media_url) {
+      if (post.thumbnail_url) items.push({ url: post.thumbnail_url, type: 'image' })
       items.push({ url: post.media_url, type: 'video' })
     } else if (post.media_type === 'CAROUSEL_ALBUM') {
       for (const child of post.children?.data ?? []) {
         if (child.media_type === 'IMAGE' && child.media_url) {
           items.push({ url: child.media_url, type: 'image' })
         } else if (child.media_type === 'VIDEO' && child.media_url) {
+          if (child.thumbnail_url) items.push({ url: child.thumbnail_url, type: 'image' })
           items.push({ url: child.media_url, type: 'video' })
         }
       }
