@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler'
+import { ScheduleModule } from '@nestjs/schedule'
 import { APP_GUARD, APP_FILTER } from '@nestjs/core'
 import { SentryModule, SentryGlobalFilter } from '@sentry/nestjs/setup'
 import { AuthModule } from './auth/auth.module'
@@ -20,6 +21,7 @@ import { HealthController } from './health.controller'
   imports: [
     SentryModule.forRoot(),
     ConfigModule.forRoot({ isGlobal: true }),
+    ScheduleModule.forRoot(),
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 60 }]),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],

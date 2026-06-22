@@ -118,7 +118,7 @@ export class ProjectsService {
     return this.findById(projectId)
   }
 
-  async syncInstagram(): Promise<{ imported: number; skipped: number }> {
+  async syncInstagram(autoPublish = false): Promise<{ imported: number; skipped: number }> {
     const token = this.config.get<string>('INSTAGRAM_ACCESS_TOKEN')
     const userId = this.config.get<string>('INSTAGRAM_USER_ID')
     if (!token || !userId) {
@@ -174,7 +174,7 @@ export class ProjectsService {
         highlights: parsed.highlights || [],
         statBoxes: parsed.statBoxes || [],
         category: parsed.category || null,
-        published: false,
+        published: autoPublish,
         instagramMediaId: post.id,
       })
       const saved = await this.projectRepo.save(project)
