@@ -211,10 +211,10 @@ export default function ProjelerAdmin() {
             <button
               onClick={handleSync}
               disabled={syncing}
-              className="inline-flex items-center gap-2 bg-white border border-gray-200 hover:border-[#448834] hover:text-[#448834] text-gray-600 font-semibold px-4 py-2 rounded-lg transition-colors text-sm disabled:opacity-50"
+              className="inline-flex items-center gap-2 bg-white border border-gray-200 hover:border-[#448834] hover:text-[#448834] text-gray-600 font-semibold px-3 sm:px-4 py-2 rounded-lg transition-colors text-sm disabled:opacity-50"
             >
               <RefreshCw size={15} className={syncing ? 'animate-spin' : ''} />
-              {syncing ? 'Çekiliyor...' : 'Instagram\'dan Çek'}
+              <span className="hidden sm:inline">{syncing ? 'Çekiliyor...' : 'Instagram\'dan Çek'}</span>
             </button>
             <Link
               to="/admin/projeler/yeni"
