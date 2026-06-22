@@ -154,9 +154,9 @@ export default function ProjelerAdmin() {
     setSyncing(true)
     setSyncResult(null)
     try {
-      const result = await syncInstagram()
-      setSyncResult(result)
-      if (result.imported > 0) load()
+      await syncInstagram()
+      setSyncResult({ started: true })
+      setTimeout(() => load(), 30000)
     } catch (err) {
       alert('Instagram senkronizasyonu başarısız: ' + err.message)
     } finally {
@@ -202,10 +202,8 @@ export default function ProjelerAdmin() {
             <p className="text-sm text-gray-400 mt-0.5">
               {projects.length} proje
               {saving && <span className="ml-2 text-[#448834]">· kaydediliyor...</span>}
-              {syncResult && (
-                <span className="ml-2 text-[#448834]">
-                  · {syncResult.imported} yeni proje eklendi{syncResult.skipped > 0 ? `, ${syncResult.skipped} atlandı` : ''}
-                </span>
+              {syncResult?.started && (
+                <span className="ml-2 text-[#448834]">· Instagram sync başlatıldı, 30 saniye sonra yenileniyor...</span>
               )}
             </p>
           </div>

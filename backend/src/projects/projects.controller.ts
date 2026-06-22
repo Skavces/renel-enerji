@@ -40,7 +40,8 @@ export class ProjectsController {
   @Post('admin/instagram-sync')
   @HttpCode(200)
   syncInstagram() {
-    return this.service.syncInstagram()
+    this.service.syncInstagram().catch(() => {})
+    return { status: 'started' }
   }
 
   @UseGuards(JwtAuthGuard)
