@@ -47,7 +47,7 @@ export default function ProjeDetay() {
     )
   }
 
-  const media = [...(project.media || [])].filter(m => m.type !== 'thumbnail').sort((a, b) => b.sortOrder - a.sortOrder)
+  const media = [...(project.media || [])].filter(m => m.type !== 'thumbnail').sort((a, b) => a.sortOrder - b.sortOrder)
   const item = media[current] || null
 
   const prev = () => setCurrent((i) => (i - 1 + media.length) % media.length)

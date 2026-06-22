@@ -21,7 +21,7 @@ export default function Projelerimiz() {
   const coverPhoto = (p) => {
     const thumb = p.media?.find((m) => m.type === 'thumbnail')
     if (thumb) return mediaUrl(thumb.src)
-    const sorted = [...(p.media || [])].sort((a, b) => b.sortOrder - a.sortOrder)
+    const sorted = [...(p.media || [])].sort((a, b) => a.sortOrder - b.sortOrder)
     const first = sorted.find((m) => m.type === 'image')
     return first ? mediaUrl(first.src) : null
   }
