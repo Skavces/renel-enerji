@@ -2,6 +2,7 @@ import { ConflictException, Injectable, InternalServerErrorException, NotFoundEx
 import { ConfigService } from '@nestjs/config'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
+import * as sharp from 'sharp'
 import { Project } from './entities/project.entity'
 import { ProjectMedia } from './entities/project-media.entity'
 import { CreateProjectDto } from './dto/create-project.dto'
@@ -114,6 +115,118 @@ export class ProjectsService {
       ),
     )
     return this.findById(projectId)
+  }
+
+  async syncInstagram(): Promise<{ imported: number; skipped: number }> {
+    const token = this.config.get<string>('INSTAGRAM_ACCESS_TOKEN')
+    const userId = this.config.get<string>('INSTAGRAM_USER_ID')
+    if (!token || !userId) {
+      throw new InternalServerErrorException('INSTAGRAM_ACCESS_TOKEN veya INSTAGRAM_USER_ID .env dosyasında tanımlı değil')
+    }
+
+    const apiUrl =
+      `https://graph.instagram.com/v21.0/${userId}/media` +
+      `?fields=id,caption,media_url,media_type,timestamp,children{id,media_url,media_type}` +
+      `&limit=50&access_token=${token}`
+
+    const res = await fetch(apiUrl)
+    if (!res.ok) {
+      const err = await res.text()
+      throw new InternalServerErrorException(`Instagram API hatası: ${err}`)
+    }
+
+    const data = await res.json()
+    const posts: any[] = (data.data ?? []).filter(
+      (p: any) => p.caption?.toLowerCase().includes('#proje'),
+    )
+
+    let imported = 0
+    let skipped = 0
+
+    for (const post of posts) {
+      const already = await this.projectRepo.findOne({ where: { instagramMediaId: post.id } })
+      if (already) {
+        skipped++
+        continue
+      }
+
+      let parsed: any
+      try {
+        parsed = await this.parseInstagram(post.caption)
+      } catch {
+        skipped++
+        continue
+      }
+
+      const baseSlug = this.toSlug(parsed.name)
+      const slug = await this.uniqueSlug(baseSlug)
+
+      const project = this.projectRepo.create({
+        slug,
+        name: parsed.name || 'Instagram Proje',
+        location: parsed.location || '',
+        kw: parsed.kw || 0,
+        date: parsed.date || String(new Date().getFullYear()),
+        description: parsed.description || '',
+        about: parsed.about || '',
+        specs: parsed.specs || [],
+        highlights: parsed.highlights || [],
+        statBoxes: parsed.statBoxes || [],
+        category: parsed.category || null,
+        published: false,
+        instagramMediaId: post.id,
+      })
+      const saved = await this.projectRepo.save(project)
+      await this.importInstagramImages(saved, post)
+      imported++
+    }
+
+    return { imported, skipped }
+  }
+
+  private toSlug(name: string): string {
+    if (!name) return 'proje'
+    return name
+      .toLowerCase()
+      .replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ş/g, 's')
+      .replace(/ı/g, 'i').replace(/ö/g, 'o').replace(/ç/g, 'c')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 60) || 'proje'
+  }
+
+  private async uniqueSlug(base: string): Promise<string> {
+    let slug = base
+    let n = 0
+    while (await this.projectRepo.findOne({ where: { slug } })) {
+      n++
+      slug = `${base}-${n}`
+    }
+    return slug
+  }
+
+  private async importInstagramImages(project: Project, post: any): Promise<void> {
+    const urls: string[] = []
+    if (post.media_type === 'IMAGE' && post.media_url) {
+      urls.push(post.media_url)
+    } else if (post.media_type === 'CAROUSEL_ALBUM') {
+      for (const child of post.children?.data ?? []) {
+        if (child.media_type === 'IMAGE' && child.media_url) urls.push(child.media_url)
+      }
+    }
+
+    for (const url of urls) {
+      try {
+        const r = await fetch(url)
+        if (!r.ok) continue
+        const buf = Buffer.from(await r.arrayBuffer())
+        const filename = `${project.slug}-ig-${Date.now()}-${Math.round(Math.random() * 1e4)}.webp`
+        await sharp(buf).webp({ quality: 82 }).toFile(`./uploads/${filename}`)
+        await this.addMedia(project.id, 'image', `/uploads/${filename}`)
+      } catch {
+        // görsel indirilemezse geç
+      }
+    }
   }
 
   async parseInstagram(text: string) {

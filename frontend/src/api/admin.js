@@ -98,6 +98,13 @@ export async function fetchAllProjects() {
   return res.json()
 }
 
+export async function syncInstagram() {
+  const res = await fetch(`${API}/api/projects/admin/instagram-sync`, authOptions({ method: 'POST' }))
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.message || 'Senkronizasyon başarısız')
+  return json
+}
+
 export async function parseInstagramPost(text) {
   const res = await fetch(`${API}/api/projects/admin/parse-instagram`, {
     ...authOptions({ method: 'POST' }),

@@ -61,6 +61,9 @@ export class Project {
   @Column({ default: 0 })
   sortOrder: number
 
+  @Column({ nullable: true, unique: true })
+  instagramMediaId: string
+
   @OneToMany(() => ProjectMedia, (m) => m.project, { cascade: true, eager: true })
   media: ProjectMedia[]
 

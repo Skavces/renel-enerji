@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Plus, Pencil, Trash2, Eye, EyeOff, GripVertical } from 'lucide-react'
+import { Plus, Pencil, Trash2, Eye, EyeOff, GripVertical, RefreshCw } from 'lucide-react'
 import {
   DndContext,
   closestCenter,
@@ -15,7 +15,7 @@ import {
   arrayMove,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { fetchAllProjects, deleteProject, reorderProjects } from '../../api/admin'
+import { fetchAllProjects, deleteProject, reorderProjects, syncInstagram } from '../../api/admin'
 import { useAdminAuth } from '../../contexts/AdminAuthContext'
 import { mediaUrl } from '../../api/projects'
 
@@ -107,6 +107,8 @@ export default function ProjelerAdmin() {
   const [loading, setLoading] = useState(true)
   const [deletingId, setDeletingId] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [syncing, setSyncing] = useState(false)
+  const [syncResult, setSyncResult] = useState(null)
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
 
@@ -141,6 +143,20 @@ export default function ProjelerAdmin() {
     }
   }
 
+  const handleSync = async () => {
+    setSyncing(true)
+    setSyncResult(null)
+    try {
+      const result = await syncInstagram()
+      setSyncResult(result)
+      if (result.imported > 0) load()
+    } catch (err) {
+      alert('Instagram senkronizasyonu başarısız: ' + err.message)
+    } finally {
+      setSyncing(false)
+    }
+  }
+
   const handleDelete = async (id, name) => {
     if (!confirm(`"${name}" projesini silmek istediğinize emin misiniz?`)) return
     setDeletingId(id)
@@ -167,15 +183,30 @@ export default function ProjelerAdmin() {
             <p className="text-sm text-gray-400 mt-0.5">
               {projects.length} proje
               {saving && <span className="ml-2 text-[#448834]">· kaydediliyor...</span>}
+              {syncResult && (
+                <span className="ml-2 text-[#448834]">
+                  · {syncResult.imported} yeni proje eklendi{syncResult.skipped > 0 ? `, ${syncResult.skipped} atlandı` : ''}
+                </span>
+              )}
             </p>
           </div>
-          <Link
-            to="/admin/projeler/yeni"
-            className="inline-flex items-center gap-2 bg-[#448834] hover:bg-[#357228] text-white font-bold px-4 py-2 rounded-lg transition-colors text-sm"
-          >
-            <Plus size={16} />
-            Yeni Proje
-          </Link>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleSync}
+              disabled={syncing}
+              className="inline-flex items-center gap-2 bg-white border border-gray-200 hover:border-[#448834] hover:text-[#448834] text-gray-600 font-semibold px-4 py-2 rounded-lg transition-colors text-sm disabled:opacity-50"
+            >
+              <RefreshCw size={15} className={syncing ? 'animate-spin' : ''} />
+              {syncing ? 'Çekiliyor...' : 'Instagram\'dan Çek'}
+            </button>
+            <Link
+              to="/admin/projeler/yeni"
+              className="inline-flex items-center gap-2 bg-[#448834] hover:bg-[#357228] text-white font-bold px-4 py-2 rounded-lg transition-colors text-sm"
+            >
+              <Plus size={16} />
+              Yeni Proje
+            </Link>
+          </div>
         </div>
 
         {loading ? (

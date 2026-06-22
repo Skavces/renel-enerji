@@ -37,6 +37,13 @@ export class ProjectsController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Post('admin/instagram-sync')
+  @HttpCode(200)
+  syncInstagram() {
+    return this.service.syncInstagram()
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Post('admin/parse-instagram')
   @HttpCode(200)
   parseInstagram(@Body() body: { text: string }) {
