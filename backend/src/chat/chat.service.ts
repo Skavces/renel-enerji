@@ -80,7 +80,7 @@ export class ChatService {
   constructor(private config: ConfigService) {}
 
   private async callGroq(systemPrompt: string, messages: ChatMessage[], maxTokens = 400): Promise<string> {
-    const key1 = this.config.get<string>('GROQ_API_KEY')
+    const key1 = this.config.get<string>('GROQ_API_KEY_3') ?? this.config.get<string>('GROQ_API_KEY')
     const key2 = this.config.get<string>('GROQ_API_KEY_2')
     if (!key1) throw new BadRequestException('Chatbot şu anda kullanılamıyor')
 
