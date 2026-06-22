@@ -40,6 +40,8 @@ services:
       SENTRY_DSN: ${SENTRY_DSN}
       REDIS_URL: redis://redis:6379
       DB_SYNC: ${DB_SYNC:-false}
+      INSTAGRAM_ACCESS_TOKEN: ${INSTAGRAM_ACCESS_TOKEN}
+      INSTAGRAM_USER_ID: ${INSTAGRAM_USER_ID}
     volumes:
       - uploads:/app/uploads
     depends_on:
