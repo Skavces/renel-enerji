@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Logger,
   Param,
   Patch,
   Post,
@@ -16,6 +17,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 
 @Controller('projects')
 export class ProjectsController {
+  private readonly logger = new Logger(ProjectsController.name)
   constructor(private readonly service: ProjectsService) {}
 
   // Public endpoints
@@ -40,7 +42,9 @@ export class ProjectsController {
   @Post('admin/instagram-sync')
   @HttpCode(200)
   syncInstagram() {
-    this.service.syncInstagram().catch(() => {})
+    this.service.syncInstagram()
+      .then(r => this.logger.log(`Sync tamamlandı: ${r.imported} eklendi, ${r.skipped} atlandı`))
+      .catch(err => this.logger.error(`Sync hatası: ${err.message}`))
     return { status: 'started' }
   }
 
