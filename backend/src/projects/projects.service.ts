@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import * as sharp from 'sharp'
+import { writeFile } from 'fs/promises'
 import { Project } from './entities/project.entity'
 import { ProjectMedia } from './entities/project-media.entity'
 import { CreateProjectDto } from './dto/create-project.dto'
@@ -126,7 +127,7 @@ export class ProjectsService {
 
     const apiUrl =
       `https://graph.instagram.com/v21.0/${userId}/media` +
-      `?fields=id,caption,media_url,media_type,timestamp,children{id,media_url,media_type}` +
+      `?fields=id,caption,media_url,media_type,timestamp,children{id,media_url,media_type,thumbnail_url}` +
       `&limit=50&access_token=${token}`
 
     const res = await fetch(apiUrl)
@@ -206,25 +207,39 @@ export class ProjectsService {
   }
 
   private async importInstagramImages(project: Project, post: any): Promise<void> {
-    const urls: string[] = []
+    const items: { url: string; type: 'image' | 'video' }[] = []
+
     if (post.media_type === 'IMAGE' && post.media_url) {
-      urls.push(post.media_url)
+      items.push({ url: post.media_url, type: 'image' })
+    } else if (post.media_type === 'VIDEO' && post.media_url) {
+      items.push({ url: post.media_url, type: 'video' })
     } else if (post.media_type === 'CAROUSEL_ALBUM') {
       for (const child of post.children?.data ?? []) {
-        if (child.media_type === 'IMAGE' && child.media_url) urls.push(child.media_url)
+        if (child.media_type === 'IMAGE' && child.media_url) {
+          items.push({ url: child.media_url, type: 'image' })
+        } else if (child.media_type === 'VIDEO' && child.media_url) {
+          items.push({ url: child.media_url, type: 'video' })
+        }
       }
     }
 
-    for (const url of urls) {
+    for (const item of items) {
       try {
-        const r = await fetch(url)
+        const r = await fetch(item.url)
         if (!r.ok) continue
         const buf = Buffer.from(await r.arrayBuffer())
-        const filename = `${project.slug}-ig-${Date.now()}-${Math.round(Math.random() * 1e4)}.webp`
-        await sharp(buf).webp({ quality: 82 }).toFile(`./uploads/${filename}`)
-        await this.addMedia(project.id, 'image', `/uploads/${filename}`)
+
+        if (item.type === 'video') {
+          const filename = `${project.slug}-ig-${Date.now()}-${Math.round(Math.random() * 1e4)}.mp4`
+          await writeFile(`./uploads/${filename}`, buf)
+          await this.addMedia(project.id, 'video', `/uploads/${filename}`)
+        } else {
+          const filename = `${project.slug}-ig-${Date.now()}-${Math.round(Math.random() * 1e4)}.webp`
+          await sharp(buf).webp({ quality: 82 }).toFile(`./uploads/${filename}`)
+          await this.addMedia(project.id, 'image', `/uploads/${filename}`)
+        }
       } catch {
-        // görsel indirilemezse geç
+        // medya indirilemezse geç
       }
     }
   }
