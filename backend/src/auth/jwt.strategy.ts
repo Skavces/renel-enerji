@@ -15,7 +15,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         (req) => req?.cookies?.admin_token ?? null,
-        ExtractJwt.fromAuthHeaderAsBearerToken(), // geriye dönük uyumluluk
       ]),
       ignoreExpiration: false,
       secretOrKey: secret,
@@ -34,6 +33,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('Oturum sonlandırılmış')
     }
 
-    return { userId: payload.sub, username: payload.username, jti: payload.jti }
+    return { userId: payload.sub, username: payload.username, jti: payload.jti, exp: payload.exp }
   }
 }

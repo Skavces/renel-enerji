@@ -273,6 +273,8 @@ export default function Guvenlik() {
   const [tfaSuccess, setTfaSuccess] = useState('')
   const [tfaLoading, setTfaLoading] = useState(false)
   const [credSuccess, setCredSuccess] = useState('')
+  const [removeMode, setRemoveMode] = useState(false)
+  const [removeCode, setRemoveCode] = useState('')
 
   useEffect(() => {
     get2FAStatus().then(setTwoFaStatus).catch(() => navigate('/admin'))
@@ -307,16 +309,21 @@ export default function Guvenlik() {
     } finally { setTfaLoading(false) }
   }
 
-  const handleRemove2FA = async () => {
-    if (!confirm('2FA\'yı devre dışı bırakmak istediğinize emin misiniz?')) return
+  const handleRemove2FA = async (e) => {
+    e.preventDefault()
     setTfaLoading(true)
+    setTfaError('')
     try {
-      await remove2FA()
+      await remove2FA(removeCode)
       setTwoFaStatus({ enabled: false })
       setSetup(null)
+      setRemoveMode(false)
+      setRemoveCode('')
       setTfaSuccess('2FA devre dışı bırakıldı.')
-    } catch { setTfaError('2FA kaldırılamadı.') }
-    finally { setTfaLoading(false) }
+    } catch (err) {
+      setTfaError(err.message || '2FA kaldırılamadı.')
+      setRemoveCode('')
+    } finally { setTfaLoading(false) }
   }
 
   if (!twoFaStatus) return <div className="text-center py-20 text-gray-400">Yükleniyor...</div>
@@ -374,9 +381,9 @@ export default function Guvenlik() {
             </p>
           </div>
 
-          {!setup && (
+          {!setup && !removeMode && (
             twoFaStatus.enabled
-              ? <button onClick={handleRemove2FA} disabled={tfaLoading}
+              ? <button onClick={() => { setRemoveMode(true); setTfaError('') }} disabled={tfaLoading}
                   className="text-sm text-red-500 hover:text-red-600 font-medium disabled:opacity-40">
                   Devre Dışı Bırak
                 </button>
@@ -384,6 +391,33 @@ export default function Guvenlik() {
                   className="w-full bg-[#448834] hover:bg-[#357228] disabled:opacity-60 text-white font-bold py-2.5 rounded-lg transition-colors text-sm">
                   {tfaLoading ? 'Yükleniyor...' : '2FA\'yı Etkinleştir'}
                 </button>
+          )}
+
+          {removeMode && (
+            <form onSubmit={handleRemove2FA} className="space-y-3 border-t border-gray-50 pt-4">
+              <p className="text-sm font-semibold text-gray-800">
+                Devre dışı bırakmak için authenticator kodunuzu girin
+              </p>
+              <input
+                type="text" inputMode="numeric" pattern="\d{6}" maxLength={6}
+                value={removeCode} onChange={e => setRemoveCode(e.target.value.replace(/\D/g, ''))}
+                placeholder="000000" required autoFocus
+                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-center text-xl font-mono tracking-[0.5em] focus:outline-none focus:ring-2 focus:ring-red-300 focus:border-red-400"
+              />
+              {tfaError && <ErrorMsg msg={tfaError} />}
+              <div className="flex gap-3">
+                <button type="button"
+                  onClick={() => { setRemoveMode(false); setRemoveCode(''); setTfaError('') }}
+                  className="flex-1 border border-gray-200 text-gray-600 font-medium py-2.5 rounded-lg hover:bg-gray-50 transition-colors text-sm">
+                  İptal
+                </button>
+                <button type="submit"
+                  disabled={tfaLoading || removeCode.length !== 6}
+                  className="flex-1 bg-red-500 hover:bg-red-600 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold py-2.5 rounded-lg transition-colors text-sm">
+                  {tfaLoading ? 'Kaldırılıyor...' : 'Devre Dışı Bırak'}
+                </button>
+              </div>
+            </form>
           )}
 
           {setup && (

@@ -38,7 +38,7 @@ services:
       OPENWEATHER_API_KEY: ${OPENWEATHER_API_KEY}
       GROQ_API_KEY: ${GROQ_API_KEY}
       SENTRY_DSN: ${SENTRY_DSN}
-      REDIS_URL: redis://redis:6379
+      REDIS_URL: redis://:${REDIS_PASS}@redis:6379
       DB_SYNC: ${DB_SYNC:-false}
       INSTAGRAM_ACCESS_TOKEN: ${INSTAGRAM_ACCESS_TOKEN}
       INSTAGRAM_USER_ID: ${INSTAGRAM_USER_ID}
@@ -57,7 +57,7 @@ services:
       - "127.0.0.1:6379:6379"
     volumes:
       - redisdata:/data
-    command: redis-server --appendonly yes
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASS}
 
   frontend:
     build:

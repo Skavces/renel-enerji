@@ -27,9 +27,10 @@ export class AuthService implements OnModuleInit {
     return val !== null
   }
 
-  // O-03: Token'ı blacklist'e ekle (8 saat TTL)
-  async blacklistToken(jti: string): Promise<void> {
-    await this.redis.set(`blacklist:${jti}`, '1', 'EX', 8 * 60 * 60)
+  // O-03: Token'ı blacklist'e ekle — TTL tokenin gerçek ömrünü izler
+  async blacklistToken(jti: string, exp: number): Promise<void> {
+    const ttl = Math.max(exp - Math.floor(Date.now() / 1000), 1)
+    await this.redis.set(`blacklist:${jti}`, '1', 'EX', ttl)
   }
 
   private async getEffectiveUsername(): Promise<string> {
@@ -194,7 +195,21 @@ export class AuthService implements OnModuleInit {
     return { ok: true }
   }
 
-  async remove2FA(): Promise<{ ok: boolean }> {
+  async remove2FA(code: string): Promise<{ ok: boolean }> {
+    const config = await this.adminConfigService.getConfig()
+    if (!config.totpSecret) {
+      throw new UnauthorizedException('2FA kurulu değil')
+    }
+    const otpKey = `otp:${code}-${Math.floor(Date.now() / 30000)}`
+    const alreadyUsed = await this.redis.get(otpKey)
+    if (alreadyUsed) {
+      throw new UnauthorizedException('Bu 2FA kodu daha önce kullanıldı')
+    }
+    const valid = authenticator.verify({ token: code, secret: config.totpSecret })
+    if (!valid) {
+      throw new UnauthorizedException('Geçersiz doğrulama kodu')
+    }
+    await this.redis.set(otpKey, '1', 'EX', 60)
     await this.adminConfigService.removeTotpSecret()
     return { ok: true }
   }

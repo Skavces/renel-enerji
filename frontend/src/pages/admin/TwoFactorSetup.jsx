@@ -11,6 +11,8 @@ export default function TwoFactorSetup() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
+  const [removeMode, setRemoveMode] = useState(false)
+  const [removeCode, setRemoveCode] = useState('')
 
   useEffect(() => {
     get2FAStatus().then(setStatus).catch(() => navigate('/admin'))
@@ -47,16 +49,20 @@ export default function TwoFactorSetup() {
     }
   }
 
-  const handleRemove = async () => {
-    if (!confirm('2FA\'yı devre dışı bırakmak istediğinize emin misiniz?')) return
+  const handleRemove = async (e) => {
+    e.preventDefault()
     setLoading(true)
+    setError('')
     try {
-      await remove2FA()
+      await remove2FA(removeCode)
       setStatus({ enabled: false })
       setSetup(null)
+      setRemoveMode(false)
+      setRemoveCode('')
       setSuccess('2FA devre dışı bırakıldı.')
-    } catch {
-      setError('2FA kaldırılamadı.')
+    } catch (err) {
+      setError(err.message || '2FA kaldırılamadı.')
+      setRemoveCode('')
     } finally {
       setLoading(false)
     }
@@ -96,7 +102,7 @@ export default function TwoFactorSetup() {
         </div>
         {status.enabled ? (
           <button
-            onClick={handleRemove}
+            onClick={() => { setRemoveMode(true); setError('') }}
             disabled={loading}
             className="text-sm text-red-500 hover:text-red-600 font-medium disabled:opacity-40"
           >
@@ -112,6 +118,44 @@ export default function TwoFactorSetup() {
           </button>
         )}
       </div>
+
+      {/* 2FA kaldırma — kod doğrulama */}
+      {removeMode && (
+        <div className="bg-white border border-red-100 rounded-xl p-6 space-y-4 mb-6">
+          <p className="text-sm font-semibold text-gray-800">2FA'yı devre dışı bırakmak için authenticator kodunuzu girin</p>
+          <form onSubmit={handleRemove} className="space-y-3">
+            <input
+              type="text"
+              inputMode="numeric"
+              pattern="\d{6}"
+              maxLength={6}
+              value={removeCode}
+              onChange={(e) => setRemoveCode(e.target.value.replace(/\D/g, ''))}
+              placeholder="000000"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-center text-xl font-mono tracking-[0.5em] focus:outline-none focus:ring-2 focus:ring-red-300 focus:border-red-400"
+              required
+              autoFocus
+            />
+            {error && <p className="text-red-500 text-sm bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => { setRemoveMode(false); setRemoveCode(''); setError('') }}
+                className="flex-1 border border-gray-200 text-gray-600 font-medium py-2.5 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+              >
+                İptal
+              </button>
+              <button
+                type="submit"
+                disabled={loading || removeCode.length !== 6}
+                className="flex-1 bg-red-500 hover:bg-red-600 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold py-2.5 rounded-lg transition-colors text-sm"
+              >
+                {loading ? 'Kaldırılıyor...' : 'Devre Dışı Bırak'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {/* Setup akışı */}
       {setup && (

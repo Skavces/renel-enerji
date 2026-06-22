@@ -84,12 +84,14 @@ export async function confirm2FASetup(secret, code) {
   return data
 }
 
-export async function remove2FA() {
+export async function remove2FA(code) {
   const res = await fetch(`${API}/api/auth/2fa/setup`, {
     ...authOptions({ method: 'DELETE' }),
+    body: JSON.stringify({ code }),
   })
-  if (!res.ok) throw new Error('2FA kaldırılamadı')
-  return res.json()
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.message || '2FA kaldırılamadı')
+  return data
 }
 
 export async function fetchAllProjects() {

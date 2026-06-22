@@ -47,9 +47,9 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Post('logout')
   async logout(@Req() req: any, @Res() res: Response) {
-    const jti = req.user?.jti
-    if (!jti) throw new UnauthorizedException('Token kimliği bulunamadı')
-    await this.authService.blacklistToken(jti)
+    const { jti, exp } = req.user ?? {}
+    if (!jti || !exp) throw new UnauthorizedException('Token kimliği bulunamadı')
+    await this.authService.blacklistToken(jti, exp)
     res.clearCookie('admin_token', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -76,8 +76,8 @@ export class AuthController {
       dto.newPassword,
     )
     // Kimlik bilgisi değişikliği sonrası mevcut oturumu kapat
-    const jti = req.user?.jti
-    if (jti) await this.authService.blacklistToken(jti)
+    const { jti, exp } = req.user ?? {}
+    if (jti && exp) await this.authService.blacklistToken(jti, exp)
     res.clearCookie('admin_token', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -106,7 +106,7 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Delete('2fa/setup')
-  remove2fa() {
-    return this.authService.remove2FA()
+  remove2fa(@Body() body: { code: string }) {
+    return this.authService.remove2FA(body.code)
   }
 }
