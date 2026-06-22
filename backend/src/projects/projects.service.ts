@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common'
+import { ConflictException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
@@ -35,6 +35,8 @@ Kurallar:
 
 @Injectable()
 export class ProjectsService {
+  private readonly logger = new Logger(ProjectsService.name)
+
   constructor(
     @InjectRepository(Project)
     private projectRepo: Repository<Project>,
@@ -143,6 +145,7 @@ export class ProjectsService {
 
     let imported = 0
     let skipped = 0
+    let parseErrors = 0
 
     for (const post of posts) {
       const already = await this.projectRepo.findOne({ where: { instagramMediaId: post.id } })
@@ -154,7 +157,9 @@ export class ProjectsService {
       let parsed: any
       try {
         parsed = await this.parseInstagram(post.caption)
-      } catch {
+      } catch (err) {
+        this.logger.warn(`Parse hatası (post ${post.id}): ${err.message}`)
+        parseErrors++
         skipped++
         continue
       }
@@ -182,6 +187,7 @@ export class ProjectsService {
       imported++
     }
 
+    this.logger.log(`Sync özet: ${imported} eklendi, ${skipped - parseErrors} zaten var, ${parseErrors} parse hatası`)
     return { imported, skipped }
   }
 
