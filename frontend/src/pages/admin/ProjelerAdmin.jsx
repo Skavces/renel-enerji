@@ -15,11 +15,11 @@ import {
   arrayMove,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { fetchAllProjects, deleteProject, reorderProjects, syncInstagram } from '../../api/admin'
+import { fetchAllProjects, deleteProject, reorderProjects, syncInstagram, updateProject } from '../../api/admin'
 import { useAdminAuth } from '../../contexts/AdminAuthContext'
 import { mediaUrl } from '../../api/projects'
 
-function SortableRow({ p, coverPhoto, onDelete, deletingId }) {
+function SortableRow({ p, coverPhoto, onDelete, deletingId, onTogglePublish, togglingId }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: p.id })
 
@@ -69,15 +69,21 @@ function SortableRow({ p, coverPhoto, onDelete, deletingId }) {
         {p.kw} kW
       </td>
       <td className="px-5 py-5">
-        {p.published ? (
-          <span className="flex items-center gap-1.5 text-sm text-green-600">
-            <Eye size={14} /> Yayında
-          </span>
-        ) : (
-          <span className="flex items-center gap-1.5 text-sm text-gray-400">
-            <EyeOff size={14} /> Gizli
-          </span>
-        )}
+        <button
+          onClick={() => onTogglePublish(p)}
+          disabled={togglingId === p.id}
+          className="flex items-center gap-1.5 text-sm transition-colors disabled:opacity-40 hover:opacity-70"
+        >
+          {p.published ? (
+            <span className="flex items-center gap-1.5 text-green-600">
+              <Eye size={14} /> Yayında
+            </span>
+          ) : (
+            <span className="flex items-center gap-1.5 text-gray-400">
+              <EyeOff size={14} /> Gizli
+            </span>
+          )}
+        </button>
       </td>
       <td className="px-5 py-5">
         <div className="flex items-center gap-2 justify-end">
@@ -109,6 +115,7 @@ export default function ProjelerAdmin() {
   const [saving, setSaving] = useState(false)
   const [syncing, setSyncing] = useState(false)
   const [syncResult, setSyncResult] = useState(null)
+  const [togglingId, setTogglingId] = useState(null)
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
 
@@ -154,6 +161,18 @@ export default function ProjelerAdmin() {
       alert('Instagram senkronizasyonu başarısız: ' + err.message)
     } finally {
       setSyncing(false)
+    }
+  }
+
+  const handleTogglePublish = async (p) => {
+    setTogglingId(p.id)
+    try {
+      await updateProject(p.id, { published: !p.published })
+      setProjects((prev) => prev.map((x) => x.id === p.id ? { ...x, published: !p.published } : x))
+    } catch (err) {
+      alert('Durum değiştirilemedi: ' + err.message)
+    } finally {
+      setTogglingId(null)
     }
   }
 
@@ -242,6 +261,8 @@ export default function ProjelerAdmin() {
                         coverPhoto={coverPhoto}
                         onDelete={handleDelete}
                         deletingId={deletingId}
+                        onTogglePublish={handleTogglePublish}
+                        togglingId={togglingId}
                       />
                     ))}
                   </tbody>
