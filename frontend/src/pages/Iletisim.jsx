@@ -1,7 +1,7 @@
-import { Phone, Mail, MapPin, Clock, MessageCircle } from 'lucide-react'
+import { Phone, Mail, MapPin, Clock } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
 import SEO from '../components/SEO'
-import { WA_NUMBER, waLink } from '../lib/whatsapp'
+import { WA_NUMBER } from '../lib/whatsapp'
 
 const jsonLd = {
   '@context': 'https://schema.org',
@@ -98,19 +98,11 @@ export default function Iletisim() {
             </div>
           </div>
 
-          <a
-            href={waLink('Merhaba, güneş enerjisi sistemi hakkında bilgi almak istiyorum.')}
-            target="_blank" rel="noopener noreferrer"
-            className="flex items-center justify-center gap-3 w-full bg-[#25D366] hover:bg-[#1ebe5d] text-white font-bold py-4 rounded-2xl transition-colors shadow-md shadow-[#25D366]/20 text-base"
-          >
-            <MessageCircle size={22} />
-            WhatsApp ile Teklif Al
-          </a>
         </div>
       </section>
 
       <section className="pb-16 bg-gray-50">
-        <div className="max-w-4xl mx-auto px-6">
+        <div className="max-w-7xl mx-auto px-6">
           <div className="overflow-hidden rounded-2xl border border-gray-200 shadow-sm h-[260px] sm:h-[360px] lg:h-[420px]">
             <iframe
               title="RenEl Enerji Konumu"
