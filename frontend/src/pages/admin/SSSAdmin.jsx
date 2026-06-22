@@ -32,33 +32,33 @@ function SortableRow({ faq, onDelete, onEdit, deletingId }) {
 
   return (
     <div ref={setNodeRef} style={style} className="bg-white border border-gray-100 rounded-xl overflow-hidden">
-      <div className="flex items-center gap-3 px-4 py-4">
+      <div className="flex items-center gap-3 px-5 py-5">
         <button
           {...attributes}
           {...listeners}
           className="text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing touch-none shrink-0"
         >
-          <GripVertical size={18} />
+          <GripVertical size={20} />
         </button>
 
         <button
           onClick={() => setExpanded((e) => !e)}
           className="flex-1 flex items-center gap-3 text-left"
         >
-          <p className="flex-1 font-medium text-gray-800 text-sm">{faq.question}</p>
+          <p className="flex-1 font-semibold text-gray-800 text-base leading-snug">{faq.question}</p>
           <ChevronDown
-            size={16}
+            size={18}
             className={`text-gray-400 shrink-0 transition-transform ${expanded ? 'rotate-180' : ''}`}
           />
         </button>
 
         <div className="flex items-center gap-1 shrink-0">
           {faq.published ? (
-            <span className="flex items-center gap-1 text-xs text-green-600 mr-2">
+            <span className="hidden sm:flex items-center gap-1 text-xs font-medium text-green-600 bg-green-50 px-2.5 py-1 rounded-full mr-2">
               <Eye size={12} /> Yayında
             </span>
           ) : (
-            <span className="flex items-center gap-1 text-xs text-gray-400 mr-2">
+            <span className="hidden sm:flex items-center gap-1 text-xs font-medium text-gray-400 bg-gray-100 px-2.5 py-1 rounded-full mr-2">
               <EyeOff size={12} /> Gizli
             </span>
           )}
@@ -66,21 +66,21 @@ function SortableRow({ faq, onDelete, onEdit, deletingId }) {
             onClick={() => onEdit(faq)}
             className="p-2 text-gray-400 hover:text-[#448834] hover:bg-green-50 rounded-lg transition-colors"
           >
-            <Pencil size={15} />
+            <Pencil size={17} />
           </button>
           <button
             onClick={() => onDelete(faq.id, faq.question)}
             disabled={deletingId === faq.id}
             className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-40"
           >
-            <Trash2 size={15} />
+            <Trash2 size={17} />
           </button>
         </div>
       </div>
 
       {expanded && (
-        <div className="px-4 pb-4 pt-0 border-t border-gray-50">
-          <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line pl-7">{faq.answer}</p>
+        <div className="px-5 pb-5 pt-0 border-t border-gray-50">
+          <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line pl-8 pt-4">{faq.answer}</p>
         </div>
       )}
     </div>
@@ -153,7 +153,7 @@ export default function SSSAdmin() {
   }
 
   return (
-    <main className="max-w-2xl mx-auto px-6 py-8">
+    <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl font-bold text-gray-900">S.S.S.</h1>
