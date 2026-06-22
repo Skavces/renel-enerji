@@ -80,26 +80,27 @@ export class ChatService {
   constructor(private config: ConfigService) {}
 
   private async callGroq(systemPrompt: string, messages: ChatMessage[], maxTokens = 400): Promise<string> {
-    const apiKey = this.config.get<string>('GROQ_API_KEY')
-    if (!apiKey) throw new BadRequestException('Chatbot şu anda kullanılamıyor')
+    const key1 = this.config.get<string>('GROQ_API_KEY')
+    const key2 = this.config.get<string>('GROQ_API_KEY_2')
+    if (!key1) throw new BadRequestException('Chatbot şu anda kullanılamıyor')
 
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          ...messages.slice(-12),
-        ],
-        max_tokens: maxTokens,
-        temperature: 0.4,
-      }),
+    const body = JSON.stringify({
+      model: 'llama-3.3-70b-versatile',
+      messages: [{ role: 'system', content: systemPrompt }, ...messages.slice(-12)],
+      max_tokens: maxTokens,
+      temperature: 0.4,
     })
 
+    const makeRequest = (key: string) => fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
+      body,
+    })
+
+    let res = await makeRequest(key1)
+    if (!res.ok && res.status === 429 && key2) {
+      res = await makeRequest(key2)
+    }
     if (!res.ok) throw new BadRequestException('Yanıt alınamadı, lütfen tekrar deneyin')
     const data = await res.json()
     return data.choices[0].message.content

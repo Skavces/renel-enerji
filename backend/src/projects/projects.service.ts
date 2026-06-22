@@ -252,11 +252,8 @@ export class ProjectsService {
     }
   }
 
-  async parseInstagram(text: string) {
-    const apiKey = this.config.get<string>('GROQ_API_KEY')
-    if (!apiKey) throw new InternalServerErrorException('GROQ_API_KEY tanımlı değil')
-
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+  private async callGroqParse(apiKey: string, text: string): Promise<Response> {
+    return fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -271,10 +268,24 @@ export class ProjectsService {
         temperature: 0,
       }),
     })
+  }
+
+  async parseInstagram(text: string) {
+    const key1 = this.config.get<string>('GROQ_API_KEY')
+    const key2 = this.config.get<string>('GROQ_API_KEY_2')
+    if (!key1) throw new InternalServerErrorException('GROQ_API_KEY tanımlı değil')
+
+    let res = await this.callGroqParse(key1, text)
 
     if (!res.ok) {
-      const err = await res.text()
-      throw new InternalServerErrorException(`Groq API hatası: ${err}`)
+      const body = await res.text()
+      if (res.status === 429 && key2) {
+        this.logger.warn('GROQ_API_KEY rate limit — GROQ_API_KEY_2 deneniyor')
+        res = await this.callGroqParse(key2, text)
+      }
+      if (!res.ok) {
+        throw new InternalServerErrorException(`Groq API hatası: ${body}`)
+      }
     }
 
     const data = await res.json()
