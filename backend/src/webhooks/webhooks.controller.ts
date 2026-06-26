@@ -7,13 +7,14 @@ import {
   Headers,
   RawBodyRequest,
   Req,
+  Res,
   ForbiddenException,
   HttpCode,
   Logger,
 } from '@nestjs/common'
 import { SkipThrottle } from '@nestjs/throttler'
 import { ConfigService } from '@nestjs/config'
-import { Request } from 'express'
+import { Request, Response } from 'express'
 import { WebhooksService } from './webhooks.service'
 
 @SkipThrottle()
@@ -31,11 +32,12 @@ export class WebhooksController {
     @Query('hub.mode') mode: string,
     @Query('hub.challenge') challenge: string,
     @Query('hub.verify_token') token: string,
+    @Res() res: Response,
   ) {
     const verifyToken = this.config.get<string>('INSTAGRAM_WEBHOOK_VERIFY_TOKEN')
     if (mode === 'subscribe' && token === verifyToken) {
       this.logger.log('Instagram webhook doğrulandı')
-      return parseInt(challenge, 10)
+      return res.type('text/plain').send(challenge)
     }
     throw new ForbiddenException('Geçersiz verify token')
   }
