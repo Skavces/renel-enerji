@@ -4,8 +4,10 @@ import { Calendar, ArrowLeft } from 'lucide-react'
 import DOMPurify from 'dompurify'
 import PageHeader from '../components/PageHeader'
 import SEO from '../components/SEO'
-
-const API = import.meta.env.VITE_API_URL || ''
+import Spinner from '../components/Spinner'
+import { fetchPostBySlug } from '../api/blog.js'
+import { formatDate } from '../lib/date.js'
+import { API } from '../api/config.js'
 
 export default function BlogDetay() {
   const { slug } = useParams()
@@ -14,11 +16,7 @@ export default function BlogDetay() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch(`${API}/api/blog/${slug}`)
-      .then((r) => {
-        if (!r.ok) throw new Error('not found')
-        return r.json()
-      })
+    fetchPostBySlug(slug)
       .then(setPost)
       .catch(() => navigate('/blog', { replace: true }))
       .finally(() => setLoading(false))
@@ -27,17 +25,13 @@ export default function BlogDetay() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-[#448834] border-t-transparent rounded-full animate-spin" />
+        <Spinner />
       </div>
     )
   }
 
   if (!post) return null
 
-  const formatDate = (dateStr) =>
-    new Date(dateStr).toLocaleDateString('tr-TR', { day: '2-digit', month: 'long', year: 'numeric' })
-
-  const API_URL = import.meta.env.VITE_API_URL || ''
   const absoluteImage = post.coverImage
     ? `https://renelenerji.com${post.coverImage}`
     : undefined

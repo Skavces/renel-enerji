@@ -1,4 +1,4 @@
-const API = import.meta.env.VITE_API_URL || ''
+import { API } from './config.js'
 
 export async function sendChatMessage(messages) {
   const res = await fetch(`${API}/api/chat`, {

@@ -1,24 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Plus, Pencil, Trash2, Eye, EyeOff, GripVertical } from 'lucide-react'
-import {
-  DndContext,
-  closestCenter,
-  PointerSensor,
-  useSensor,
-  useSensors,
-} from '@dnd-kit/core'
-import {
-  SortableContext,
-  useSortable,
-  verticalListSortingStrategy,
-  arrayMove,
-} from '@dnd-kit/sortable'
+import { DndContext, closestCenter } from '@dnd-kit/core'
+import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { fetchAllReferences, deleteReference, reorderReferences } from '../../api/admin'
 import { useAdminAuth } from '../../contexts/AdminAuthContext'
-
-const API = import.meta.env.VITE_API_URL || ''
+import { API } from '../../api/config.js'
+import { useDndReorder } from '../../hooks/useDndReorder.js'
 
 function SortableRow({ r, onDelete, deletingId }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
@@ -94,7 +83,7 @@ export default function ReferanslarAdmin() {
   const [deletingId, setDeletingId] = useState(null)
   const [saving, setSaving] = useState(false)
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
+  const { sensors, handleDragEnd } = useDndReorder(refs, setRefs, reorderReferences, setSaving)
 
   const load = () => {
     setLoading(true)
@@ -111,21 +100,6 @@ export default function ReferanslarAdmin() {
 
   useEffect(load, [])
 
-  const handleDragEnd = async ({ active, over }) => {
-    if (!over || active.id === over.id) return
-    const oldIndex = refs.findIndex((r) => r.id === active.id)
-    const newIndex = refs.findIndex((r) => r.id === over.id)
-    const reordered = arrayMove(refs, oldIndex, newIndex)
-    setRefs(reordered)
-    setSaving(true)
-    try {
-      await reorderReferences(reordered.map((r) => r.id))
-    } catch {
-      // sessizce geç
-    } finally {
-      setSaving(false)
-    }
-  }
 
   const handleDelete = async (id, name) => {
     if (!confirm(`"${name}" referansını silmek istediğinize emin misiniz?`)) return

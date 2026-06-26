@@ -3,23 +3,20 @@ import { Link } from 'react-router-dom'
 import { Calendar, ArrowRight } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
 import SEO from '../components/SEO'
-
-const API = import.meta.env.VITE_API_URL || ''
+import { fetchPosts } from '../api/blog.js'
+import { formatDate } from '../lib/date.js'
+import { API } from '../api/config.js'
 
 export default function Blog() {
   const [posts, setPosts] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch(`${API}/api/blog`)
-      .then((r) => r.json())
+    fetchPosts()
       .then(setPosts)
       .catch(console.error)
       .finally(() => setLoading(false))
   }, [])
-
-  const formatDate = (dateStr) =>
-    new Date(dateStr).toLocaleDateString('tr-TR', { day: '2-digit', month: 'long', year: 'numeric' })
 
   const jsonLd = posts.length > 0 ? {
     '@context': 'https://schema.org',

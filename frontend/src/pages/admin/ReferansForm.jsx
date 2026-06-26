@@ -4,7 +4,7 @@ import { ArrowLeft, Upload, X } from 'lucide-react'
 import { createReference, updateReference, fetchAllReferences, uploadReferenceLogo } from '../../api/admin'
 
 
-const API = import.meta.env.VITE_API_URL || ''
+import { API } from '../../api/config.js'
 
 const empty = { name: '', published: true, sortOrder: 0 }
 

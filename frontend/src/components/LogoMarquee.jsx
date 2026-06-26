@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { fetchReferences } from '../api/references'
-
-const API = import.meta.env.VITE_API_URL || ''
+import { API } from '../api/config.js'
 
 export default function LogoMarquee() {
   const [refs, setRefs] = useState([])

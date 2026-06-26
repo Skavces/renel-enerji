@@ -3,8 +3,7 @@ import { Link } from 'react-router-dom'
 import { ChevronDown, ArrowRight } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
 import SEO from '../components/SEO'
-
-const API = import.meta.env.VITE_API_URL || ''
+import { fetchFaqs } from '../api/faq.js'
 
 function FaqItem({ faq, isOpen, onToggle }) {
   return (
@@ -34,8 +33,7 @@ export default function SSS() {
   const [openId, setOpenId] = useState(null)
 
   useEffect(() => {
-    fetch(`${API}/api/faq`)
-      .then((r) => r.json())
+    fetchFaqs()
       .then(setFaqs)
       .catch(console.error)
       .finally(() => setLoading(false))

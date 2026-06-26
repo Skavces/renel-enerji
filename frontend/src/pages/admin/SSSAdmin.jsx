@@ -1,23 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus, Pencil, Trash2, Eye, EyeOff, GripVertical, ChevronDown } from 'lucide-react'
-import {
-  DndContext,
-  closestCenter,
-  PointerSensor,
-  useSensor,
-  useSensors,
-} from '@dnd-kit/core'
-import {
-  SortableContext,
-  useSortable,
-  verticalListSortingStrategy,
-  arrayMove,
-} from '@dnd-kit/sortable'
+import { DndContext, closestCenter } from '@dnd-kit/core'
+import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { fetchAllFaqs, deleteFaq, reorderFaqs } from '../../api/admin'
 import { useAdminAuth } from '../../contexts/AdminAuthContext'
 import SSSForm from './SSSForm'
+import { useDndReorder } from '../../hooks/useDndReorder.js'
 
 function SortableRow({ faq, onDelete, onEdit, deletingId }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
@@ -96,7 +86,7 @@ export default function SSSAdmin() {
   const [saving, setSaving] = useState(false)
   const [editing, setEditing] = useState(null) // null = kapalı, {} = yeni, {id,...} = düzenleme
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
+  const { sensors, handleDragEnd } = useDndReorder(faqs, setFaqs, reorderFaqs, setSaving)
 
   const load = () => {
     setLoading(true)
@@ -113,21 +103,6 @@ export default function SSSAdmin() {
 
   useEffect(load, [])
 
-  const handleDragEnd = async ({ active, over }) => {
-    if (!over || active.id === over.id) return
-    const oldIndex = faqs.findIndex((f) => f.id === active.id)
-    const newIndex = faqs.findIndex((f) => f.id === over.id)
-    const reordered = arrayMove(faqs, oldIndex, newIndex)
-    setFaqs(reordered)
-    setSaving(true)
-    try {
-      await reorderFaqs(reordered.map((f) => f.id))
-    } catch {
-      // sessizce geç
-    } finally {
-      setSaving(false)
-    }
-  }
 
   const handleDelete = async (id, question) => {
     if (!confirm(`"${question}" sorusunu silmek istediğinize emin misiniz?`)) return

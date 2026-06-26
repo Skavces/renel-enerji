@@ -8,8 +8,7 @@ import {
   uploadBlogCover,
 } from '../../api/admin'
 import RichTextEditor from '../../components/RichTextEditor'
-
-const API = import.meta.env.VITE_API_URL || ''
+import { API } from '../../api/config.js'
 
 function slugify(text) {
   return text

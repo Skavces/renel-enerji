@@ -1,23 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Plus, Pencil, Trash2, Eye, EyeOff, GripVertical, RefreshCw } from 'lucide-react'
-import {
-  DndContext,
-  closestCenter,
-  PointerSensor,
-  useSensor,
-  useSensors,
-} from '@dnd-kit/core'
-import {
-  SortableContext,
-  useSortable,
-  verticalListSortingStrategy,
-  arrayMove,
-} from '@dnd-kit/sortable'
+import { DndContext, closestCenter } from '@dnd-kit/core'
+import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { fetchAllProjects, deleteProject, reorderProjects, syncInstagram, updateProject } from '../../api/admin'
 import { useAdminAuth } from '../../contexts/AdminAuthContext'
 import { mediaUrl } from '../../api/projects'
+import { useDndReorder } from '../../hooks/useDndReorder.js'
 
 function SortableRow({ p, coverPhoto, onDelete, deletingId, onTogglePublish, togglingId }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
@@ -117,7 +107,7 @@ export default function ProjelerAdmin() {
   const [syncResult, setSyncResult] = useState(null)
   const [togglingId, setTogglingId] = useState(null)
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
+  const { sensors, handleDragEnd } = useDndReorder(projects, setProjects, reorderProjects, setSaving)
 
   const load = () => {
     setLoading(true)
@@ -134,21 +124,6 @@ export default function ProjelerAdmin() {
 
   useEffect(load, [])
 
-  const handleDragEnd = async ({ active, over }) => {
-    if (!over || active.id === over.id) return
-    const oldIndex = projects.findIndex((p) => p.id === active.id)
-    const newIndex = projects.findIndex((p) => p.id === over.id)
-    const reordered = arrayMove(projects, oldIndex, newIndex)
-    setProjects(reordered)
-    setSaving(true)
-    try {
-      await reorderProjects(reordered.map((p) => p.id))
-    } catch {
-      // sessizce geç, sıra kaydedilemese de UI güncel
-    } finally {
-      setSaving(false)
-    }
-  }
 
   const handleSync = async () => {
     setSyncing(true)

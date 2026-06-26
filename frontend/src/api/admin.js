@@ -1,4 +1,4 @@
-const API = import.meta.env.VITE_API_URL || ''
+import { API } from './config.js'
 
 // Token artık httpOnly cookie'de gönderiliyor.
 // Tüm korumalı isteklerde credentials: 'include' ekliyoruz.

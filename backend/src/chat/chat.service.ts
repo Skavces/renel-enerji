@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
+import { GroqService, GROQ_MODEL } from '../groq/groq.service'
 
 export interface ChatMessage {
   role: 'user' | 'assistant'
@@ -77,32 +78,24 @@ export function sanitizeContent(text: string): string {
 
 @Injectable()
 export class ChatService {
-  constructor(private config: ConfigService) {}
+  constructor(
+    private config: ConfigService,
+    private groq: GroqService,
+  ) {}
 
   private async callGroq(systemPrompt: string, messages: ChatMessage[], maxTokens = 400): Promise<string> {
     const key1 = this.config.get<string>('GROQ_API_KEY_3') ?? this.config.get<string>('GROQ_API_KEY')
     const key2 = this.config.get<string>('GROQ_API_KEY_2')
     if (!key1) throw new BadRequestException('Chatbot şu anda kullanılamıyor')
 
-    const body = JSON.stringify({
-      model: 'llama-3.3-70b-versatile',
+    const { res, data } = await this.groq.call(key1, key2, {
+      model: GROQ_MODEL,
       messages: [{ role: 'system', content: systemPrompt }, ...messages.slice(-12)],
       max_tokens: maxTokens,
       temperature: 0.4,
     })
 
-    const makeRequest = (key: string) => fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
-      body,
-    })
-
-    let res = await makeRequest(key1)
-    if (!res.ok && res.status === 429 && key2) {
-      res = await makeRequest(key2)
-    }
     if (!res.ok) throw new BadRequestException('Yanıt alınamadı, lütfen tekrar deneyin')
-    const data = await res.json()
     return data.choices[0].message.content
   }
 

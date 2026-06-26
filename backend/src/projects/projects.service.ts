@@ -9,6 +9,11 @@ import { ProjectMedia } from './entities/project-media.entity'
 import { CreateProjectDto } from './dto/create-project.dto'
 import { UpdateProjectDto } from './dto/update-project.dto'
 import { InstagramTokenService } from '../instagram-token/instagram-token.service'
+import { GroqService, GROQ_MODEL } from '../groq/groq.service'
+
+const INSTAGRAM_API_VERSION = 'v21.0'
+const INSTAGRAM_MEDIA_FIELDS =
+  'id,caption,media_url,thumbnail_url,media_type,timestamp,children{id,media_url,media_type,thumbnail_url}'
 
 const PARSE_PROMPT = `Sen RenEl Enerji şirketinin web sitesi için Instagram gönderilerinden proje bilgisi çıkaran bir içerik asistanısın.
 
@@ -45,6 +50,7 @@ export class ProjectsService {
     private mediaRepo: Repository<ProjectMedia>,
     private config: ConfigService,
     private tokenService: InstagramTokenService,
+    private groq: GroqService,
   ) {}
 
   findAllPublic() {
@@ -133,14 +139,11 @@ export class ProjectsService {
     if (!token) throw new InternalServerErrorException('INSTAGRAM_ACCESS_TOKEN tanımlı değil')
 
     const url =
-      `https://graph.instagram.com/v21.0/${mediaId}` +
-      `?fields=id,caption,media_url,thumbnail_url,media_type,timestamp,children{id,media_url,media_type,thumbnail_url}` +
-      `&access_token=${token}`
+      `https://graph.instagram.com/${INSTAGRAM_API_VERSION}/${mediaId}` +
+      `?fields=${INSTAGRAM_MEDIA_FIELDS}&access_token=${token}`
 
     const res = await fetch(url)
-    if (!res.ok) {
-      throw new InternalServerErrorException(`Instagram API hatası: ${await res.text()}`)
-    }
+    if (!res.ok) throw new InternalServerErrorException(`Instagram API hatası: ${await res.text()}`)
 
     const post = await res.json()
     if (!post.caption?.toLowerCase().includes('#proje')) {
@@ -155,26 +158,7 @@ export class ProjectsService {
       throw new InternalServerErrorException(`Parse hatası: ${err.message}`)
     }
 
-    const baseSlug = this.toSlug(parsed.name)
-    const slug = await this.uniqueSlug(baseSlug)
-
-    const project = this.projectRepo.create({
-      slug,
-      name: parsed.name || 'Instagram Proje',
-      location: parsed.location || '',
-      kw: parsed.kw || 0,
-      date: parsed.date || String(new Date().getFullYear()),
-      description: parsed.description || '',
-      about: parsed.about || '',
-      specs: parsed.specs || [],
-      highlights: parsed.highlights || [],
-      statBoxes: parsed.statBoxes || [],
-      category: parsed.category || null,
-      published: true,
-      instagramMediaId: post.id,
-    })
-    const saved = await this.projectRepo.save(project)
-    await this.importInstagramImages(saved, post)
+    const saved = await this.createProjectFromInstagram(parsed, post, true)
     this.logger.log(`Webhook ile proje oluşturuldu: ${saved.slug}`)
   }
 
@@ -186,15 +170,11 @@ export class ProjectsService {
     }
 
     const apiUrl =
-      `https://graph.instagram.com/v21.0/${userId}/media` +
-      `?fields=id,caption,media_url,thumbnail_url,media_type,timestamp,children{id,media_url,media_type,thumbnail_url}` +
-      `&limit=50&access_token=${token}`
+      `https://graph.instagram.com/${INSTAGRAM_API_VERSION}/${userId}/media` +
+      `?fields=${INSTAGRAM_MEDIA_FIELDS}&limit=50&access_token=${token}`
 
     const res = await fetch(apiUrl)
-    if (!res.ok) {
-      const err = await res.text()
-      throw new InternalServerErrorException(`Instagram API hatası: ${err}`)
-    }
+    if (!res.ok) throw new InternalServerErrorException(`Instagram API hatası: ${await res.text()}`)
 
     const data = await res.json()
     const posts: any[] = (data.data ?? []).filter(
@@ -207,10 +187,7 @@ export class ProjectsService {
 
     for (const post of posts) {
       const already = await this.projectRepo.findOne({ where: { instagramMediaId: post.id } })
-      if (already) {
-        skipped++
-        continue
-      }
+      if (already) { skipped++; continue }
 
       let parsed: any
       try {
@@ -222,31 +199,34 @@ export class ProjectsService {
         continue
       }
 
-      const baseSlug = this.toSlug(parsed.name)
-      const slug = await this.uniqueSlug(baseSlug)
-
-      const project = this.projectRepo.create({
-        slug,
-        name: parsed.name || 'Instagram Proje',
-        location: parsed.location || '',
-        kw: parsed.kw || 0,
-        date: parsed.date || String(new Date().getFullYear()),
-        description: parsed.description || '',
-        about: parsed.about || '',
-        specs: parsed.specs || [],
-        highlights: parsed.highlights || [],
-        statBoxes: parsed.statBoxes || [],
-        category: parsed.category || null,
-        published: autoPublish,
-        instagramMediaId: post.id,
-      })
-      const saved = await this.projectRepo.save(project)
-      await this.importInstagramImages(saved, post)
+      await this.createProjectFromInstagram(parsed, post, autoPublish)
       imported++
     }
 
     this.logger.log(`Sync özet: ${imported} eklendi, ${skipped - parseErrors} zaten var, ${parseErrors} parse hatası`)
     return { imported, skipped }
+  }
+
+  private async createProjectFromInstagram(parsed: any, post: any, published: boolean): Promise<Project> {
+    const slug = await this.uniqueSlug(this.toSlug(parsed.name))
+    const project = this.projectRepo.create({
+      slug,
+      name: parsed.name || 'Instagram Proje',
+      location: parsed.location || '',
+      kw: parsed.kw || 0,
+      date: parsed.date || String(new Date().getFullYear()),
+      description: parsed.description || '',
+      about: parsed.about || '',
+      specs: parsed.specs || [],
+      highlights: parsed.highlights || [],
+      statBoxes: parsed.statBoxes || [],
+      category: parsed.category || null,
+      published,
+      instagramMediaId: post.id,
+    })
+    const saved = await this.projectRepo.save(project)
+    await this.importInstagramImages(saved, post)
+    return saved
   }
 
   private toSlug(name: string): string {
@@ -310,47 +290,25 @@ export class ProjectsService {
     }
   }
 
-  private async callGroqParse(apiKey: string, text: string): Promise<Response> {
-    return fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
-        messages: [
-          { role: 'system', content: PARSE_PROMPT },
-          { role: 'user', content: text },
-        ],
-        temperature: 0,
-      }),
-    })
-  }
-
   async parseInstagram(text: string) {
     const key1 = this.config.get<string>('GROQ_API_KEY')
     const key2 = this.config.get<string>('GROQ_API_KEY_2')
     if (!key1) throw new InternalServerErrorException('GROQ_API_KEY tanımlı değil')
 
-    let res = await this.callGroqParse(key1, text)
+    const { res, data } = await this.groq.call(key1, key2, {
+      model: GROQ_MODEL,
+      messages: [
+        { role: 'system', content: PARSE_PROMPT },
+        { role: 'user', content: text },
+      ],
+      temperature: 0,
+    })
 
-    if (!res.ok) {
-      const body = await res.text()
-      if (res.status === 429 && key2) {
-        this.logger.warn('GROQ_API_KEY rate limit — GROQ_API_KEY_2 deneniyor')
-        res = await this.callGroqParse(key2, text)
-      }
-      if (!res.ok) {
-        throw new InternalServerErrorException(`Groq API hatası: ${body}`)
-      }
-    }
+    if (!res.ok) throw new InternalServerErrorException(`Groq API hatası: ${res.status}`)
 
-    const data = await res.json()
     const content = data.choices?.[0]?.message?.content ?? ''
-
     const jsonMatch = content.match(/\{[\s\S]*\}/)
-    if (!jsonMatch) throw new InternalServerErrorException('Grok geçersiz yanıt döndürdü')
+    if (!jsonMatch) throw new InternalServerErrorException('Groq geçersiz yanıt döndürdü')
 
     return JSON.parse(jsonMatch[0])
   }

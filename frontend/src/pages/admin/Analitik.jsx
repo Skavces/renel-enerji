@@ -4,7 +4,7 @@ import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
 } from 'recharts'
 
-const API = import.meta.env.VITE_API_URL || ''
+import { API } from '../../api/config.js'
 const UMAMI_URL = import.meta.env.VITE_UMAMI_URL || 'http://localhost:3002'
 
 
