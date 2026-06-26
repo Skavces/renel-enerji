@@ -61,6 +61,16 @@ services:
       - redisdata:/data
     command: redis-server --appendonly yes --requirepass ${REDIS_PASS}
 
+  prerender:
+    image: tvanro/prerender-alpine:latest
+    restart: unless-stopped
+    expose:
+      - "3000"
+    environment:
+      CACHE_MAXSIZE: "300"
+      CACHE_TTL: "86400"
+    mem_limit: 512m
+
   frontend:
     build:
       context: ./frontend
@@ -74,6 +84,7 @@ services:
       - "8080:80"
     depends_on:
       - backend
+      - prerender
 
   umami-db:
     image: postgres:16-alpine
