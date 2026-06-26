@@ -10,7 +10,7 @@ import * as cookieParser from 'cookie-parser'
 import { AppModule } from './app.module'
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule)
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, { rawBody: true })
 
   app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }))
   app.use(cookieParser())

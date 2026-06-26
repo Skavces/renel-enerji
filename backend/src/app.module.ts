@@ -14,6 +14,7 @@ import { BlogModule } from './blog/blog.module'
 import { FaqModule } from './faq/faq.module'
 import { SitemapModule } from './sitemap/sitemap.module'
 import { ChatModule } from './chat/chat.module'
+import { WebhooksModule } from './webhooks/webhooks.module'
 import { WeatherController } from './weather/weather.controller'
 import { HealthController } from './health.controller'
 
@@ -45,6 +46,7 @@ import { HealthController } from './health.controller'
     FaqModule,
     SitemapModule,
     ChatModule,
+    WebhooksModule,
   ],
   controllers: [WeatherController, HealthController],
   providers: [

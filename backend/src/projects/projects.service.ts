@@ -120,6 +120,62 @@ export class ProjectsService {
     return this.findById(projectId)
   }
 
+  async syncInstagramByMediaId(mediaId: string): Promise<void> {
+    const already = await this.projectRepo.findOne({ where: { instagramMediaId: mediaId } })
+    if (already) {
+      this.logger.log(`Instagram post ${mediaId} zaten kayıtlı, atlanıyor`)
+      return
+    }
+
+    const token = this.config.get<string>('INSTAGRAM_ACCESS_TOKEN')
+    if (!token) throw new InternalServerErrorException('INSTAGRAM_ACCESS_TOKEN tanımlı değil')
+
+    const url =
+      `https://graph.instagram.com/v21.0/${mediaId}` +
+      `?fields=id,caption,media_url,thumbnail_url,media_type,timestamp,children{id,media_url,media_type,thumbnail_url}` +
+      `&access_token=${token}`
+
+    const res = await fetch(url)
+    if (!res.ok) {
+      throw new InternalServerErrorException(`Instagram API hatası: ${await res.text()}`)
+    }
+
+    const post = await res.json()
+    if (!post.caption?.toLowerCase().includes('#proje')) {
+      this.logger.log(`Instagram post ${mediaId} #proje etiketi yok, atlanıyor`)
+      return
+    }
+
+    let parsed: any
+    try {
+      parsed = await this.parseInstagram(post.caption)
+    } catch (err) {
+      throw new InternalServerErrorException(`Parse hatası: ${err.message}`)
+    }
+
+    const baseSlug = this.toSlug(parsed.name)
+    const slug = await this.uniqueSlug(baseSlug)
+
+    const project = this.projectRepo.create({
+      slug,
+      name: parsed.name || 'Instagram Proje',
+      location: parsed.location || '',
+      kw: parsed.kw || 0,
+      date: parsed.date || String(new Date().getFullYear()),
+      description: parsed.description || '',
+      about: parsed.about || '',
+      specs: parsed.specs || [],
+      highlights: parsed.highlights || [],
+      statBoxes: parsed.statBoxes || [],
+      category: parsed.category || null,
+      published: true,
+      instagramMediaId: post.id,
+    })
+    const saved = await this.projectRepo.save(project)
+    await this.importInstagramImages(saved, post)
+    this.logger.log(`Webhook ile proje oluşturuldu: ${saved.slug}`)
+  }
+
   async syncInstagram(autoPublish = false): Promise<{ imported: number; skipped: number }> {
     const token = this.config.get<string>('INSTAGRAM_ACCESS_TOKEN')
     const userId = this.config.get<string>('INSTAGRAM_USER_ID')
