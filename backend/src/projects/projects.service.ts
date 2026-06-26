@@ -8,6 +8,7 @@ import { Project } from './entities/project.entity'
 import { ProjectMedia } from './entities/project-media.entity'
 import { CreateProjectDto } from './dto/create-project.dto'
 import { UpdateProjectDto } from './dto/update-project.dto'
+import { InstagramTokenService } from '../instagram-token/instagram-token.service'
 
 const PARSE_PROMPT = `Sen RenEl Enerji şirketinin web sitesi için Instagram gönderilerinden proje bilgisi çıkaran bir içerik asistanısın.
 
@@ -43,6 +44,7 @@ export class ProjectsService {
     @InjectRepository(ProjectMedia)
     private mediaRepo: Repository<ProjectMedia>,
     private config: ConfigService,
+    private tokenService: InstagramTokenService,
   ) {}
 
   findAllPublic() {
@@ -127,7 +129,7 @@ export class ProjectsService {
       return
     }
 
-    const token = this.config.get<string>('INSTAGRAM_ACCESS_TOKEN')
+    const token = await this.tokenService.getAccessToken()
     if (!token) throw new InternalServerErrorException('INSTAGRAM_ACCESS_TOKEN tanımlı değil')
 
     const url =
@@ -177,7 +179,7 @@ export class ProjectsService {
   }
 
   async syncInstagram(autoPublish = false): Promise<{ imported: number; skipped: number }> {
-    const token = this.config.get<string>('INSTAGRAM_ACCESS_TOKEN')
+    const token = await this.tokenService.getAccessToken()
     const userId = this.config.get<string>('INSTAGRAM_USER_ID')
     if (!token || !userId) {
       throw new InternalServerErrorException('INSTAGRAM_ACCESS_TOKEN veya INSTAGRAM_USER_ID .env dosyasında tanımlı değil')

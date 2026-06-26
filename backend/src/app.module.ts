@@ -15,6 +15,7 @@ import { FaqModule } from './faq/faq.module'
 import { SitemapModule } from './sitemap/sitemap.module'
 import { ChatModule } from './chat/chat.module'
 import { WebhooksModule } from './webhooks/webhooks.module'
+import { InstagramTokenModule } from './instagram-token/instagram-token.module'
 import { WeatherController } from './weather/weather.controller'
 import { HealthController } from './health.controller'
 
@@ -47,6 +48,7 @@ import { HealthController } from './health.controller'
     SitemapModule,
     ChatModule,
     WebhooksModule,
+    InstagramTokenModule,
   ],
   controllers: [WeatherController, HealthController],
   providers: [
