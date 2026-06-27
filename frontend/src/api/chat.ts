@@ -1,6 +1,7 @@
-import { API } from './config.js'
+import { API } from './config'
+import type { ChatMessage } from '../types'
 
-export async function sendChatMessage(messages) {
+export async function sendChatMessage(messages: ChatMessage[]): Promise<{ content: string }> {
   const res = await fetch(`${API}/api/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -10,7 +11,7 @@ export async function sendChatMessage(messages) {
   return res.json()
 }
 
-export async function generateWhatsappSummary(messages) {
+export async function generateWhatsappSummary(messages: ChatMessage[]): Promise<{ summary: string }> {
   const res = await fetch(`${API}/api/chat/summary`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

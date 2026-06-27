@@ -12,12 +12,14 @@ import {
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express'
 import { diskStorage } from 'multer'
 import { extname } from 'path'
-import { unlinkSync, renameSync } from 'fs'
+import { unlink, rename } from 'fs/promises'
 import { fromFile } from 'file-type'
 import sharp from 'sharp'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 import { LinkMediaDto } from './dto/link-media.dto'
 import { ProjectsService } from '../projects/projects.service'
+import { MediaService } from '../projects/media.service'
+import { MediaType } from '../projects/entities/project-media.entity'
 import { ReferencesService } from '../references/references.service'
 import { BlogService } from '../blog/blog.service'
 
@@ -35,7 +37,7 @@ async function toWebp(filePath: string): Promise<string> {
   const webpPath = filePath.replace(/\.[^.]+$/, '.webp')
   if (filePath === webpPath) return filePath
   await sharp(filePath).webp({ quality: 82 }).toFile(webpPath)
-  unlinkSync(filePath)
+  await unlink(filePath)
   return webpPath
 }
 
@@ -58,7 +60,7 @@ const logoFilter = (_req: any, file: Express.Multer.File, cb: any) => {
 async function assertMagicBytes(filePath: string, allowedMimes: string[]): Promise<void> {
   const detected = await fromFile(filePath)
   if (!detected || !allowedMimes.includes(detected.mime)) {
-    unlinkSync(filePath)
+    await unlink(filePath)
     throw new BadRequestException('Dosya içeriği izin verilen türlerle eşleşmiyor')
   }
 }
@@ -67,6 +69,7 @@ async function assertMagicBytes(filePath: string, allowedMimes: string[]): Promi
 export class UploadController {
   constructor(
     private projectsService: ProjectsService,
+    private mediaService: MediaService,
     private referencesService: ReferencesService,
     private blogService: BlogService,
   ) {}
@@ -96,9 +99,9 @@ export class UploadController {
       const ext = isVideo ? (videoExtMap[file.mimetype] ?? '.mp4') : '.webp'
       const seoName = `${project.slug}-gunes-enerjisi-${Date.now()}-${Math.round(Math.random() * 1e4)}${ext}`
       const seoPath = `./uploads/${seoName}`
-      renameSync(converted, seoPath)
+      await rename(converted, seoPath)
       const src = `/uploads/${seoName}`
-      const media = await this.projectsService.addMedia(projectId, isVideo ? 'video' : 'image', src)
+      const media = await this.mediaService.addMedia(projectId, isVideo ? MediaType.VIDEO : MediaType.IMAGE, src)
       results.push(media)
     }
     return results
@@ -107,8 +110,8 @@ export class UploadController {
   @UseGuards(JwtAuthGuard)
   @Post('projects/:id/media/link')
   async linkMedia(@Param('id') projectId: string, @Body() dto: LinkMediaDto) {
-    const type = /\.(mp4|mov|webm)$/i.test(dto.src) ? 'video' : 'image'
-    return this.projectsService.addMedia(projectId, type, dto.src)
+    const type = /\.(mp4|mov|webm)$/i.test(dto.src) ? MediaType.VIDEO : MediaType.IMAGE
+    return this.mediaService.addMedia(projectId, type, dto.src)
   }
 
   @UseGuards(JwtAuthGuard)
@@ -139,7 +142,7 @@ export class UploadController {
     const finalPath = await toWebp(file.path)
     const seoName = `${post.slug}-gunes-enerjisi-${Date.now()}.webp`
     const seoPath = `./uploads/${seoName}`
-    renameSync(finalPath, seoPath)
+    await rename(finalPath, seoPath)
     const coverImage = `/uploads/${seoName}`
     return this.blogService.update(id, { coverImage })
   }

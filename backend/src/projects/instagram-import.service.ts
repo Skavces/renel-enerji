@@ -1,0 +1,207 @@
+import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common'
+import { ConfigService } from '@nestjs/config'
+import { InjectRepository } from '@nestjs/typeorm'
+import { Repository } from 'typeorm'
+import sharp from 'sharp'
+import { writeFile } from 'fs/promises'
+import { join } from 'path'
+import { Project } from './entities/project.entity'
+import { MediaType } from './entities/project-media.entity'
+import { ProjectsService } from './projects.service'
+import { MediaService } from './media.service'
+import { InstagramParseService } from './instagram-parse.service'
+import { InstagramTokenService } from '../instagram-token/instagram-token.service'
+import { fetchWithTimeout } from '../common/fetch-with-timeout'
+
+const INSTAGRAM_API_VERSION = 'v21.0'
+const INSTAGRAM_MEDIA_FIELDS =
+  'id,caption,media_url,thumbnail_url,media_type,timestamp,children{id,media_url,media_type,thumbnail_url}'
+
+const UPLOADS_DIR = join(__dirname, '..', '..', 'uploads')
+
+@Injectable()
+export class InstagramImportService {
+  private readonly logger = new Logger(InstagramImportService.name)
+
+  private readonly syncStatus = {
+    running: false,
+    lastRun: null as Date | null,
+    lastResult: null as { imported: number; skipped: number } | null,
+    lastError: null as string | null,
+  }
+
+  constructor(
+    @InjectRepository(Project)
+    private projectRepo: Repository<Project>,
+    private projectsService: ProjectsService,
+    private mediaService: MediaService,
+    private parseService: InstagramParseService,
+    private tokenService: InstagramTokenService,
+    private config: ConfigService,
+  ) {}
+
+  getSyncStatus() {
+    return this.syncStatus
+  }
+
+  startSyncInstagram() {
+    if (this.syncStatus.running) {
+      return { status: 'already_running' }
+    }
+    this.syncStatus.running = true
+    this.syncStatus.lastError = null
+    this.syncInstagram()
+      .then(r => {
+        this.syncStatus.lastResult = r
+        this.syncStatus.lastRun = new Date()
+        this.logger.log(`Sync tamamlandı: ${r.imported} eklendi, ${r.skipped} atlandı`)
+      })
+      .catch((err: any) => {
+        this.syncStatus.lastError = err.message
+        this.logger.error(`Sync hatası: ${err.message}`)
+      })
+      .finally(() => { this.syncStatus.running = false })
+    return { status: 'started' }
+  }
+
+  async syncInstagram(autoPublish = false): Promise<{ imported: number; skipped: number }> {
+    const token = await this.tokenService.getAccessToken()
+    const userId = this.config.get<string>('INSTAGRAM_USER_ID')
+    if (!token || !userId) {
+      throw new InternalServerErrorException('INSTAGRAM_ACCESS_TOKEN veya INSTAGRAM_USER_ID .env dosyasında tanımlı değil')
+    }
+
+    const apiUrl =
+      `https://graph.instagram.com/${INSTAGRAM_API_VERSION}/${userId}/media` +
+      `?fields=${INSTAGRAM_MEDIA_FIELDS}&limit=50&access_token=${token}`
+
+    const res = await fetchWithTimeout(apiUrl)
+    if (!res.ok) throw new InternalServerErrorException(`Instagram API hatası: ${await res.text()}`)
+
+    const data = await res.json()
+    const posts: any[] = (data.data ?? []).filter(
+      (p: any) => p.caption?.toLowerCase().includes('#proje'),
+    )
+
+    let imported = 0
+    let skipped = 0
+    let parseErrors = 0
+
+    for (const post of posts) {
+      const already = await this.projectRepo.findOne({ where: { instagramMediaId: post.id } })
+      if (already) { skipped++; continue }
+
+      let parsed: any
+      try {
+        parsed = await this.parseService.parseInstagram(post.caption)
+      } catch (err: any) {
+        this.logger.warn(`Parse hatası (post ${post.id}): ${err.message}`)
+        parseErrors++
+        skipped++
+        continue
+      }
+
+      await this.createProjectFromInstagram(parsed, post, autoPublish)
+      imported++
+    }
+
+    this.logger.log(`Sync özet: ${imported} eklendi, ${skipped - parseErrors} zaten var, ${parseErrors} parse hatası`)
+    return { imported, skipped }
+  }
+
+  async syncInstagramByMediaId(mediaId: string): Promise<void> {
+    const already = await this.projectRepo.findOne({ where: { instagramMediaId: mediaId } })
+    if (already) {
+      this.logger.log(`Instagram post ${mediaId} zaten kayıtlı, atlanıyor`)
+      return
+    }
+
+    const token = await this.tokenService.getAccessToken()
+    if (!token) throw new InternalServerErrorException('INSTAGRAM_ACCESS_TOKEN tanımlı değil')
+
+    const url =
+      `https://graph.instagram.com/${INSTAGRAM_API_VERSION}/${mediaId}` +
+      `?fields=${INSTAGRAM_MEDIA_FIELDS}&access_token=${token}`
+
+    const res = await fetchWithTimeout(url)
+    if (!res.ok) throw new InternalServerErrorException(`Instagram API hatası: ${await res.text()}`)
+
+    const post = await res.json()
+    if (!post.caption?.toLowerCase().includes('#proje')) {
+      this.logger.log(`Instagram post ${mediaId} #proje etiketi yok, atlanıyor`)
+      return
+    }
+
+    let parsed: any
+    try {
+      parsed = await this.parseService.parseInstagram(post.caption)
+    } catch (err: any) {
+      throw new InternalServerErrorException(`Parse hatası: ${err.message}`)
+    }
+
+    const saved = await this.createProjectFromInstagram(parsed, post, true)
+    this.logger.log(`Webhook ile proje oluşturuldu: ${saved.slug}`)
+  }
+
+  private async createProjectFromInstagram(parsed: any, post: any, published: boolean): Promise<Project> {
+    const slug = await this.projectsService.uniqueSlug(this.projectsService.toSlug(parsed.name))
+    const project = this.projectRepo.create({
+      slug,
+      name: parsed.name || 'Instagram Proje',
+      location: parsed.location || '',
+      kw: parsed.kw || 0,
+      date: parsed.date || String(new Date().getFullYear()),
+      description: parsed.description || '',
+      about: parsed.about || '',
+      specs: parsed.specs || [],
+      highlights: parsed.highlights || [],
+      statBoxes: parsed.statBoxes || [],
+      category: parsed.category || null,
+      published,
+      instagramMediaId: post.id,
+    })
+    const saved = await this.projectRepo.save(project)
+    await this.importInstagramImages(saved, post)
+    return saved
+  }
+
+  private async importInstagramImages(project: Project, post: any): Promise<void> {
+    const items: { url: string; type: MediaType }[] = []
+
+    if (post.media_type === 'IMAGE' && post.media_url) {
+      items.push({ url: post.media_url, type: MediaType.IMAGE })
+    } else if (post.media_type === 'VIDEO' && post.media_url) {
+      if (post.thumbnail_url) items.push({ url: post.thumbnail_url, type: MediaType.THUMBNAIL })
+      items.push({ url: post.media_url, type: MediaType.VIDEO })
+    } else if (post.media_type === 'CAROUSEL_ALBUM') {
+      for (const child of post.children?.data ?? []) {
+        if (child.media_type === 'IMAGE' && child.media_url) {
+          items.push({ url: child.media_url, type: MediaType.IMAGE })
+        } else if (child.media_type === 'VIDEO' && child.media_url) {
+          if (child.thumbnail_url) items.push({ url: child.thumbnail_url, type: MediaType.THUMBNAIL })
+          items.push({ url: child.media_url, type: MediaType.VIDEO })
+        }
+      }
+    }
+
+    for (const item of items) {
+      try {
+        const r = await fetchWithTimeout(item.url, undefined, 30000)
+        if (!r.ok) continue
+        const buf = Buffer.from(await r.arrayBuffer())
+
+        if (item.type === MediaType.VIDEO) {
+          const filename = `${project.slug}-ig-${Date.now()}-${Math.round(Math.random() * 1e4)}.mp4`
+          await writeFile(join(UPLOADS_DIR, filename), buf)
+          await this.mediaService.addMedia(project.id, MediaType.VIDEO, `/uploads/${filename}`)
+        } else {
+          const filename = `${project.slug}-ig-${Date.now()}-${Math.round(Math.random() * 1e4)}.webp`
+          await sharp(buf).webp({ quality: 82 }).toFile(join(UPLOADS_DIR, filename))
+          await this.mediaService.addMedia(project.id, MediaType.IMAGE, `/uploads/${filename}`)
+        }
+      } catch (err: any) {
+        this.logger.warn(`Instagram medya indirilemedi (${item.url}): ${err.message}`)
+      }
+    }
+  }
+}

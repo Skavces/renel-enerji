@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { createHmac, timingSafeEqual } from 'crypto'
-import { ProjectsService } from '../projects/projects.service'
+import { InstagramImportService } from '../projects/instagram-import.service'
 
 @Injectable()
 export class WebhooksService {
@@ -9,7 +9,7 @@ export class WebhooksService {
 
   constructor(
     private readonly config: ConfigService,
-    private readonly projectsService: ProjectsService,
+    private readonly importService: InstagramImportService,
   ) {}
 
   verifySignature(rawBody: Buffer, signature: string): boolean {
@@ -37,7 +37,7 @@ export class WebhooksService {
 
         this.logger.log(`Yeni Instagram gönderisi algılandı: ${mediaId}`)
         try {
-          await this.projectsService.syncInstagramByMediaId(mediaId)
+          await this.importService.syncInstagramByMediaId(mediaId)
         } catch (err: any) {
           this.logger.error(`syncInstagramByMediaId hatası (${mediaId}): ${err.message}`)
         }

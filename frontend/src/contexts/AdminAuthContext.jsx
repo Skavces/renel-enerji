@@ -17,7 +17,6 @@ export function AdminAuthProvider({ children }) {
 
   const logout = () => {
     setIsAuth(false)
-    localStorage.removeItem('admin_token')
   }
 
   if (checking) return null

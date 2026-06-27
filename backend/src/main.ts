@@ -12,6 +12,9 @@ import { AppModule } from './app.module'
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, { rawBody: true })
 
+  // Trust the first proxy hop (Nginx) so req.ip reflects the real client IP
+  app.set('trust proxy', 1)
+
   app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }))
   app.use(cookieParser())
 
@@ -43,6 +46,8 @@ async function bootstrap() {
     const document = SwaggerModule.createDocument(app, config)
     SwaggerModule.setup('api/docs', app, document)
   }
+
+  app.enableShutdownHooks()
 
   const port = process.env.PORT || 3001
   await app.listen(port)

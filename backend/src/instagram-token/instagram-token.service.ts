@@ -4,6 +4,7 @@ import { Repository } from 'typeorm'
 import { Cron } from '@nestjs/schedule'
 import { ConfigService } from '@nestjs/config'
 import { AppSetting } from './app-setting.entity'
+import { fetchWithTimeout } from '../common/fetch-with-timeout'
 
 const TOKEN_KEY = 'instagram_access_token'
 const REFRESHED_AT_KEY = 'instagram_token_refreshed_at'
@@ -41,7 +42,7 @@ export class InstagramTokenService implements OnModuleInit {
         `https://graph.instagram.com/refresh_access_token` +
         `?grant_type=ig_refresh_token&access_token=${currentToken}`
 
-      const res = await fetch(url)
+      const res = await fetchWithTimeout(url)
       if (!res.ok) {
         this.logger.error(`Token yenileme başarısız (${res.status}): ${await res.text()}`)
         return

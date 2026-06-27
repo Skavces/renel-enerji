@@ -1,6 +1,12 @@
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm'
 import { Project } from './project.entity'
 
+export enum MediaType {
+  IMAGE = 'image',
+  VIDEO = 'video',
+  THUMBNAIL = 'thumbnail',
+}
+
 @Entity('project_media')
 export class ProjectMedia {
   @PrimaryGeneratedColumn('uuid')
@@ -10,8 +16,8 @@ export class ProjectMedia {
   @JoinColumn({ name: 'project_id' })
   project: Project
 
-  @Column()
-  type: string
+  @Column({ type: 'enum', enum: MediaType })
+  type: MediaType
 
   @Column()
   src: string

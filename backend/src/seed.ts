@@ -2,7 +2,7 @@ import 'reflect-metadata'
 import { DataSource } from 'typeorm'
 import { config } from 'dotenv'
 import { Project } from './projects/entities/project.entity'
-import { ProjectMedia } from './projects/entities/project-media.entity'
+import { MediaType, ProjectMedia } from './projects/entities/project-media.entity'
 
 config()
 
@@ -273,7 +273,7 @@ async function seed() {
     const saved = await projectRepo.save(project)
 
     for (let i = 0; i < media.length; i++) {
-      const m = mediaRepo.create({ project: saved, type: media[i].type, src: media[i].src, sortOrder: i })
+      const m = mediaRepo.create({ project: saved, type: media[i].type as MediaType, src: media[i].src, sortOrder: i })
       await mediaRepo.save(m)
     }
 

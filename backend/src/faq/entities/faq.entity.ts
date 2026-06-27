@@ -2,11 +2,13 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm'
 
 @Entity('faqs')
+@Index(['published', 'sortOrder'])
 export class Faq {
   @PrimaryGeneratedColumn('uuid')
   id: string

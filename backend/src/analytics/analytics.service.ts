@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
+import { fetchWithTimeout } from '../common/fetch-with-timeout'
 
 @Injectable()
 export class AnalyticsService {
@@ -20,7 +21,7 @@ export class AnalyticsService {
   private async getToken(): Promise<string> {
     if (this.token && Date.now() < this.tokenExpiry) return this.token
 
-    const res = await fetch(`${this.umamiUrl}/api/auth/login`, {
+    const res = await fetchWithTimeout(`${this.umamiUrl}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -38,7 +39,7 @@ export class AnalyticsService {
 
   private async fetch(path: string): Promise<any> {
     const token = await this.getToken()
-    const res = await fetch(`${this.umamiUrl}${path}`, {
+    const res = await fetchWithTimeout(`${this.umamiUrl}${path}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
     if (!res.ok) throw new Error(`Umami API error: ${res.status}`)

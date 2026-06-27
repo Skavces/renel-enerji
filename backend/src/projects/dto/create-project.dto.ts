@@ -1,4 +1,4 @@
-import { IsArray, IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator'
+import { IsArray, IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength, ValidateNested } from 'class-validator'
 import { Transform, Type } from 'class-transformer'
 
 export class StatBoxDto {
@@ -12,6 +12,7 @@ export class StatBoxDto {
 export class CreateProjectDto {
   @IsString()
   @IsNotEmpty()
+  @MaxLength(80)
   slug: string
 
   @IsString()
@@ -58,6 +59,8 @@ export class CreateProjectDto {
 
   @IsOptional()
   @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => StatBoxDto)
   statBoxes?: StatBoxDto[]
 
   @IsOptional()

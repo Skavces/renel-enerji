@@ -45,8 +45,10 @@ export class FaqService {
   }
 
   async reorder(orderedIds: string[]) {
-    await Promise.all(
-      orderedIds.map((id, index) => this.repo.update(id, { sortOrder: index })),
-    )
+    await this.repo.manager.transaction(async (manager) => {
+      await Promise.all(
+        orderedIds.map((id, index) => manager.update(Faq, id, { sortOrder: index })),
+      )
+    })
   }
 }

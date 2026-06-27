@@ -1,10 +1,12 @@
-import { Module } from '@nestjs/common'
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler'
 import { ScheduleModule } from '@nestjs/schedule'
+import { TerminusModule } from '@nestjs/terminus'
 import { APP_GUARD, APP_FILTER } from '@nestjs/core'
 import { SentryModule, SentryGlobalFilter } from '@sentry/nestjs/setup'
+import { LoggingMiddleware } from './common/logging.middleware'
 import { AuthModule } from './auth/auth.module'
 import { ProjectsModule } from './projects/projects.module'
 import { UploadModule } from './upload/upload.module'
@@ -25,7 +27,12 @@ import { HealthController } from './health.controller'
     SentryModule.forRoot(),
     ConfigModule.forRoot({ isGlobal: true }),
     ScheduleModule.forRoot(),
-    ThrottlerModule.forRoot([{ ttl: 60000, limit: 60 }]),
+    ThrottlerModule.forRootAsync({
+      useFactory: () => ({
+        throttlers: [{ ttl: 60000, limit: 60 }],
+        getTracker: (req: any) => (req.ips?.length ? req.ips[0] : req.ip),
+      }),
+    }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (cfg: ConfigService) => ({
@@ -39,6 +46,7 @@ import { HealthController } from './health.controller'
         synchronize: cfg.get('DB_SYNC', 'false') === 'true',
       }),
     }),
+    TerminusModule,
     AuthModule,
     ProjectsModule,
     UploadModule,
@@ -59,4 +67,8 @@ import { HealthController } from './health.controller'
     { provide: APP_GUARD, useClass: ThrottlerGuard },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggingMiddleware).forRoutes('*')
+  }
+}

@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -9,6 +10,7 @@ import {
 import { ProjectMedia } from './project-media.entity'
 
 @Entity('projects')
+@Index(['published', 'sortOrder'])
 export class Project {
   @PrimaryGeneratedColumn('uuid')
   id: string

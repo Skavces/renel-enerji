@@ -37,24 +37,28 @@ export class BlogService {
   }
 
   async create(dto: CreateBlogPostDto) {
-    const existing = await this.repo.findOne({ where: { slug: dto.slug } })
-    if (existing) throw new ConflictException('Bu slug zaten kullanımda')
     const post = this.repo.create(dto)
     if (dto.published && !post.publishedAt) post.publishedAt = new Date()
-    return this.repo.save(post)
+    try {
+      return await this.repo.save(post)
+    } catch (err: any) {
+      if (err.code === '23505') throw new ConflictException('Bu slug zaten kullanımda')
+      throw err
+    }
   }
 
   async update(id: string, dto: UpdateBlogPostDto) {
     const post = await this.findById(id)
-    if (dto.slug && dto.slug !== post.slug) {
-      const existing = await this.repo.findOne({ where: { slug: dto.slug } })
-      if (existing) throw new ConflictException('Bu slug zaten kullanımda')
-    }
     if (dto.published && !post.published && !post.publishedAt) {
       post.publishedAt = new Date()
     }
     Object.assign(post, dto)
-    return this.repo.save(post)
+    try {
+      return await this.repo.save(post)
+    } catch (err: any) {
+      if (err.code === '23505') throw new ConflictException('Bu slug zaten kullanımda')
+      throw err
+    }
   }
 
   async remove(id: string) {
@@ -63,8 +67,10 @@ export class BlogService {
   }
 
   async reorder(orderedIds: string[]) {
-    await Promise.all(
-      orderedIds.map((id, index) => this.repo.update(id, { sortOrder: index })),
-    )
+    await this.repo.manager.transaction(async (manager) => {
+      await Promise.all(
+        orderedIds.map((id, index) => manager.update(BlogPost, id, { sortOrder: index })),
+      )
+    })
   }
 }

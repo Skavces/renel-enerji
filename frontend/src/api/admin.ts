@@ -1,9 +1,7 @@
-import { API } from './config.js'
+import { API } from './config'
+import type { Project, ProjectMedia, Reference, BlogPost, Faq, SyncStatus } from '../types'
 
-// Token artık httpOnly cookie'de gönderiliyor.
-// Tüm korumalı isteklerde credentials: 'include' ekliyoruz.
-
-function authOptions(extra = {}) {
+function authOptions(extra: RequestInit = {}): RequestInit {
   return {
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
@@ -11,70 +9,78 @@ function authOptions(extra = {}) {
   }
 }
 
-export async function login(username, password, rememberMe = false) {
+function rateError(): never {
+  throw Object.assign(new Error('429'), { status: 429 })
+}
+
+export async function login(
+  username: string,
+  password: string,
+  rememberMe = false,
+): Promise<{ preAuthToken?: string; requiresTwoFactor?: boolean }> {
   const res = await fetch(`${API}/api/auth/login`, {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, password, rememberMe }),
   })
-  if (res.status === 429) {
-    const err = new Error('429')
-    err.status = 429
-    throw err
-  }
+  if (res.status === 429) rateError()
   const data = await res.json()
   if (!res.ok) throw new Error(data.message || 'Giriş başarısız')
   return data
 }
 
-export async function verify2FA(preAuthToken, code) {
+export async function verify2FA(
+  preAuthToken: string,
+  code: string,
+): Promise<Record<string, unknown>> {
   const res = await fetch(`${API}/api/auth/2fa/verify`, {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ preAuthToken, code }),
   })
-  if (res.status === 429) {
-    const err = new Error('429')
-    err.status = 429
-    throw err
-  }
+  if (res.status === 429) rateError()
   const data = await res.json()
   if (!res.ok) throw new Error(data.message || 'Geçersiz kod')
   return data
 }
 
-export async function logout() {
-  await fetch(`${API}/api/auth/logout`, {
-    method: 'POST',
-    credentials: 'include',
-  })
+export async function logout(): Promise<void> {
+  await fetch(`${API}/api/auth/logout`, { method: 'POST', credentials: 'include' })
 }
 
-export async function changeCredentials({ currentPassword, newUsername, newPassword, totpCode }) {
+export async function changeCredentials(payload: {
+  currentPassword: string
+  newUsername?: string
+  newPassword?: string
+  totpCode?: string
+}): Promise<Record<string, unknown>> {
   const res = await fetch(`${API}/api/auth/credentials`, {
     ...authOptions({ method: 'PATCH' }),
-    body: JSON.stringify({ currentPassword, newUsername, newPassword, totpCode }),
+    body: JSON.stringify(payload),
   })
   const data = await res.json()
   if (!res.ok) throw new Error(data.message || 'Değişiklik başarısız')
   return data
 }
 
-export async function get2FAStatus() {
+export async function get2FAStatus(): Promise<{ enabled: boolean }> {
   const res = await fetch(`${API}/api/auth/2fa/status`, authOptions())
   if (!res.ok) throw new Error('Durum alınamadı')
   return res.json()
 }
 
-export async function generate2FASetup() {
+export async function generate2FASetup(): Promise<{ secret: string; qrCode: string }> {
   const res = await fetch(`${API}/api/auth/2fa/setup`, authOptions())
   if (!res.ok) throw new Error('QR kodu üretilemedi')
   return res.json()
 }
 
-export async function confirm2FASetup(secret, code) {
+export async function confirm2FASetup(
+  secret: string,
+  code: string,
+): Promise<Record<string, unknown>> {
   const res = await fetch(`${API}/api/auth/2fa/setup/confirm`, {
     ...authOptions({ method: 'POST' }),
     body: JSON.stringify({ secret, code }),
@@ -84,7 +90,7 @@ export async function confirm2FASetup(secret, code) {
   return data
 }
 
-export async function remove2FA(code) {
+export async function remove2FA(code: string): Promise<Record<string, unknown>> {
   const res = await fetch(`${API}/api/auth/2fa/setup`, {
     ...authOptions({ method: 'DELETE' }),
     body: JSON.stringify({ code }),
@@ -94,20 +100,21 @@ export async function remove2FA(code) {
   return data
 }
 
-export async function fetchAllProjects() {
+// Projects
+export async function fetchAllProjects(): Promise<Project[]> {
   const res = await fetch(`${API}/api/projects/admin/all`, authOptions())
   if (!res.ok) throw new Error('Projeler yüklenemedi')
   return res.json()
 }
 
-export async function syncInstagram() {
+export async function syncInstagram(): Promise<{ status: string }> {
   const res = await fetch(`${API}/api/projects/admin/instagram-sync`, authOptions({ method: 'POST' }))
   const json = await res.json()
   if (!res.ok) throw new Error(json.message || 'Senkronizasyon başarısız')
   return json
 }
 
-export async function parseInstagramPost(text) {
+export async function parseInstagramPost(text: string): Promise<Partial<Project>> {
   const res = await fetch(`${API}/api/projects/admin/parse-instagram`, {
     ...authOptions({ method: 'POST' }),
     body: JSON.stringify({ text }),
@@ -117,7 +124,7 @@ export async function parseInstagramPost(text) {
   return json
 }
 
-export async function createProject(data) {
+export async function createProject(data: Partial<Project>): Promise<Project> {
   const res = await fetch(`${API}/api/projects`, {
     ...authOptions({ method: 'POST' }),
     body: JSON.stringify(data),
@@ -127,7 +134,7 @@ export async function createProject(data) {
   return json
 }
 
-export async function updateProject(id, data) {
+export async function updateProject(id: string, data: Partial<Project>): Promise<Project> {
   const res = await fetch(`${API}/api/projects/${id}`, {
     ...authOptions({ method: 'PATCH' }),
     body: JSON.stringify(data),
@@ -137,7 +144,7 @@ export async function updateProject(id, data) {
   return json
 }
 
-export async function reorderProjects(orderedIds) {
+export async function reorderProjects(orderedIds: string[]): Promise<void> {
   const res = await fetch(`${API}/api/projects/reorder`, {
     ...authOptions({ method: 'PATCH' }),
     body: JSON.stringify({ orderedIds }),
@@ -145,15 +152,14 @@ export async function reorderProjects(orderedIds) {
   if (!res.ok) throw new Error('Sıralama kaydedilemedi')
 }
 
-export async function deleteProject(id) {
+export async function deleteProject(id: string): Promise<void> {
   const res = await fetch(`${API}/api/projects/${id}`, authOptions({ method: 'DELETE' }))
   if (!res.ok) throw new Error('Proje silinemedi')
 }
 
-export async function uploadMedia(projectId, files) {
+export async function uploadMedia(projectId: string, files: File[]): Promise<ProjectMedia[]> {
   const form = new FormData()
   for (const file of files) form.append('files', file)
-  // FormData ile Content-Type header'ı otomatik set edilmeli — özel header verme
   const res = await fetch(`${API}/api/upload/projects/${projectId}/media`, {
     method: 'POST',
     credentials: 'include',
@@ -164,7 +170,7 @@ export async function uploadMedia(projectId, files) {
   return json
 }
 
-export async function linkMedia(projectId, src) {
+export async function linkMedia(projectId: string, src: string): Promise<ProjectMedia> {
   const res = await fetch(`${API}/api/upload/projects/${projectId}/media/link`, {
     ...authOptions({ method: 'POST' }),
     body: JSON.stringify({ src }),
@@ -174,12 +180,12 @@ export async function linkMedia(projectId, src) {
   return json
 }
 
-export async function deleteMedia(projectId, mediaId) {
+export async function deleteMedia(projectId: string, mediaId: string): Promise<void> {
   const res = await fetch(`${API}/api/projects/${projectId}/media/${mediaId}`, authOptions({ method: 'DELETE' }))
   if (!res.ok) throw new Error('Medya silinemedi')
 }
 
-export async function reorderMedia(projectId, orderedIds) {
+export async function reorderMedia(projectId: string, orderedIds: string[]): Promise<Project> {
   const res = await fetch(`${API}/api/projects/${projectId}/media/reorder`, {
     ...authOptions({ method: 'PATCH' }),
     body: JSON.stringify({ orderedIds }),
@@ -189,13 +195,13 @@ export async function reorderMedia(projectId, orderedIds) {
 }
 
 // References
-export async function fetchAllReferences() {
+export async function fetchAllReferences(): Promise<Reference[]> {
   const res = await fetch(`${API}/api/references/admin/all`, authOptions())
   if (!res.ok) throw new Error('Referanslar yüklenemedi')
   return res.json()
 }
 
-export async function createReference(data) {
+export async function createReference(data: Partial<Reference>): Promise<Reference> {
   const res = await fetch(`${API}/api/references`, {
     ...authOptions({ method: 'POST' }),
     body: JSON.stringify(data),
@@ -205,7 +211,7 @@ export async function createReference(data) {
   return json
 }
 
-export async function updateReference(id, data) {
+export async function updateReference(id: string, data: Partial<Reference>): Promise<Reference> {
   const res = await fetch(`${API}/api/references/${id}`, {
     ...authOptions({ method: 'PATCH' }),
     body: JSON.stringify(data),
@@ -215,7 +221,7 @@ export async function updateReference(id, data) {
   return json
 }
 
-export async function reorderReferences(orderedIds) {
+export async function reorderReferences(orderedIds: string[]): Promise<void> {
   const res = await fetch(`${API}/api/references/reorder`, {
     ...authOptions({ method: 'PATCH' }),
     body: JSON.stringify({ orderedIds }),
@@ -223,12 +229,12 @@ export async function reorderReferences(orderedIds) {
   if (!res.ok) throw new Error('Sıralama kaydedilemedi')
 }
 
-export async function deleteReference(id) {
+export async function deleteReference(id: string): Promise<void> {
   const res = await fetch(`${API}/api/references/${id}`, authOptions({ method: 'DELETE' }))
   if (!res.ok) throw new Error('Referans silinemedi')
 }
 
-export async function uploadReferenceLogo(referenceId, file) {
+export async function uploadReferenceLogo(referenceId: string, file: File): Promise<Reference> {
   const form = new FormData()
   form.append('file', file)
   const res = await fetch(`${API}/api/upload/references/${referenceId}/logo`, {
@@ -242,13 +248,13 @@ export async function uploadReferenceLogo(referenceId, file) {
 }
 
 // Blog
-export async function fetchAllBlogPosts() {
+export async function fetchAllBlogPosts(): Promise<BlogPost[]> {
   const res = await fetch(`${API}/api/blog/admin/all`, authOptions())
   if (!res.ok) throw new Error('Blog yazıları yüklenemedi')
   return res.json()
 }
 
-export async function createBlogPost(data) {
+export async function createBlogPost(data: Partial<BlogPost>): Promise<BlogPost> {
   const res = await fetch(`${API}/api/blog`, {
     ...authOptions({ method: 'POST' }),
     body: JSON.stringify(data),
@@ -258,7 +264,7 @@ export async function createBlogPost(data) {
   return json
 }
 
-export async function updateBlogPost(id, data) {
+export async function updateBlogPost(id: string, data: Partial<BlogPost>): Promise<BlogPost> {
   const res = await fetch(`${API}/api/blog/${id}`, {
     ...authOptions({ method: 'PATCH' }),
     body: JSON.stringify(data),
@@ -268,12 +274,12 @@ export async function updateBlogPost(id, data) {
   return json
 }
 
-export async function deleteBlogPost(id) {
+export async function deleteBlogPost(id: string): Promise<void> {
   const res = await fetch(`${API}/api/blog/${id}`, authOptions({ method: 'DELETE' }))
   if (!res.ok) throw new Error('Yazı silinemedi')
 }
 
-export async function reorderBlogPosts(orderedIds) {
+export async function reorderBlogPosts(orderedIds: string[]): Promise<void> {
   const res = await fetch(`${API}/api/blog/reorder`, {
     ...authOptions({ method: 'PATCH' }),
     body: JSON.stringify({ orderedIds }),
@@ -281,7 +287,7 @@ export async function reorderBlogPosts(orderedIds) {
   if (!res.ok) throw new Error('Sıralama kaydedilemedi')
 }
 
-export async function uploadBlogCover(postId, file) {
+export async function uploadBlogCover(postId: string, file: File): Promise<BlogPost> {
   const form = new FormData()
   form.append('file', file)
   const res = await fetch(`${API}/api/upload/blog/${postId}/cover`, {
@@ -295,13 +301,13 @@ export async function uploadBlogCover(postId, file) {
 }
 
 // SSS (FAQ)
-export async function fetchAllFaqs() {
+export async function fetchAllFaqs(): Promise<Faq[]> {
   const res = await fetch(`${API}/api/faq/admin/all`, authOptions())
   if (!res.ok) throw new Error('SSS yüklenemedi')
   return res.json()
 }
 
-export async function createFaq(data) {
+export async function createFaq(data: Partial<Faq>): Promise<Faq> {
   const res = await fetch(`${API}/api/faq`, {
     ...authOptions({ method: 'POST' }),
     body: JSON.stringify(data),
@@ -311,7 +317,7 @@ export async function createFaq(data) {
   return json
 }
 
-export async function updateFaq(id, data) {
+export async function updateFaq(id: string, data: Partial<Faq>): Promise<Faq> {
   const res = await fetch(`${API}/api/faq/${id}`, {
     ...authOptions({ method: 'PATCH' }),
     body: JSON.stringify(data),
@@ -321,12 +327,12 @@ export async function updateFaq(id, data) {
   return json
 }
 
-export async function deleteFaq(id) {
+export async function deleteFaq(id: string): Promise<void> {
   const res = await fetch(`${API}/api/faq/${id}`, authOptions({ method: 'DELETE' }))
   if (!res.ok) throw new Error('SSS silinemedi')
 }
 
-export async function reorderFaqs(orderedIds) {
+export async function reorderFaqs(orderedIds: string[]): Promise<void> {
   const res = await fetch(`${API}/api/faq/reorder`, {
     ...authOptions({ method: 'PATCH' }),
     body: JSON.stringify({ orderedIds }),
