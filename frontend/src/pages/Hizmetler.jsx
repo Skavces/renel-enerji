@@ -152,7 +152,7 @@ export default function Hizmetler() {
                 className={`group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 grid lg:grid-cols-2 ${s.highlight ? 'ring-2 ring-[#448834]/40' : 'border border-gray-100'}`}
               >
                 {/* Photo side */}
-                <div className={`relative h-72 lg:h-auto min-h-[340px] overflow-hidden ${isEven ? 'lg:order-1' : 'lg:order-2'}`}>
+                <div className={`relative h-72 lg:h-auto min-h-85 overflow-hidden ${isEven ? 'lg:order-1' : 'lg:order-2'}`}>
                   <img
                     src={s.photo}
                     alt={s.title}

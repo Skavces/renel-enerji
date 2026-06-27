@@ -105,7 +105,7 @@ export default function BlogAdmin() {
       .finally(() => setLoading(false))
   }
 
-  useEffect(load, [])
+  useEffect(load, [load])
 
 
   const handleDelete = async (id, title) => {

@@ -93,7 +93,7 @@ export default function Kurumsal() {
 
       {/* Hero split: photo collage left, content right */}
       <section className="relative py-20 bg-white overflow-hidden">
-        <img src="/stats.webp" alt="" className="absolute bottom-0 right-0 w-[560px] opacity-50 pointer-events-none select-none" loading="lazy" />
+        <img src="/stats.webp" alt="" className="absolute bottom-0 right-0 w-140 opacity-50 pointer-events-none select-none" loading="lazy" />
         <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-16 items-center">
 
           {/* Photo collage */}
@@ -103,7 +103,7 @@ export default function Kurumsal() {
                 <img src="/renel-logo.svg" alt="RenEl" className="w-16 h-16" loading="lazy" />
               </div>
             </div>
-            <div className="flex gap-3 h-[320px] sm:h-[420px] lg:h-[560px]">
+            <div className="flex gap-3 h-80 sm:h-105 lg:h-140">
               {/* Sol kolon */}
               <div className="flex-1 flex flex-col gap-3">
                 <div className="flex-3 overflow-hidden rounded-xl">

@@ -21,7 +21,7 @@ export default function AdminDashboard() {
         }
       })
       .finally(() => setLoading(false))
-  }, [])
+  }, [logout, navigate])
 
   const publishedProjects = projects.filter((p) => p.published)
   const publishedRefs = refs.filter((r) => r.published)
@@ -41,7 +41,7 @@ export default function AdminDashboard() {
       <img
         src="/renel-logo.svg"
         alt=""
-        className="hidden sm:block fixed bottom-0 right-0 w-80 lg:w-[28rem] opacity-5 pointer-events-none select-none"
+        className="hidden sm:block fixed bottom-0 right-0 w-80 lg:w-md opacity-5 pointer-events-none select-none"
       />
 
       {/* Hero Banner — tam genişlik */}
@@ -106,7 +106,7 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Link
           to="/admin/projeler/yeni"
-          className="group relative bg-white hover:bg-gray-50 rounded-2xl overflow-hidden flex items-center px-6 py-5 min-h-[90px] transition-all duration-200 border border-gray-100 border-l-4 border-l-[#448834] shadow-md hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+          className="group relative bg-white hover:bg-gray-50 rounded-2xl overflow-hidden flex items-center px-6 py-5 min-h-22.5 transition-all duration-200 border border-gray-100 border-l-4 border-l-[#448834] shadow-md hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
         >
           <img src="/yeni_proje.webp" alt="" className="absolute w-44 h-44 object-contain shrink-0 opacity-10" style={{ right: -30, bottom: -47 }} />
           <div className="relative z-10">
@@ -120,7 +120,7 @@ export default function AdminDashboard() {
 
         <Link
           to="/admin/referanslar/yeni"
-          className="group relative bg-white hover:bg-gray-50 rounded-2xl overflow-hidden flex items-center px-6 py-5 min-h-[90px] transition-all duration-200 border border-gray-100 border-l-4 border-l-[#448834] shadow-md hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+          className="group relative bg-white hover:bg-gray-50 rounded-2xl overflow-hidden flex items-center px-6 py-5 min-h-22.5 transition-all duration-200 border border-gray-100 border-l-4 border-l-[#448834] shadow-md hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
         >
           <img src="/yeni_referans.webp" alt="" className="absolute w-36 h-36 object-contain shrink-0 opacity-10" style={{ right: -25, bottom: -30 }} />
           <div className="relative z-10">
@@ -134,7 +134,7 @@ export default function AdminDashboard() {
 
         <Link
           to="/admin/analitik"
-          className="group relative bg-white hover:bg-gray-50 rounded-2xl overflow-hidden flex items-center px-6 py-5 min-h-[90px] transition-all duration-200 border border-gray-100 border-l-4 border-l-[#448834] shadow-md hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+          className="group relative bg-white hover:bg-gray-50 rounded-2xl overflow-hidden flex items-center px-6 py-5 min-h-22.5 transition-all duration-200 border border-gray-100 border-l-4 border-l-[#448834] shadow-md hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
         >
           <img src="/analitik_banner.webp" alt="" className="absolute w-36 h-36 object-contain shrink-0 opacity-10" style={{ right: -25, bottom: -35 }} />
           <div className="relative z-10">

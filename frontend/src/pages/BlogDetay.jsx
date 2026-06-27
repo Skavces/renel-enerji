@@ -20,7 +20,7 @@ export default function BlogDetay() {
       .then(setPost)
       .catch(() => navigate('/blog', { replace: true }))
       .finally(() => setLoading(false))
-  }, [slug])
+  }, [slug, navigate])
 
   if (loading) {
     return (

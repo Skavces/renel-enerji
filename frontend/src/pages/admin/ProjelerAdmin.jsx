@@ -122,7 +122,7 @@ export default function ProjelerAdmin() {
       .finally(() => setLoading(false))
   }
 
-  useEffect(load, [])
+  useEffect(load, [load])
 
 
   const handleSync = async () => {

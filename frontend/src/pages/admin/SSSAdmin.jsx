@@ -101,7 +101,7 @@ export default function SSSAdmin() {
       .finally(() => setLoading(false))
   }
 
-  useEffect(load, [])
+  useEffect(load, [load])
 
 
   const handleDelete = async (id, question) => {

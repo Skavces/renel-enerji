@@ -33,6 +33,7 @@ export default function AdminLayout() {
   const { pathname } = useLocation()
   const [mobileOpen, setMobileOpen] = useState(false)
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setMobileOpen(false) }, [pathname])
 
   const handleLogout = async () => {
@@ -53,6 +54,7 @@ export default function AdminLayout() {
 
           {/* Nav links — desktop only */}
           <nav className="hidden lg:flex items-center gap-0.5 flex-1 justify-center">
+            {/* eslint-disable-next-line no-unused-vars */}
             {NAV.map(({ to, label, icon: Icon, match }) => {
               const active = match(pathname)
               return (
@@ -105,6 +107,7 @@ export default function AdminLayout() {
         {/* Mobile menu */}
         {mobileOpen && (
           <div className="lg:hidden border-t border-gray-100 bg-white px-4 py-3 space-y-1 shadow-lg">
+            {/* eslint-disable-next-line no-unused-vars */}
             {NAV.map(({ to, label, icon: Icon, match }) => {
               const active = match(pathname)
               return (

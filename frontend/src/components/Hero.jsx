@@ -38,7 +38,7 @@ export default function Hero() {
       </div>
 
       {/* Content */}
-      <div className="relative max-w-7xl mx-auto px-6 pt-[100px] sm:pt-[132px] lg:pt-[164px] pb-24 w-full flex items-center justify-between gap-8 xl:gap-12">
+      <div className="relative max-w-7xl mx-auto px-6 pt-25 sm:pt-33 lg:pt-41 pb-24 w-full flex items-center justify-between gap-8 xl:gap-12">
 
         {/* Left — text */}
         <div className="w-full max-w-xl min-w-0">
@@ -65,7 +65,7 @@ export default function Hero() {
 
         {/* Right — auto-rotating project card */}
         {projects.length > 0 && project && (
-          <div className="hidden lg:block shrink-0 w-[300px] xl:w-[400px] border-2 border-[#f5ce31]/60 rounded-3xl p-3">
+          <div className="hidden lg:block shrink-0 w-75 xl:w-100 border-2 border-[#f5ce31]/60 rounded-3xl p-3">
             <p className="text-white/80 text-sm font-semibold mb-3">
               Son Projeler
             </p>

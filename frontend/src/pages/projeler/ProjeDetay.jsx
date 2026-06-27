@@ -15,6 +15,7 @@ export default function ProjeDetay() {
   const [lightbox, setLightbox] = useState(null)
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true)
     setCurrent(0)
     setLightbox(null)

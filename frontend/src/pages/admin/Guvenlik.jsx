@@ -278,7 +278,7 @@ export default function Guvenlik() {
 
   useEffect(() => {
     get2FAStatus().then(setTwoFaStatus).catch(() => navigate('/admin'))
-  }, [])
+  }, [navigate])
 
   const handleCredentialDone = () => {
     setCredSuccess('Bilgiler değiştirildi. Tekrar giriş yapın...')

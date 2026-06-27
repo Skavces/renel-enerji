@@ -59,7 +59,7 @@ export default function BlogForm() {
       setSlugManual(true)
       setLoading(false)
     })
-  }, [id])
+  }, [id, isEdit, navigate])
 
   const set = (key, val) => setForm((f) => ({ ...f, [key]: val }))
 

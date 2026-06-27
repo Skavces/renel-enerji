@@ -34,7 +34,7 @@ export default function LogoMarquee() {
                 alt={r.name}
                 width={200}
                 height={112}
-                className="h-28 w-auto max-w-[200px] object-contain grayscale hover:grayscale-0 opacity-75 hover:opacity-100 transition-all duration-300"
+                className="h-28 w-auto max-w-50 object-contain grayscale hover:grayscale-0 opacity-75 hover:opacity-100 transition-all duration-300"
                 loading="lazy"
               />
             ) : (

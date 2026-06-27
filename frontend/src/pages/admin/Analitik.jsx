@@ -35,6 +35,7 @@ function CustomTooltip({ active, payload, label }) {
   )
 }
 
+// eslint-disable-next-line no-unused-vars
 function MetricList({ title, icon: Icon, items, emptyText }) {
   const max = items[0]?.y || 1
   return (
@@ -122,7 +123,7 @@ export default function Analitik() {
     }
   }
 
-  useEffect(() => { load(rangeIdx) }, [rangeIdx])
+  useEffect(() => { load(rangeIdx) }, [rangeIdx, load])
 
   const chartData = pageviews?.pageviews?.map((pv, i) => ({
     t: pv.x,

@@ -103,7 +103,7 @@ export default function Iletisim() {
 
       <section className="pb-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="overflow-hidden rounded-2xl border border-gray-200 shadow-sm h-[260px] sm:h-[360px] lg:h-[420px]">
+          <div className="overflow-hidden rounded-2xl border border-gray-200 shadow-sm h-65 sm:h-90 lg:h-105">
             <iframe
               title="RenEl Enerji Konumu"
               src="https://maps.google.com/maps?q=Renel+Enerji+M%C3%BChendislik&output=embed&hl=tr"

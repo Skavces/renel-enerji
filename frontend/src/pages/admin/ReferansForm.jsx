@@ -33,7 +33,7 @@ export default function ReferansForm() {
       })
       .catch(() => setError('Referans yüklenemedi'))
       .finally(() => setLoading(false))
-  }, [id])
+  }, [id, isEdit])
 
   const set = (field, value) => setForm((prev) => ({ ...prev, [field]: value }))
 

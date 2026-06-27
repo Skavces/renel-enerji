@@ -61,10 +61,10 @@ export default function Services() {
   return (
     <section id="hizmetler" className="relative py-24 bg-white overflow-hidden">
       {/* Decorative background */}
-      <div className="absolute left-0 bottom-0 w-[750px] h-[750px] pointer-events-none select-none opacity-70">
+      <div className="absolute left-0 bottom-0 w-187.5 h-187.5 pointer-events-none select-none opacity-70">
         <img src="/banner.webp" alt="" className="w-full h-full object-contain object-bottom-left" loading="lazy" />
       </div>
-      <div className="max-w-[1400px] mx-auto px-6">
+      <div className="max-w-350 mx-auto px-6">
         {/* Header */}
         <div className="text-center mb-16">
           <span className="inline-block text-[#357228] font-semibold text-base mb-4">

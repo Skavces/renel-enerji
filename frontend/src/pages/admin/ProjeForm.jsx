@@ -5,7 +5,7 @@ import {
 } from 'lucide-react'
 import {
   createProject, updateProject, fetchAllProjects,
-  uploadMedia, deleteMedia, reorderMedia, linkMedia,
+  uploadMedia, deleteMedia, linkMedia,
   parseInstagramPost,
 } from '../../api/admin'
 import { mediaUrl } from '../../api/projects'
@@ -46,7 +46,6 @@ export default function ProjeForm() {
   const [error, setError] = useState('')
   const [slugManual, setSlugManual] = useState(false)
   const [linkPath, setLinkPath] = useState('')
-  const [linking, setLinking] = useState(false)
   const [instaText, setInstaText] = useState('')
   const [instaOpen, setInstaOpen] = useState(false)
   const [parsing, setParsing] = useState(false)
@@ -75,7 +74,7 @@ export default function ProjeForm() {
       })
       .catch(() => { logout(); navigate('/admin/login') })
       .finally(() => setLoading(false))
-  }, [id])
+  }, [id, isEdit, logout, navigate])
 
   const set = (key, val) => {
     setForm((prev) => {
@@ -114,19 +113,6 @@ export default function ProjeForm() {
     }
   }
 
-  const handleLinkPath = async () => {
-    if (!linkPath.trim() || !id) return
-    setLinking(true)
-    try {
-      const media = await linkMedia(id, linkPath.trim())
-      setExistingMedia((prev) => [media, ...prev])
-      setLinkPath('')
-    } catch (err) {
-      alert('Eklenemedi: ' + err.message)
-    } finally {
-      setLinking(false)
-    }
-  }
 
   const handleInstaParse = async () => {
     if (!instaText.trim()) return
@@ -238,7 +224,7 @@ if (parsed.description) { set('description', parsed.description); count++ }
           <button
             type="button"
             onClick={() => setInstaOpen(true)}
-            className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl bg-gradient-to-r from-[#448834] to-[#5aa042] hover:from-[#357228] hover:to-[#4a9035] text-white transition-all shadow-md shadow-[#448834]/20 hover:shadow-lg hover:shadow-[#448834]/30 hover:-translate-y-0.5 active:translate-y-0"
+            className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl bg-linear-to-r from-[#448834] to-[#5aa042] hover:from-[#357228] hover:to-[#4a9035] text-white transition-all shadow-md shadow-[#448834]/20 hover:shadow-lg hover:shadow-[#448834]/30 hover:-translate-y-0.5 active:translate-y-0"
           >
             <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
               <Sparkles size={18} />
@@ -252,7 +238,7 @@ if (parsed.description) { set('description', parsed.description); count++ }
         ) : (
           <div className="rounded-2xl border border-[#448834]/20 overflow-hidden shadow-sm">
             {/* Header */}
-            <div className="flex items-center gap-3 px-5 py-3.5 bg-gradient-to-r from-[#448834] to-[#5aa042]">
+            <div className="flex items-center gap-3 px-5 py-3.5 bg-linear-to-r from-[#448834] to-[#5aa042]">
               <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
                 <Sparkles size={15} className="text-white" />
               </div>

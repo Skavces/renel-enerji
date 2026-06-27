@@ -16,7 +16,7 @@ export default function TwoFactorSetup() {
 
   useEffect(() => {
     get2FAStatus().then(setStatus).catch(() => navigate('/admin'))
-  }, [])
+  }, [navigate])
 
   const startSetup = async () => {
     setError('')

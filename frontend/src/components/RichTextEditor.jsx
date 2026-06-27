@@ -92,13 +92,13 @@ function Dropdown({ label, options, onSelect, selected }) {
       <button
         type="button"
         onMouseDown={(e) => { e.preventDefault(); setOpen((o) => !o) }}
-        className="flex items-center gap-1 px-2 py-1 text-xs text-gray-700 border border-gray-200 rounded hover:bg-gray-50 transition-colors min-w-[90px] justify-between"
+        className="flex items-center gap-1 px-2 py-1 text-xs text-gray-700 border border-gray-200 rounded hover:bg-gray-50 transition-colors min-w-22.5 justify-between"
       >
         <span className="truncate">{selected || label}</span>
         <ChevronDown size={12} className="shrink-0 text-gray-400" />
       </button>
       {open && (
-        <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-50 min-w-[150px] max-h-52 overflow-y-auto">
+        <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-50 min-w-37.5 max-h-52 overflow-y-auto">
           {options.map((opt) => (
             <button
               key={opt.value}
@@ -177,6 +177,7 @@ function LinkModal({ open, initialUrl, onApply, onRemove, onClose }) {
 
   useEffect(() => {
     if (open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setUrl(initialUrl || '')
       setTimeout(() => inputRef.current?.select(), 30)
     }
@@ -197,7 +198,7 @@ function LinkModal({ open, initialUrl, onApply, onRemove, onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={onClose} />
       <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md border border-gray-100 overflow-hidden">
         {/* Header */}
