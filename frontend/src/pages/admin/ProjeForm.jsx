@@ -5,7 +5,7 @@ import {
 } from 'lucide-react'
 import {
   createProject, updateProject, fetchAllProjects,
-  uploadMedia, deleteMedia, linkMedia,
+  uploadMedia, deleteMedia,
   parseInstagramPost,
 } from '../../api/admin'
 import { mediaUrl } from '../../api/projects'
@@ -45,7 +45,6 @@ export default function ProjeForm() {
   const [uploadingMedia, setUploadingMedia] = useState(false)
   const [error, setError] = useState('')
   const [slugManual, setSlugManual] = useState(false)
-  const [linkPath, setLinkPath] = useState('')
   const [instaText, setInstaText] = useState('')
   const [instaOpen, setInstaOpen] = useState(false)
   const [parsing, setParsing] = useState(false)

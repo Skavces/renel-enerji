@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Users, Eye, MousePointer, Clock, ExternalLink, RefreshCw, Globe, Monitor, Smartphone, Link2 } from 'lucide-react'
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
@@ -79,7 +79,7 @@ export default function Analitik() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  const load = async (idx = rangeIdx) => {
+  const load = useCallback(async (idx = rangeIdx) => {
     setLoading(true)
     setError(null)
     const range = RANGES[idx]
@@ -121,7 +121,7 @@ export default function Analitik() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [rangeIdx])
 
   useEffect(() => { load(rangeIdx) }, [rangeIdx, load])
 
