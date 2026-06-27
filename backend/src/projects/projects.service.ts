@@ -162,6 +162,37 @@ export class ProjectsService {
     this.logger.log(`Webhook ile proje oluşturuldu: ${saved.slug}`)
   }
 
+  private readonly syncStatus = {
+    running: false,
+    lastRun: null as Date | null,
+    lastResult: null as { imported: number; skipped: number } | null,
+    lastError: null as string | null,
+  }
+
+  getSyncStatus() {
+    return this.syncStatus
+  }
+
+  startSyncInstagram() {
+    if (this.syncStatus.running) {
+      return { status: 'already_running' }
+    }
+    this.syncStatus.running = true
+    this.syncStatus.lastError = null
+    this.syncInstagram()
+      .then(r => {
+        this.syncStatus.lastResult = r
+        this.syncStatus.lastRun = new Date()
+        this.logger.log(`Sync tamamlandı: ${r.imported} eklendi, ${r.skipped} atlandı`)
+      })
+      .catch((err: any) => {
+        this.syncStatus.lastError = err.message
+        this.logger.error(`Sync hatası: ${err.message}`)
+      })
+      .finally(() => { this.syncStatus.running = false })
+    return { status: 'started' }
+  }
+
   async syncInstagram(autoPublish = false): Promise<{ imported: number; skipped: number }> {
     const token = await this.tokenService.getAccessToken()
     const userId = this.config.get<string>('INSTAGRAM_USER_ID')

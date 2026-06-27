@@ -13,6 +13,8 @@ import {
 import { ProjectsService } from './projects.service'
 import { CreateProjectDto } from './dto/create-project.dto'
 import { UpdateProjectDto } from './dto/update-project.dto'
+import { ParseInstagramDto } from './dto/parse-instagram.dto'
+import { ReorderDto } from './dto/reorder.dto'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 
 @Controller('projects')
@@ -42,17 +44,20 @@ export class ProjectsController {
   @Post('admin/instagram-sync')
   @HttpCode(200)
   syncInstagram() {
-    this.service.syncInstagram()
-      .then(r => this.logger.log(`Sync tamamlandı: ${r.imported} eklendi, ${r.skipped} atlandı`))
-      .catch(err => this.logger.error(`Sync hatası: ${err.message}`))
-    return { status: 'started' }
+    return this.service.startSyncInstagram()
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('admin/instagram-sync/status')
+  getSyncStatus() {
+    return this.service.getSyncStatus()
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('admin/parse-instagram')
   @HttpCode(200)
-  parseInstagram(@Body() body: { text: string }) {
-    return this.service.parseInstagram(body.text)
+  parseInstagram(@Body() dto: ParseInstagramDto) {
+    return this.service.parseInstagram(dto.text)
   }
 
   @UseGuards(JwtAuthGuard)
@@ -63,8 +68,8 @@ export class ProjectsController {
 
   @UseGuards(JwtAuthGuard)
   @Patch('reorder')
-  reorderProjects(@Body() body: { orderedIds: string[] }) {
-    return this.service.reorderProjects(body.orderedIds)
+  reorderProjects(@Body() dto: ReorderDto) {
+    return this.service.reorderProjects(dto.orderedIds)
   }
 
   @UseGuards(JwtAuthGuard)
@@ -90,7 +95,7 @@ export class ProjectsController {
 
   @UseGuards(JwtAuthGuard)
   @Patch(':id/media/reorder')
-  reorderMedia(@Param('id') id: string, @Body() body: { orderedIds: string[] }) {
-    return this.service.reorderMedia(id, body.orderedIds)
+  reorderMedia(@Param('id') id: string, @Body() dto: ReorderDto) {
+    return this.service.reorderMedia(id, dto.orderedIds)
   }
 }

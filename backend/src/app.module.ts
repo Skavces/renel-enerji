@@ -17,7 +17,7 @@ import { ChatModule } from './chat/chat.module'
 import { WebhooksModule } from './webhooks/webhooks.module'
 import { InstagramTokenModule } from './instagram-token/instagram-token.module'
 import { GroqModule } from './groq/groq.module'
-import { WeatherController } from './weather/weather.controller'
+import { WeatherModule } from './weather/weather.module'
 import { HealthController } from './health.controller'
 
 @Module({
@@ -51,8 +51,9 @@ import { HealthController } from './health.controller'
     WebhooksModule,
     InstagramTokenModule,
     GroqModule,
+    WeatherModule,
   ],
-  controllers: [WeatherController, HealthController],
+  controllers: [HealthController],
   providers: [
     { provide: APP_FILTER, useClass: SentryGlobalFilter },
     { provide: APP_GUARD, useClass: ThrottlerGuard },

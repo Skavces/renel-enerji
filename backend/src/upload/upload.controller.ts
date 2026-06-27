@@ -16,6 +16,7 @@ import { unlinkSync, renameSync } from 'fs'
 import { fromFile } from 'file-type'
 import sharp from 'sharp'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
+import { LinkMediaDto } from './dto/link-media.dto'
 import { ProjectsService } from '../projects/projects.service'
 import { ReferencesService } from '../references/references.service'
 import { BlogService } from '../blog/blog.service'
@@ -105,13 +106,9 @@ export class UploadController {
 
   @UseGuards(JwtAuthGuard)
   @Post('projects/:id/media/link')
-  async linkMedia(@Param('id') projectId: string, @Body() body: { src: string }) {
-    // O-05: Yol formatını sıkı doğrula — path traversal ve keyfi URL'leri engelle
-    if (!body?.src?.match(/^\/uploads\/[\w\-\.]+\.(jpg|jpeg|png|webp|mp4|mov|webm)$/i)) {
-      throw new BadRequestException('Geçersiz medya yolu')
-    }
-    const type = /\.(mp4|mov|webm)$/i.test(body.src) ? 'video' : 'image'
-    return this.projectsService.addMedia(projectId, type, body.src)
+  async linkMedia(@Param('id') projectId: string, @Body() dto: LinkMediaDto) {
+    const type = /\.(mp4|mov|webm)$/i.test(dto.src) ? 'video' : 'image'
+    return this.projectsService.addMedia(projectId, type, dto.src)
   }
 
   @UseGuards(JwtAuthGuard)
