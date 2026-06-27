@@ -1,0 +1,60 @@
+import { Body, Controller, Param, Post, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common'
+import { FilesInterceptor } from '@nestjs/platform-express'
+import { JwtAuthGuard } from '../auth/jwt-auth.guard'
+import { LinkMediaDto } from './dto/link-media.dto'
+import { ProjectsService } from '../projects/projects.service'
+import { MediaService } from '../projects/media.service'
+import { MediaType } from '../projects/entities/project-media.entity'
+import {
+  imageStorage,
+  VIDEO_MIMES,
+  ALLOWED_MEDIA_MIMES,
+  videoExtMap,
+  assertMagicBytes,
+  toWebp,
+  saveWithSeoName,
+} from './upload.utils'
+
+@Controller('upload/projects')
+export class ProjectUploadController {
+  constructor(
+    private projectsService: ProjectsService,
+    private mediaService: MediaService,
+  ) {}
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/media')
+  @UseInterceptors(
+    FilesInterceptor('files', 20, {
+      storage: imageStorage,
+      fileFilter: (_req, file, cb) => {
+        cb(null, ALLOWED_MEDIA_MIMES.includes(file.mimetype))
+      },
+      limits: { fileSize: 100 * 1024 * 1024 },
+    }),
+  )
+  async uploadMedia(
+    @Param('id') projectId: string,
+    @UploadedFiles() files: Express.Multer.File[],
+  ) {
+    const project = await this.projectsService.findById(projectId)
+    const results = []
+    for (const file of files) {
+      await assertMagicBytes(file.path, ALLOWED_MEDIA_MIMES)
+      const isVideo = VIDEO_MIMES.includes(file.mimetype)
+      const converted = isVideo ? file.path : await toWebp(file.path)
+      const ext = isVideo ? (videoExtMap[file.mimetype] ?? '.mp4') : '.webp'
+      const src = await saveWithSeoName(converted, project.slug, ext)
+      const media = await this.mediaService.addMedia(projectId, isVideo ? MediaType.VIDEO : MediaType.IMAGE, src)
+      results.push(media)
+    }
+    return results
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/media/link')
+  linkMedia(@Param('id') projectId: string, @Body() dto: LinkMediaDto) {
+    const type = /\.(mp4|mov|webm)$/i.test(dto.src) ? MediaType.VIDEO : MediaType.IMAGE
+    return this.mediaService.addMedia(projectId, type, dto.src)
+  }
+}
