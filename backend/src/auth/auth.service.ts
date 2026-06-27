@@ -5,6 +5,7 @@ import * as bcrypt from 'bcrypt'
 import { authenticator } from 'otplib'
 import * as qrcode from 'qrcode'
 import { AdminConfigService } from './admin-config.service'
+import { AdminConfig } from './admin-config.entity'
 import Redis from 'ioredis'
 
 @Injectable()
@@ -21,43 +22,53 @@ export class AuthService implements OnModuleInit {
     this.redis = new Redis(this.cfg.get<string>('REDIS_URL') ?? 'redis://localhost:6379')
   }
 
-  // O-03: Blacklist kontrolü (JwtStrategy'den çağrılır)
   async isTokenBlacklisted(jti: string): Promise<boolean> {
     const val = await this.redis.get(`blacklist:${jti}`)
     return val !== null
   }
 
-  // O-03: Token'ı blacklist'e ekle — TTL tokenin gerçek ömrünü izler
   async blacklistToken(jti: string, exp: number): Promise<void> {
     const ttl = Math.max(exp - Math.floor(Date.now() / 1000), 1)
     await this.redis.set(`blacklist:${jti}`, '1', 'EX', ttl)
   }
 
-  private async getEffectiveUsername(): Promise<string> {
+  // Returns the loaded config so callers can reuse it without a second DB hit.
+  private async validateCredentials(username: string, password: string): Promise<AdminConfig> {
     const config = await this.adminConfigService.getConfig()
-    return config.username ?? this.cfg.get<string>('ADMIN_USERNAME') ?? ''
-  }
-
-  private async getEffectivePasswordHash(): Promise<string> {
-    const config = await this.adminConfigService.getConfig()
-    return config.passwordHash ?? this.cfg.get<string>('ADMIN_PASSWORD_HASH') ?? ''
-  }
-
-  private async validateCredentials(username: string, password: string): Promise<void> {
-    const effectiveUsername = await this.getEffectiveUsername()
-    const effectiveHash = await this.getEffectivePasswordHash()
+    const effectiveUsername = config.username ?? this.cfg.get<string>('ADMIN_USERNAME') ?? ''
+    const effectiveHash = config.passwordHash ?? this.cfg.get<string>('ADMIN_PASSWORD_HASH') ?? ''
 
     if (!effectiveUsername || !effectiveHash) {
       throw new Error('Admin kimlik bilgileri yapılandırılmamış')
     }
 
-    if (username !== effectiveUsername) {
+    const usernameMatch = username === effectiveUsername
+    // Always run bcrypt regardless of username match to prevent timing-based enumeration
+    const passwordMatch = await bcrypt.compare(password, effectiveHash)
+    if (!usernameMatch || !passwordMatch) {
       throw new UnauthorizedException('Kullanıcı adı veya şifre hatalı')
     }
 
-    const valid = await bcrypt.compare(password, effectiveHash)
-    if (!valid) {
-      throw new UnauthorizedException('Kullanıcı adı veya şifre hatalı')
+    return config
+  }
+
+  async login(username: string, password: string, rememberMe = false) {
+    const config = await this.validateCredentials(username, password)
+    const bypass = this.cfg.get('TOTP_BYPASS') === '1'
+
+    if (config.totpSecret && !bypass) {
+      const preAuthToken = this.jwtService.sign(
+        { username, sub: 'admin', role: 'pre-auth', rememberMe },
+        { expiresIn: '5m' },
+      )
+      return { requires2fa: true, preAuthToken }
+    }
+
+    const jti = crypto.randomUUID()
+    const expiresIn = rememberMe ? '30d' : this.cfg.get('JWT_EXPIRES_IN', '8h')
+    return {
+      access_token: this.jwtService.sign({ username, sub: 'admin', jti }, { expiresIn }),
+      rememberMe,
     }
   }
 
@@ -71,16 +82,15 @@ export class AuthService implements OnModuleInit {
       throw new UnauthorizedException('En az bir alan değiştirilmeli')
     }
 
-    // Mevcut şifre doğrulama
-    const effectiveUsername = await this.getEffectiveUsername()
-    const effectiveHash = await this.getEffectivePasswordHash()
+    const config = await this.adminConfigService.getConfig()
+    const effectiveUsername = config.username ?? this.cfg.get<string>('ADMIN_USERNAME') ?? ''
+    const effectiveHash = config.passwordHash ?? this.cfg.get<string>('ADMIN_PASSWORD_HASH') ?? ''
+
     const passwordValid = await bcrypt.compare(currentPassword, effectiveHash)
     if (!passwordValid) {
       throw new UnauthorizedException('Mevcut şifre hatalı')
     }
 
-    // 2FA aktifse kod zorunlu
-    const config = await this.adminConfigService.getConfig()
     if (config.totpSecret) {
       if (!totpCode) {
         throw new UnauthorizedException('2FA kodu gerekli')
@@ -97,7 +107,6 @@ export class AuthService implements OnModuleInit {
       await this.redis.set(otpKey, '1', 'EX', 60)
     }
 
-    // Yeni kullanıcı adı mevcut ile aynıysa reddet
     if (newUsername && newUsername === effectiveUsername) {
       throw new UnauthorizedException('Yeni kullanıcı adı mevcut ile aynı olamaz')
     }
@@ -109,28 +118,6 @@ export class AuthService implements OnModuleInit {
     if (newPassword) {
       const hash = await bcrypt.hash(newPassword, 12)
       await this.adminConfigService.setPasswordHash(hash)
-    }
-  }
-
-  async login(username: string, password: string, rememberMe = false) {
-    await this.validateCredentials(username, password)
-
-    const config = await this.adminConfigService.getConfig()
-    const bypass = this.cfg.get('TOTP_BYPASS') === '1'
-
-    if (config.totpSecret && !bypass) {
-      const preAuthToken = this.jwtService.sign(
-        { username, sub: 'admin', role: 'pre-auth', rememberMe },
-        { expiresIn: '5m' },
-      )
-      return { requires2fa: true, preAuthToken }
-    }
-
-    const jti = crypto.randomUUID()
-    const expiresIn = rememberMe ? '30d' : this.cfg.get('JWT_EXPIRES_IN', '8h')
-    return {
-      access_token: this.jwtService.sign({ username, sub: 'admin', jti }, { expiresIn }),
-      rememberMe,
     }
   }
 
@@ -151,7 +138,6 @@ export class AuthService implements OnModuleInit {
       throw new UnauthorizedException('2FA kurulu değil')
     }
 
-    // O-01: Replay koruması — kullanılan OTP'yi reddet
     const otpKey = `otp:${code}-${Math.floor(Date.now() / 30000)}`
     const alreadyUsed = await this.redis.get(otpKey)
     if (alreadyUsed) {
@@ -163,7 +149,6 @@ export class AuthService implements OnModuleInit {
       throw new UnauthorizedException('Geçersiz doğrulama kodu')
     }
 
-    // O-01: Kodu 60 saniye TTL ile Redis'e kaydet
     await this.redis.set(otpKey, '1', 'EX', 60)
 
     const rememberMe = !!payload.rememberMe

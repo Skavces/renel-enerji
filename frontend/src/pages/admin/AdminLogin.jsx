@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, ShieldCheck } from 'lucide-react'
-import { login, verify2FA, logout as apiLogout } from '../../api/admin'
+import { login, verify2FA } from '../../api/admin'
 import { useAdminAuth } from '../../contexts/AdminAuthContext'
 import Logo from '../../components/Logo'
 

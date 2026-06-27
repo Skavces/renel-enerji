@@ -1,14 +1,34 @@
 import { Body, Controller, Delete, Get, Patch, Post, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common'
 import { Response } from 'express'
+import { IsString, Length, Matches, MaxLength } from 'class-validator'
 import { Throttle } from '@nestjs/throttler'
 import { AuthService } from './auth.service'
 import { JwtAuthGuard } from './jwt-auth.guard'
 import { LoginDto } from './dto/login.dto'
 import { ChangeCredentialsDto } from './dto/change-credentials.dto'
+import { Verify2faDto } from './dto/verify-2fa.dto'
+
+class ConfirmSetupDto {
+  @IsString()
+  @MaxLength(64)
+  secret: string
+
+  @IsString()
+  @Length(6, 6)
+  @Matches(/^\d{6}$/)
+  code: string
+}
+
+class TotpCodeDto {
+  @IsString()
+  @Length(6, 6)
+  @Matches(/^\d{6}$/)
+  code: string
+}
 
 const COOKIE_MAX_AGE = {
-  short: 8 * 60 * 60 * 1000,        // 8 saat
-  long: 30 * 24 * 60 * 60 * 1000,   // 30 gün
+  short: 8 * 60 * 60 * 1000,
+  long: 30 * 24 * 60 * 60 * 1000,
 }
 
 function cookieOptions(rememberMe: boolean) {
@@ -37,13 +57,12 @@ export class AuthController {
 
   @Throttle({ default: { ttl: 60000, limit: 10 } })
   @Post('2fa/verify')
-  async verify2fa(@Body() body: { preAuthToken: string; code: string }, @Res() res: Response) {
-    const data = await this.authService.verify2FA(body.preAuthToken, body.code)
+  async verify2fa(@Body() dto: Verify2faDto, @Res() res: Response) {
+    const data = await this.authService.verify2FA(dto.preAuthToken, dto.code)
     res.cookie('admin_token', data.access_token, cookieOptions(data.rememberMe))
     return res.json({ success: true })
   }
 
-  // O-03: Logout endpoint — token'ı blacklist'e alır ve cookie'yi temizler
   @UseGuards(JwtAuthGuard)
   @Post('logout')
   async logout(@Req() req: any, @Res() res: Response) {
@@ -64,7 +83,6 @@ export class AuthController {
     return { ok: true, username: req.user?.username }
   }
 
-  // Kimlik bilgisi değiştirme — mevcut şifre + 2FA (aktifse) zorunlu, oturum kapatılır
   @Throttle({ default: { ttl: 60000, limit: 3 } })
   @UseGuards(JwtAuthGuard)
   @Patch('credentials')
@@ -75,7 +93,6 @@ export class AuthController {
       dto.newUsername,
       dto.newPassword,
     )
-    // Kimlik bilgisi değişikliği sonrası mevcut oturumu kapat
     const { jti, exp } = req.user ?? {}
     if (jti && exp) await this.authService.blacklistToken(jti, exp)
     res.clearCookie('admin_token', {
@@ -100,13 +117,13 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Post('2fa/setup/confirm')
-  confirmSetup(@Body() body: { secret: string; code: string }) {
-    return this.authService.confirmSetup(body.secret, body.code)
+  confirmSetup(@Body() dto: ConfirmSetupDto) {
+    return this.authService.confirmSetup(dto.secret, dto.code)
   }
 
   @UseGuards(JwtAuthGuard)
   @Delete('2fa/setup')
-  remove2fa(@Body() body: { code: string }) {
-    return this.authService.remove2FA(body.code)
+  remove2fa(@Body() dto: TotpCodeDto) {
+    return this.authService.remove2FA(dto.code)
   }
 }
