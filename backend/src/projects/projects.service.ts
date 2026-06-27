@@ -2,7 +2,7 @@ import { ConflictException, Injectable, InternalServerErrorException, Logger, No
 import { ConfigService } from '@nestjs/config'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
-import * as sharp from 'sharp'
+import sharp from 'sharp'
 import { writeFile } from 'fs/promises'
 import { Project } from './entities/project.entity'
 import { ProjectMedia } from './entities/project-media.entity'
@@ -154,7 +154,7 @@ export class ProjectsService {
     let parsed: any
     try {
       parsed = await this.parseInstagram(post.caption)
-    } catch (err) {
+    } catch (err: any) {
       throw new InternalServerErrorException(`Parse hatası: ${err.message}`)
     }
 
@@ -192,7 +192,7 @@ export class ProjectsService {
       let parsed: any
       try {
         parsed = await this.parseInstagram(post.caption)
-      } catch (err) {
+      } catch (err: any) {
         this.logger.warn(`Parse hatası (post ${post.id}): ${err.message}`)
         parseErrors++
         skipped++

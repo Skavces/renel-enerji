@@ -38,7 +38,7 @@ export class WebhooksService {
         this.logger.log(`Yeni Instagram gönderisi algılandı: ${mediaId}`)
         try {
           await this.projectsService.syncInstagramByMediaId(mediaId)
-        } catch (err) {
+        } catch (err: any) {
           this.logger.error(`syncInstagramByMediaId hatası (${mediaId}): ${err.message}`)
         }
       }
