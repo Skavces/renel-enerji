@@ -122,7 +122,7 @@ export default function ProjelerAdmin() {
       .finally(() => setLoading(false))
   }
 
-  useEffect(load, [load])
+  useEffect(() => { load() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
 
   const handleSync = async () => {
