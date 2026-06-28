@@ -1,12 +1,14 @@
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 WORKDIR /app
+RUN npm install -g npm@11
 COPY package*.json ./
 RUN npm ci
 COPY . .
 RUN npm run build
 
-FROM node:20-alpine AS production
+FROM node:22-alpine AS production
 WORKDIR /app
+RUN npm install -g npm@11
 ENV NODE_ENV=production
 COPY package*.json ./
 RUN npm ci --omit=dev && npm cache clean --force
