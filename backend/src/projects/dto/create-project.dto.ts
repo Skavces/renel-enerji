@@ -1,4 +1,4 @@
-import { IsArray, IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength, ValidateNested } from 'class-validator'
+import { IsArray, IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString, Max, MaxLength, Min, ValidateNested } from 'class-validator'
 import { Transform, Type } from 'class-transformer'
 
 export class StatBoxDto {
@@ -24,6 +24,8 @@ export class CreateProjectDto {
   location: string
 
   @IsNumber()
+  @Min(0)
+  @Max(99999999.99)
   @Type(() => Number)
   kw: number
 

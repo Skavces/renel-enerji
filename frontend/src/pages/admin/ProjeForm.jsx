@@ -321,7 +321,7 @@ if (parsed.description) { set('description', parsed.description); count++ }
               <input value={form.location} onChange={(e) => set('location', e.target.value)} className={INPUT} placeholder="Balıkesir" required />
             </Field>
             <Field label="Kurulu Güç (kW)" required>
-              <input type="number" step="0.01" value={form.kw} onChange={(e) => set('kw', e.target.value)} className={INPUT} placeholder="11.25" required />
+              <input type="number" step="0.01" min="0" max="99999999.99" value={form.kw} onChange={(e) => set('kw', e.target.value)} className={INPUT} placeholder="11.25" required />
             </Field>
             <Field label="Yıl" required>
               <input value={form.date} onChange={(e) => set('date', e.target.value)} className={INPUT} placeholder="2025" required />
