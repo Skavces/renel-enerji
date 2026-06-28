@@ -1,10 +1,7 @@
 import { BadRequestException, Body, Controller, Post } from '@nestjs/common'
 import { Throttle } from '@nestjs/throttler'
-import { ChatMessage, ChatService, INJECTION_PATTERNS, sanitizeContent } from './chat.service'
-
-interface ChatBody {
-  messages: ChatMessage[]
-}
+import { ChatService, INJECTION_PATTERNS, sanitizeContent } from './chat.service'
+import { ChatBodyDto, SummaryBodyDto } from './dto/chat-body.dto'
 
 @Controller('chat')
 export class ChatController {
@@ -12,20 +9,11 @@ export class ChatController {
 
   @Post()
   @Throttle({ default: { limit: 20, ttl: 60000 } })
-  async chat(@Body() body: ChatBody) {
-    if (!Array.isArray(body?.messages) || body.messages.length === 0)
-      throw new BadRequestException('Mesajlar eksik')
-    if (body.messages.length > 20)
-      throw new BadRequestException('Çok fazla mesaj')
-
-    if (body.messages[0]?.role !== 'user')
+  async chat(@Body() dto: ChatBodyDto) {
+    if (dto.messages[0]?.role !== 'user')
       throw new BadRequestException('İlk mesaj kullanıcıdan olmalı')
 
-    const clean = body.messages.map(m => {
-      if (m.role !== 'user' && m.role !== 'assistant')
-        throw new BadRequestException('Geçersiz mesaj rolü')
-      if (typeof m.content !== 'string' || m.content.length > 1000)
-        throw new BadRequestException('Geçersiz mesaj içeriği')
+    const clean = dto.messages.map(m => {
       const content = sanitizeContent(m.content)
       if (m.role === 'user' && INJECTION_PATTERNS.some(p => p.test(content)))
         throw new BadRequestException('Geçersiz mesaj içeriği')
@@ -38,17 +26,11 @@ export class ChatController {
 
   @Post('summary')
   @Throttle({ default: { limit: 10, ttl: 60000 } })
-  async summary(@Body() body: ChatBody) {
-    if (!Array.isArray(body?.messages) || body.messages.length < 2)
-      throw new BadRequestException('Yeterli konuşma geçmişi yok')
-
-    const clean = body.messages.map(m => {
-      if (m.role !== 'user' && m.role !== 'assistant')
-        throw new BadRequestException('Geçersiz mesaj rolü')
-      if (typeof m.content !== 'string' || m.content.length > 1000)
-        throw new BadRequestException('Geçersiz mesaj içeriği')
-      return { role: m.role, content: sanitizeContent(m.content) }
-    })
+  async summary(@Body() dto: SummaryBodyDto) {
+    const clean = dto.messages.map(m => ({
+      role: m.role,
+      content: sanitizeContent(m.content),
+    }))
 
     const text = await this.chatService.generateSummary(clean)
     return { text }

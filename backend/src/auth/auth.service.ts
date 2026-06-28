@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, OnModuleInit } from '@nestjs/common'
+import { Injectable, Logger, UnauthorizedException, OnModuleInit } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { ConfigService } from '@nestjs/config'
 import * as bcrypt from 'bcrypt'
@@ -10,6 +10,7 @@ import Redis from 'ioredis'
 
 @Injectable()
 export class AuthService implements OnModuleInit {
+  private readonly logger = new Logger(AuthService.name)
   private redis: Redis
 
   constructor(
@@ -20,6 +21,7 @@ export class AuthService implements OnModuleInit {
 
   onModuleInit() {
     this.redis = new Redis(this.cfg.get<string>('REDIS_URL') ?? 'redis://localhost:6379')
+    this.redis.on('error', (err) => this.logger.error('Redis bağlantı hatası', err))
   }
 
   async isTokenBlacklisted(jti: string): Promise<boolean> {
@@ -75,6 +77,7 @@ export class AuthService implements OnModuleInit {
   async changeCredentials(
     currentPassword: string,
     totpCode: string | undefined,
+    jwtUsername: string,
     newUsername?: string,
     newPassword?: string,
   ): Promise<void> {
@@ -85,6 +88,10 @@ export class AuthService implements OnModuleInit {
     const config = await this.adminConfigService.getConfig()
     const effectiveUsername = config.username ?? this.cfg.get<string>('ADMIN_USERNAME') ?? ''
     const effectiveHash = config.passwordHash ?? this.cfg.get<string>('ADMIN_PASSWORD_HASH') ?? ''
+
+    if (jwtUsername !== effectiveUsername) {
+      throw new UnauthorizedException('Kimlik doğrulaması başarısız')
+    }
 
     const passwordValid = await bcrypt.compare(currentPassword, effectiveHash)
     if (!passwordValid) {
@@ -172,19 +179,32 @@ export class AuthService implements OnModuleInit {
   }
 
   async confirmSetup(secret: string, code: string): Promise<{ ok: boolean }> {
+    const otpKey = `otp:${code}-${Math.floor(Date.now() / 30000)}`
+    const alreadyUsed = await this.redis.get(otpKey)
+    if (alreadyUsed) {
+      throw new UnauthorizedException('Bu 2FA kodu daha önce kullanıldı')
+    }
     const valid = authenticator.verify({ token: code, secret })
     if (!valid) {
       throw new UnauthorizedException('Geçersiz doğrulama kodu, tekrar deneyin')
     }
+    await this.redis.set(otpKey, '1', 'EX', 60)
     await this.adminConfigService.setTotpSecret(secret)
     return { ok: true }
   }
 
-  async remove2FA(code: string): Promise<{ ok: boolean }> {
+  async remove2FA(code: string, currentPassword: string): Promise<{ ok: boolean }> {
     const config = await this.adminConfigService.getConfig()
     if (!config.totpSecret) {
       throw new UnauthorizedException('2FA kurulu değil')
     }
+
+    const effectiveHash = config.passwordHash ?? this.cfg.get<string>('ADMIN_PASSWORD_HASH') ?? ''
+    const passwordValid = await bcrypt.compare(currentPassword, effectiveHash)
+    if (!passwordValid) {
+      throw new UnauthorizedException('Mevcut şifre hatalı')
+    }
+
     const otpKey = `otp:${code}-${Math.floor(Date.now() / 30000)}`
     const alreadyUsed = await this.redis.get(otpKey)
     if (alreadyUsed) {

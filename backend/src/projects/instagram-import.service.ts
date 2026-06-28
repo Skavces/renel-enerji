@@ -160,7 +160,17 @@ export class InstagramImportService {
       published,
       instagramMediaId: post.id,
     })
-    const saved = await this.projectRepo.save(project)
+    let saved: Project
+    try {
+      saved = await this.projectRepo.save(project)
+    } catch (err: any) {
+      if (err.code === '23505') {
+        this.logger.warn(`Instagram post ${post.id} zaten kayıtlı (race condition), atlanıyor`)
+        const existing = await this.projectRepo.findOne({ where: { instagramMediaId: post.id } })
+        if (existing) return existing
+      }
+      throw err
+    }
     await this.importInstagramImages(saved, post)
     return saved
   }

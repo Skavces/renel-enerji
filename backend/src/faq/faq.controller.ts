@@ -3,6 +3,7 @@ import { FaqService } from './faq.service'
 import { CreateFaqDto } from './dto/create-faq.dto'
 import { UpdateFaqDto } from './dto/update-faq.dto'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
+import { ReorderDto } from '../common/dto/reorder.dto'
 
 @Controller('faq')
 export class FaqController {
@@ -27,8 +28,8 @@ export class FaqController {
 
   @UseGuards(JwtAuthGuard)
   @Patch('reorder')
-  reorder(@Body() body: { orderedIds: string[] }) {
-    return this.service.reorder(body.orderedIds)
+  reorder(@Body() dto: ReorderDto) {
+    return this.service.reorder(dto.orderedIds)
   }
 
   @UseGuards(JwtAuthGuard)

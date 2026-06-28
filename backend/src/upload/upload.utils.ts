@@ -39,12 +39,13 @@ export async function toWebp(filePath: string): Promise<string> {
   return webpPath
 }
 
-export async function assertMagicBytes(filePath: string, allowedMimes: string[]): Promise<void> {
+export async function assertMagicBytes(filePath: string, allowedMimes: string[]): Promise<string> {
   const detected = await fromFile(filePath)
   if (!detected || !allowedMimes.includes(detected.mime)) {
     await unlink(filePath)
     throw new BadRequestException('Dosya içeriği izin verilen türlerle eşleşmiyor')
   }
+  return detected.mime
 }
 
 export async function saveWithSeoName(

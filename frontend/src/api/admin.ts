@@ -90,10 +90,10 @@ export async function confirm2FASetup(
   return data
 }
 
-export async function remove2FA(code: string): Promise<Record<string, unknown>> {
+export async function remove2FA(code: string, currentPassword: string): Promise<Record<string, unknown>> {
   const res = await fetch(`${API}/api/auth/2fa/setup`, {
     ...authOptions({ method: 'DELETE' }),
-    body: JSON.stringify({ code }),
+    body: JSON.stringify({ code, currentPassword }),
   })
   const data = await res.json()
   if (!res.ok) throw new Error(data.message || '2FA kaldırılamadı')

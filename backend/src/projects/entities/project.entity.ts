@@ -24,7 +24,12 @@ export class Project {
   @Column()
   location: string
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  @Column({
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    transformer: { to: (v: number) => v, from: (v: string) => parseFloat(v) },
+  })
   kw: number
 
   @Column()
@@ -66,7 +71,7 @@ export class Project {
   @Column({ nullable: true, unique: true })
   instagramMediaId: string
 
-  @OneToMany(() => ProjectMedia, (m) => m.project, { cascade: true, eager: true })
+  @OneToMany(() => ProjectMedia, (m) => m.project, { cascade: true })
   media: ProjectMedia[]
 
   @CreateDateColumn()

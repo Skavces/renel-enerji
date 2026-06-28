@@ -1,5 +1,6 @@
 import { Body, Controller, Param, Post, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common'
 import { FilesInterceptor } from '@nestjs/platform-express'
+import { unlink } from 'fs/promises'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 import { LinkMediaDto } from './dto/link-media.dto'
 import { ProjectsService } from '../projects/projects.service'
@@ -40,11 +41,17 @@ export class ProjectUploadController {
     const project = await this.projectsService.findById(projectId)
     const results = []
     for (const file of files) {
-      await assertMagicBytes(file.path, ALLOWED_MEDIA_MIMES)
-      const isVideo = VIDEO_MIMES.includes(file.mimetype)
-      const converted = isVideo ? file.path : await toWebp(file.path)
-      const ext = isVideo ? (videoExtMap[file.mimetype] ?? '.mp4') : '.webp'
-      const src = await saveWithSeoName(converted, project.slug, ext)
+      const detectedMime = await assertMagicBytes(file.path, ALLOWED_MEDIA_MIMES)
+      const isVideo = VIDEO_MIMES.includes(detectedMime)
+      const ext = isVideo ? (videoExtMap[detectedMime] ?? '.mp4') : '.webp'
+      let src: string
+      try {
+        const converted = isVideo ? file.path : await toWebp(file.path)
+        src = await saveWithSeoName(converted, project.slug, ext)
+      } catch (err) {
+        await unlink(file.path).catch(() => {})
+        throw err
+      }
       const media = await this.mediaService.addMedia(projectId, isVideo ? MediaType.VIDEO : MediaType.IMAGE, src)
       results.push(media)
     }

@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, Patch, Post, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common'
 import { Response } from 'express'
-import { IsString, Length, Matches, MaxLength } from 'class-validator'
+import { IsString, Length, Matches, MaxLength, MinLength } from 'class-validator'
 import { Throttle } from '@nestjs/throttler'
 import { AuthService } from './auth.service'
 import { JwtAuthGuard } from './jwt-auth.guard'
@@ -19,11 +19,15 @@ class ConfirmSetupDto {
   code: string
 }
 
-class TotpCodeDto {
+class Remove2faDto {
   @IsString()
   @Length(6, 6)
   @Matches(/^\d{6}$/)
   code: string
+
+  @IsString()
+  @MinLength(1)
+  currentPassword: string
 }
 
 const COOKIE_MAX_AGE = {
@@ -90,6 +94,7 @@ export class AuthController {
     await this.authService.changeCredentials(
       dto.currentPassword,
       dto.totpCode,
+      req.user.username,
       dto.newUsername,
       dto.newPassword,
     )
@@ -123,7 +128,7 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Delete('2fa/setup')
-  remove2fa(@Body() dto: TotpCodeDto) {
-    return this.authService.remove2FA(dto.code)
+  remove2fa(@Body() dto: Remove2faDto) {
+    return this.authService.remove2FA(dto.code, dto.currentPassword)
   }
 }

@@ -13,6 +13,7 @@ export default function TwoFactorSetup() {
   const [loading, setLoading] = useState(false)
   const [removeMode, setRemoveMode] = useState(false)
   const [removeCode, setRemoveCode] = useState('')
+  const [removePassword, setRemovePassword] = useState('')
 
   useEffect(() => {
     get2FAStatus().then(setStatus).catch(() => navigate('/admin'))
@@ -54,11 +55,12 @@ export default function TwoFactorSetup() {
     setLoading(true)
     setError('')
     try {
-      await remove2FA(removeCode)
+      await remove2FA(removeCode, removePassword)
       setStatus({ enabled: false })
       setSetup(null)
       setRemoveMode(false)
       setRemoveCode('')
+      setRemovePassword('')
       setSuccess('2FA devre dışı bırakıldı.')
     } catch (err) {
       setError(err.message || '2FA kaldırılamadı.')
@@ -122,8 +124,18 @@ export default function TwoFactorSetup() {
       {/* 2FA kaldırma — kod doğrulama */}
       {removeMode && (
         <div className="bg-white border border-red-100 rounded-xl p-6 space-y-4 mb-6">
-          <p className="text-sm font-semibold text-gray-800">2FA'yı devre dışı bırakmak için authenticator kodunuzu girin</p>
+          <p className="text-sm font-semibold text-gray-800">2FA'yı devre dışı bırakmak için şifrenizi ve authenticator kodunuzu girin</p>
           <form onSubmit={handleRemove} className="space-y-3">
+            <input
+              type="password"
+              value={removePassword}
+              onChange={(e) => setRemovePassword(e.target.value)}
+              placeholder="Mevcut şifreniz"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-300 focus:border-red-400"
+              required
+              autoFocus
+              autoComplete="current-password"
+            />
             <input
               type="text"
               inputMode="numeric"
@@ -134,20 +146,19 @@ export default function TwoFactorSetup() {
               placeholder="000000"
               className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-center text-xl font-mono tracking-[0.5em] focus:outline-none focus:ring-2 focus:ring-red-300 focus:border-red-400"
               required
-              autoFocus
             />
             {error && <p className="text-red-500 text-sm bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
             <div className="flex gap-3">
               <button
                 type="button"
-                onClick={() => { setRemoveMode(false); setRemoveCode(''); setError('') }}
+                onClick={() => { setRemoveMode(false); setRemoveCode(''); setRemovePassword(''); setError('') }}
                 className="flex-1 border border-gray-200 text-gray-600 font-medium py-2.5 rounded-lg hover:bg-gray-50 transition-colors text-sm"
               >
                 İptal
               </button>
               <button
                 type="submit"
-                disabled={loading || removeCode.length !== 6}
+                disabled={loading || removeCode.length !== 6 || !removePassword}
                 className="flex-1 bg-red-500 hover:bg-red-600 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold py-2.5 rounded-lg transition-colors text-sm"
               >
                 {loading ? 'Kaldırılıyor...' : 'Devre Dışı Bırak'}

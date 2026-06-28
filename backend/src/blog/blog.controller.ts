@@ -3,6 +3,7 @@ import { BlogService } from './blog.service'
 import { CreateBlogPostDto } from './dto/create-blog-post.dto'
 import { UpdateBlogPostDto } from './dto/update-blog-post.dto'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
+import { ReorderDto } from '../common/dto/reorder.dto'
 
 @Controller('blog')
 export class BlogController {
@@ -32,8 +33,8 @@ export class BlogController {
 
   @UseGuards(JwtAuthGuard)
   @Patch('reorder')
-  reorder(@Body() body: { orderedIds: string[] }) {
-    return this.service.reorder(body.orderedIds)
+  reorder(@Body() dto: ReorderDto) {
+    return this.service.reorder(dto.orderedIds)
   }
 
   @UseGuards(JwtAuthGuard)

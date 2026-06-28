@@ -3,6 +3,7 @@ import { ReferencesService } from './references.service'
 import { CreateReferenceDto } from './dto/create-reference.dto'
 import { UpdateReferenceDto } from './dto/update-reference.dto'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
+import { ReorderDto } from '../common/dto/reorder.dto'
 
 @Controller('references')
 export class ReferencesController {
@@ -27,8 +28,8 @@ export class ReferencesController {
 
   @UseGuards(JwtAuthGuard)
   @Patch('reorder')
-  reorder(@Body() body: { orderedIds: string[] }) {
-    return this.service.reorder(body.orderedIds)
+  reorder(@Body() dto: ReorderDto) {
+    return this.service.reorder(dto.orderedIds)
   }
 
   @UseGuards(JwtAuthGuard)

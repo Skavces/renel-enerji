@@ -15,16 +15,20 @@ export class ProjectsService {
   findAllPublic() {
     return this.projectRepo.find({
       where: { published: true },
+      relations: { media: true },
       order: { sortOrder: 'ASC', createdAt: 'DESC' },
     })
   }
 
   findAll() {
-    return this.projectRepo.find({ order: { sortOrder: 'ASC', createdAt: 'DESC' } })
+    return this.projectRepo.find({
+      relations: { media: true },
+      order: { sortOrder: 'ASC', createdAt: 'DESC' },
+    })
   }
 
   async findBySlug(slug: string) {
-    const project = await this.projectRepo.findOne({ where: { slug } })
+    const project = await this.projectRepo.findOne({ where: { slug }, relations: { media: true } })
     if (!project) throw new NotFoundException('Proje bulunamadı')
     return project
   }
