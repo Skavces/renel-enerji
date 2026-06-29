@@ -53,6 +53,12 @@ export class InstagramParseService {
     const jsonMatch = content.match(/\{[\s\S]*\}/)
     if (!jsonMatch) throw new InternalServerErrorException('Groq geçersiz yanıt döndürdü')
 
-    return JSON.parse(jsonMatch[0])
+    try {
+      return JSON.parse(jsonMatch[0])
+    } catch (err) {
+      throw new InternalServerErrorException(
+        `JSON parse hatası: ${(err as Error).message}. Ham yanıt: ${jsonMatch[0].slice(0, 200)}`,
+      )
+    }
   }
 }

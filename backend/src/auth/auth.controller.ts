@@ -106,7 +106,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Post('2fa/setup/confirm')
   confirmSetup(@Body() dto: ConfirmSetupDto) {
-    return this.authService.confirmSetup(dto.secret, dto.code)
+    return this.authService.confirmSetup(dto.secret, dto.code, dto.currentCode)
   }
 
   @UseGuards(JwtAuthGuard)

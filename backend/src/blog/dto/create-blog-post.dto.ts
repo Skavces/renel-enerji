@@ -1,9 +1,10 @@
-import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString, Matches, MaxLength } from 'class-validator'
+import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString, Matches, Max, MaxLength, Min } from 'class-validator'
 import { Transform, Type } from 'class-transformer'
 
 export class CreateBlogPostDto {
   @IsString()
   @IsNotEmpty()
+  @MaxLength(255)
   title: string
 
   @IsString()
@@ -14,6 +15,7 @@ export class CreateBlogPostDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(500)
   excerpt?: string
 
   @IsOptional()
@@ -23,10 +25,12 @@ export class CreateBlogPostDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(100000)
   content?: string
 
   @IsOptional()
   @IsString()
+  @Matches(/^(https?:\/\/|\/uploads\/)/, { message: 'Geçerli URL veya /uploads/ yolu olmalı' })
   coverImage?: string
 
   @IsOptional()
@@ -36,6 +40,8 @@ export class CreateBlogPostDto {
 
   @IsOptional()
   @IsNumber()
+  @Min(0)
+  @Max(2147483647)
   @Type(() => Number)
   sortOrder?: number
 }

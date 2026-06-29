@@ -25,10 +25,14 @@ async function bootstrap() {
     throw new Error('FRONTEND_URL env variable is not set')
   }
   const originUrl = new URL(allowedOrigin)
-  originUrl.hostname = `www.${originUrl.hostname}`
-  const wwwOrigin = originUrl.toString().replace(/\/$/, '')
+  const wwwOrigins: string[] = []
+  const isIp = /^[\d.]+$/.test(originUrl.hostname)
+  if (!originUrl.hostname.startsWith('www.') && !isIp) {
+    originUrl.hostname = `www.${originUrl.hostname}`
+    wwwOrigins.push(originUrl.toString().replace(/\/$/, ''))
+  }
   app.enableCors({
-    origin: [allowedOrigin, wwwOrigin],
+    origin: [allowedOrigin, ...wwwOrigins],
     methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
     credentials: true,
   })

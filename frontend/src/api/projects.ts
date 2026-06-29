@@ -3,9 +3,9 @@ import type { Project, ProjectMedia } from '../types'
 
 export function mediaUrl(src: string | null | undefined): string {
   if (!src) return ''
-  if (src.startsWith('http')) return src
-  if (src.startsWith('/uploads')) return `${API}${src}`
-  return src
+  if (src.startsWith('https://') || src.startsWith('http://')) return src
+  if (src.startsWith('/uploads/')) return `${API}${src}`
+  return ''
 }
 
 export async function fetchProjects(): Promise<Project[]> {
@@ -15,7 +15,7 @@ export async function fetchProjects(): Promise<Project[]> {
 }
 
 export async function fetchProjectBySlug(slug: string): Promise<Project> {
-  const res = await fetch(`${API}/api/projects/${slug}`)
+  const res = await fetch(`${API}/api/projects/${encodeURIComponent(slug)}`)
   if (!res.ok) throw new Error('Proje bulunamadı')
   return res.json()
 }

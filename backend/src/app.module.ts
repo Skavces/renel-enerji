@@ -34,6 +34,11 @@ import { HealthController } from './health.controller'
         REDIS_URL: Joi.string().required(),
         FRONTEND_URL: Joi.string().uri().required(),
         NODE_ENV: Joi.string().valid('development', 'production').default('development'),
+        ADMIN_PASSWORD_HASH: Joi.string().required(),
+        GROQ_API_KEY: Joi.string().required(),
+        INSTAGRAM_APP_SECRET: Joi.string().required(),
+        INSTAGRAM_WEBHOOK_VERIFY_TOKEN: Joi.string().required(),
+        UMAMI_PASS: Joi.string().required(),
       }),
       validationOptions: { allowUnknown: true },
     }),
@@ -41,7 +46,7 @@ import { HealthController } from './health.controller'
     ThrottlerModule.forRootAsync({
       useFactory: () => ({
         throttlers: [{ ttl: 60000, limit: 60 }],
-        getTracker: (req: any) => (req.ips?.length ? req.ips[0] : req.ip),
+        getTracker: (req: any) => req.ip ?? req.connection?.remoteAddress ?? 'unknown',
       }),
     }),
     TypeOrmModule.forRootAsync({

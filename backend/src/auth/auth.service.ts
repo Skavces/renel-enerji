@@ -63,7 +63,7 @@ export class AuthService implements OnModuleInit {
 
     if (config.totpSecret && !bypass) {
       const preAuthToken = this.jwtService.sign(
-        { username, sub: 'admin', role: 'pre-auth', rememberMe },
+        { username, sub: 'admin', role: 'pre-auth', rememberMe, jti: crypto.randomUUID() },
         { expiresIn: '5m' },
       )
       return { requires2fa: true, preAuthToken }
@@ -143,6 +143,10 @@ export class AuthService implements OnModuleInit {
       throw new UnauthorizedException('Geçersiz token')
     }
 
+    if (payload.jti && await this.isTokenBlacklisted(payload.jti)) {
+      throw new UnauthorizedException('Bu token daha önce kullanıldı')
+    }
+
     const config = await this.adminConfigService.getConfig()
     if (!config.totpSecret) {
       throw new UnauthorizedException('2FA kurulu değil')
@@ -160,6 +164,8 @@ export class AuthService implements OnModuleInit {
     }
 
     await this.redis.set(otpKey, '1', 'EX', 60)
+
+    if (payload.jti) await this.blacklistToken(payload.jti, payload.exp)
 
     const rememberMe = !!payload.rememberMe
     const jti = crypto.randomUUID()
@@ -181,7 +187,19 @@ export class AuthService implements OnModuleInit {
     return { secret, qrCodeUrl }
   }
 
-  async confirmSetup(secret: string, code: string): Promise<{ ok: boolean }> {
+  async confirmSetup(secret: string, code: string, currentCode?: string): Promise<{ ok: boolean }> {
+    const config = await this.adminConfigService.getConfig()
+    if (config.totpSecret) {
+      if (!currentCode) throw new UnauthorizedException('Mevcut TOTP kodu gerekli')
+      const currentOtpKey = `otp:${currentCode}-${Math.floor(Date.now() / 30000)}`
+      if (await this.redis.get(currentOtpKey)) {
+        throw new UnauthorizedException('Mevcut TOTP kodu daha önce kullanıldı')
+      }
+      const currentValid = authenticator.verify({ token: currentCode, secret: config.totpSecret })
+      if (!currentValid) throw new UnauthorizedException('Mevcut TOTP kodu yanlış')
+      await this.redis.set(currentOtpKey, '1', 'EX', 60)
+    }
+
     const otpKey = `otp:${code}-${Math.floor(Date.now() / 30000)}`
     const alreadyUsed = await this.redis.get(otpKey)
     if (alreadyUsed) {

@@ -13,12 +13,11 @@ export class AdminConfigService {
   ) {}
 
   async getConfig(): Promise<AdminConfig> {
-    let config = await this.repo.findOne({ where: { id: ADMIN_CONFIG_ID } })
-    if (!config) {
-      config = this.repo.create({ id: ADMIN_CONFIG_ID, totpSecret: null })
-      await this.repo.save(config)
-    }
-    return config
+    await this.repo.upsert({ id: ADMIN_CONFIG_ID, totpSecret: null }, {
+      conflictPaths: ['id'],
+      skipUpdateIfNoValuesChanged: true,
+    })
+    return this.repo.findOne({ where: { id: ADMIN_CONFIG_ID } })
   }
 
   async setTotpSecret(secret: string): Promise<void> {

@@ -8,7 +8,7 @@ export async function fetchPosts(): Promise<BlogPost[]> {
 }
 
 export async function fetchPostBySlug(slug: string): Promise<BlogPost> {
-  const res = await fetch(`${API}/api/blog/${slug}`)
+  const res = await fetch(`${API}/api/blog/${encodeURIComponent(slug)}`)
   if (!res.ok) throw new Error('Blog yazısı bulunamadı')
   return res.json()
 }

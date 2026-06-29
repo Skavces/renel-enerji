@@ -68,6 +68,7 @@ export class Project {
   @Column({ default: 0 })
   sortOrder: number
 
+  @Index()
   @Column({ nullable: true, unique: true })
   instagramMediaId: string
 

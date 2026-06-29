@@ -1,8 +1,8 @@
-import { IsArray, IsString, ArrayMaxSize } from 'class-validator'
+import { IsArray, IsUUID, ArrayMaxSize } from 'class-validator'
 
 export class ReorderDto {
   @IsArray()
-  @IsString({ each: true })
+  @IsUUID('4', { each: true })
   @ArrayMaxSize(500)
   orderedIds: string[]
 }

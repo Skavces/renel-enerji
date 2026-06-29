@@ -14,10 +14,10 @@ import {
 } from '@nestjs/common'
 import { SkipThrottle } from '@nestjs/throttler'
 import { ConfigService } from '@nestjs/config'
+import { timingSafeEqual } from 'crypto'
 import { Request, Response } from 'express'
 import { WebhooksService } from './webhooks.service'
 
-@SkipThrottle()
 @Controller('webhooks')
 export class WebhooksController {
   private readonly logger = new Logger(WebhooksController.name)
@@ -27,6 +27,7 @@ export class WebhooksController {
     private readonly config: ConfigService,
   ) {}
 
+  @SkipThrottle()
   @Get('instagram')
   verifyWebhook(
     @Query('hub.mode') mode: string,
@@ -34,8 +35,11 @@ export class WebhooksController {
     @Query('hub.verify_token') token: string,
     @Res() res: Response,
   ) {
-    const verifyToken = this.config.get<string>('INSTAGRAM_WEBHOOK_VERIFY_TOKEN')
-    if (mode === 'subscribe' && token === verifyToken) {
+    const verifyToken = this.config.get<string>('INSTAGRAM_WEBHOOK_VERIFY_TOKEN') ?? ''
+    const a = Buffer.from(token ?? '')
+    const b = Buffer.from(verifyToken)
+    const tokenValid = a.length === b.length && timingSafeEqual(a, b)
+    if (mode === 'subscribe' && tokenValid) {
       this.logger.log('Instagram webhook doğrulandı')
       return res.type('text/plain').send(challenge)
     }

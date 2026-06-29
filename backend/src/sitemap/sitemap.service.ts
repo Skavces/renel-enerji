@@ -1,10 +1,9 @@
 import { Injectable } from '@nestjs/common'
+import { ConfigService } from '@nestjs/config'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { BlogPost } from '../blog/entities/blog-post.entity'
 import { Project } from '../projects/entities/project.entity'
-
-const SITE = 'https://renelenerji.com'
 
 const STATIC_URLS = [
   { loc: '/', priority: '1.0', changefreq: 'weekly' },
@@ -36,7 +35,12 @@ export class SitemapService {
   constructor(
     @InjectRepository(BlogPost) private blogRepo: Repository<BlogPost>,
     @InjectRepository(Project) private projectRepo: Repository<Project>,
+    private config: ConfigService,
   ) {}
+
+  private get site(): string {
+    return this.config.get<string>('FRONTEND_URL', 'https://renelenerji.com').replace(/\/$/, '')
+  }
 
   async generateXml(): Promise<string> {
     const [posts, projects] = await Promise.all([
@@ -54,7 +58,7 @@ export class SitemapService {
 
     const urlTag = (loc: string, opts: { lastmod?: Date; priority: string; changefreq: string }) => {
       const lastmod = opts.lastmod ? `\n    <lastmod>${opts.lastmod.toISOString().split('T')[0]}</lastmod>` : ''
-      return `  <url>\n    <loc>${SITE}${xmlEscape(loc)}</loc>${lastmod}\n    <changefreq>${opts.changefreq}</changefreq>\n    <priority>${opts.priority}</priority>\n  </url>`
+      return `  <url>\n    <loc>${this.site}${xmlEscape(loc)}</loc>${lastmod}\n    <changefreq>${opts.changefreq}</changefreq>\n    <priority>${opts.priority}</priority>\n  </url>`
     }
 
     const staticUrls = STATIC_URLS.map((u) => urlTag(u.loc, { priority: u.priority, changefreq: u.changefreq }))

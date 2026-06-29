@@ -47,7 +47,8 @@ export async function verify2FA(
 }
 
 export async function logout(): Promise<void> {
-  await fetch(`${API}/api/auth/logout`, { method: 'POST', credentials: 'include' })
+  const res = await fetch(`${API}/api/auth/logout`, { method: 'POST', credentials: 'include' })
+  if (!res.ok) throw new Error('Çıkış başarısız')
 }
 
 export async function changeCredentials(payload: {
@@ -80,10 +81,11 @@ export async function generate2FASetup(): Promise<{ secret: string; qrCode: stri
 export async function confirm2FASetup(
   secret: string,
   code: string,
+  currentCode?: string,
 ): Promise<Record<string, unknown>> {
   const res = await fetch(`${API}/api/auth/2fa/setup/confirm`, {
     ...authOptions({ method: 'POST' }),
-    body: JSON.stringify({ secret, code }),
+    body: JSON.stringify({ secret, code, ...(currentCode ? { currentCode } : {}) }),
   })
   const data = await res.json()
   if (!res.ok) throw new Error(data.message || 'Doğrulama başarısız')

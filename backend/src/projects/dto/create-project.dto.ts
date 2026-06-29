@@ -3,9 +3,11 @@ import { Transform, Type } from 'class-transformer'
 
 export class StatBoxDto {
   @IsString()
+  @MaxLength(100)
   value: string
 
   @IsString()
+  @MaxLength(100)
   label: string
 }
 
@@ -18,10 +20,12 @@ export class CreateProjectDto {
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(255)
   name: string
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(255)
   location: string
 
   @IsNumber()
@@ -32,32 +36,39 @@ export class CreateProjectDto {
 
   @IsString()
   @IsNotEmpty()
+  @Matches(/^\d{4}$/, { message: 'Tarih 4 haneli yıl formatında olmalı (örn: 2024)' })
   date: string
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(255)
   description: string
 
   @IsOptional()
   @IsString()
+  @MaxLength(500)
   about?: string
 
   @IsOptional()
   @IsString()
+  @MaxLength(500)
   specsTitle?: string
 
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
+  @MaxLength(500, { each: true })
   specs?: string[]
 
   @IsOptional()
   @IsString()
+  @MaxLength(500)
   highlightsTitle?: string
 
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
+  @MaxLength(500, { each: true })
   highlights?: string[]
 
   @IsOptional()
@@ -68,6 +79,7 @@ export class CreateProjectDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(500)
   ctaText?: string
 
   @IsOptional()
@@ -77,6 +89,8 @@ export class CreateProjectDto {
 
   @IsOptional()
   @IsNumber()
+  @Min(0)
+  @Max(2147483647)
   @Type(() => Number)
   sortOrder?: number
 }

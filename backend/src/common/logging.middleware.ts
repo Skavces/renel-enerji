@@ -12,7 +12,11 @@ export class LoggingMiddleware implements NestMiddleware {
     res.on('finish', () => {
       const ms = Date.now() - start
       const { statusCode } = res
-      this.logger.log(`${method} ${originalUrl} ${statusCode} ${ms}ms`)
+      const sanitizedUrl = originalUrl.replace(
+        /(hub\.verify_token|access_token|token|secret|password)=[^&]*/gi,
+        '$1=[REDACTED]',
+      )
+      this.logger.log(`${method} ${sanitizedUrl} ${statusCode} ${ms}ms`)
     })
 
     next()

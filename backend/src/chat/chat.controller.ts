@@ -15,7 +15,7 @@ export class ChatController {
 
     const clean = dto.messages.map(m => {
       const content = sanitizeContent(m.content)
-      if (m.role === 'user' && INJECTION_PATTERNS.some(p => p.test(content)))
+      if (INJECTION_PATTERNS.some(p => p.test(content)))
         throw new BadRequestException('Geçersiz mesaj içeriği')
       return { role: m.role, content }
     })
@@ -27,10 +27,12 @@ export class ChatController {
   @Post('summary')
   @Throttle({ default: { limit: 10, ttl: 60000 } })
   async summary(@Body() dto: SummaryBodyDto) {
-    const clean = dto.messages.map(m => ({
-      role: m.role,
-      content: sanitizeContent(m.content),
-    }))
+    const clean = dto.messages.map(m => {
+      const content = sanitizeContent(m.content)
+      if (INJECTION_PATTERNS.some(p => p.test(content)))
+        throw new BadRequestException('Geçersiz mesaj içeriği')
+      return { role: m.role, content }
+    })
 
     const text = await this.chatService.generateSummary(clean)
     return { text }

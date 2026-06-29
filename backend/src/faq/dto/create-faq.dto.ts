@@ -1,13 +1,15 @@
-import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator'
+import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator'
 import { Transform, Type } from 'class-transformer'
 
 export class CreateFaqDto {
   @IsString()
   @IsNotEmpty()
+  @MaxLength(500)
   question: string
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(5000)
   answer: string
 
   @IsOptional()
@@ -17,6 +19,8 @@ export class CreateFaqDto {
 
   @IsOptional()
   @IsNumber()
+  @Min(0)
+  @Max(2147483647)
   @Type(() => Number)
   sortOrder?: number
 }

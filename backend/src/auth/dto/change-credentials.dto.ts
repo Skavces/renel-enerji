@@ -3,6 +3,7 @@ import { IsString, IsOptional, MinLength, MaxLength, Matches, Length } from 'cla
 export class ChangeCredentialsDto {
   @IsString()
   @MinLength(1)
+  @MaxLength(72)
   currentPassword: string
 
   @IsOptional()
@@ -15,11 +16,12 @@ export class ChangeCredentialsDto {
   @IsOptional()
   @IsString()
   @MinLength(8, { message: 'Şifre en az 8 karakter olmalıdır' })
-  @MaxLength(128)
+  @MaxLength(72)
   newPassword?: string
 
   @IsOptional()
   @IsString()
   @Length(6, 6)
+  @Matches(/^\d{6}$/)
   totpCode?: string
 }

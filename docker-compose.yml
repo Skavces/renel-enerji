@@ -57,7 +57,7 @@ services:
       db:
         condition: service_healthy
       redis:
-        condition: service_started
+        condition: service_healthy
 
   redis:
     image: redis:7-alpine
@@ -65,6 +65,11 @@ services:
     volumes:
       - redisdata:/data
     command: redis-server --appendonly yes --requirepass ${REDIS_PASS}
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASS}", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
   prerender:
     image: tvanro/prerender-alpine:latest

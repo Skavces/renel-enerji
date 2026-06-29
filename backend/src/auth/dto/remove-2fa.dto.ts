@@ -1,4 +1,4 @@
-import { IsString, Length, Matches, MinLength } from 'class-validator'
+import { IsString, Length, Matches, MaxLength, MinLength } from 'class-validator'
 
 export class Remove2faDto {
   @IsString()
@@ -8,5 +8,6 @@ export class Remove2faDto {
 
   @IsString()
   @MinLength(1)
+  @MaxLength(72)
   currentPassword: string
 }

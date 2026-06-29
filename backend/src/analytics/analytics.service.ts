@@ -2,6 +2,21 @@ import { Injectable, Logger } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { fetchWithTimeout } from '../common/fetch-with-timeout'
 
+interface UmamiStat { value: number; change: number }
+export interface UmamiStats {
+  pageviews: UmamiStat
+  visitors: UmamiStat
+  visits: UmamiStat
+  bounces: UmamiStat
+  totaltime: UmamiStat
+}
+interface UmamiSeriesPoint { x: string; y: number }
+export interface UmamiPageviews {
+  pageviews: UmamiSeriesPoint[]
+  sessions: UmamiSeriesPoint[]
+}
+export interface UmamiMetric { x: string; y: number }
+
 @Injectable()
 export class AnalyticsService {
   private readonly logger = new Logger(AnalyticsService.name)
@@ -21,13 +36,14 @@ export class AnalyticsService {
   private async getToken(): Promise<string> {
     if (this.token && Date.now() < this.tokenExpiry) return this.token
 
+    const username = this.config.get<string>('UMAMI_USER')
+    const password = this.config.get<string>('UMAMI_PASS')
+    if (!username || !password) throw new Error('UMAMI_USER ve UMAMI_PASS env var zorunlu')
+
     const res = await fetchWithTimeout(`${this.umamiUrl}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        username: this.config.get('UMAMI_USER', 'admin'),
-        password: this.config.get('UMAMI_PASS', 'umami'),
-      }),
+      body: JSON.stringify({ username, password }),
     })
 
     if (!res.ok) throw new Error('Umami auth failed')
@@ -37,7 +53,7 @@ export class AnalyticsService {
     return this.token
   }
 
-  private async fetch(path: string): Promise<any> {
+  private async fetch<T>(path: string): Promise<T> {
     const token = await this.getToken()
     const res = await fetchWithTimeout(`${this.umamiUrl}${path}`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -46,31 +62,49 @@ export class AnalyticsService {
     return res.json()
   }
 
-  async getStats(startAt: number, endAt: number) {
+  async getStats(startAt: number, endAt: number): Promise<UmamiStats | null> {
     if (!this.websiteId) return null
-    return this.fetch(
-      `/api/websites/${this.websiteId}/stats?startAt=${startAt}&endAt=${endAt}`,
-    )
+    try {
+      return await this.fetch<UmamiStats>(`/api/websites/${this.websiteId}/stats?startAt=${startAt}&endAt=${endAt}`)
+    } catch (err) {
+      this.logger.warn('Umami getStats hatası:', err)
+      return null
+    }
   }
 
-  async getPageviews(startAt: number, endAt: number, unit: string) {
+  async getPageviews(startAt: number, endAt: number, unit: string): Promise<UmamiPageviews | null> {
     if (!this.websiteId) return null
-    return this.fetch(
-      `/api/websites/${this.websiteId}/pageviews?startAt=${startAt}&endAt=${endAt}&unit=${unit}&timezone=Europe/Istanbul`,
-    )
+    try {
+      return await this.fetch<UmamiPageviews>(
+        `/api/websites/${this.websiteId}/pageviews?startAt=${startAt}&endAt=${endAt}&unit=${unit}&timezone=Europe/Istanbul`,
+      )
+    } catch (err) {
+      this.logger.warn('Umami getPageviews hatası:', err)
+      return null
+    }
   }
 
-  async getTopPages(startAt: number, endAt: number) {
+  async getTopPages(startAt: number, endAt: number): Promise<UmamiMetric[] | null> {
     if (!this.websiteId) return null
-    return this.fetch(
-      `/api/websites/${this.websiteId}/metrics?startAt=${startAt}&endAt=${endAt}&type=path&limit=10`,
-    )
+    try {
+      return await this.fetch<UmamiMetric[]>(
+        `/api/websites/${this.websiteId}/metrics?startAt=${startAt}&endAt=${endAt}&type=path&limit=10`,
+      )
+    } catch (err) {
+      this.logger.warn('Umami getTopPages hatası:', err)
+      return null
+    }
   }
 
-  async getMetrics(type: string, startAt: number, endAt: number) {
+  async getMetrics(type: string, startAt: number, endAt: number): Promise<UmamiMetric[]> {
     if (!this.websiteId) return []
-    return this.fetch(
-      `/api/websites/${this.websiteId}/metrics?startAt=${startAt}&endAt=${endAt}&type=${type}&limit=8`,
-    )
+    try {
+      return await this.fetch<UmamiMetric[]>(
+        `/api/websites/${this.websiteId}/metrics?startAt=${startAt}&endAt=${endAt}&type=${type}&limit=8`,
+      )
+    } catch (err) {
+      this.logger.warn('Umami getMetrics hatası:', err)
+      return []
+    }
   }
 }

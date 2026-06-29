@@ -1,7 +1,7 @@
 import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Repository } from 'typeorm'
+import { In, Repository } from 'typeorm'
 import sharp from 'sharp'
 import { writeFile } from 'fs/promises'
 import { join } from 'path'
@@ -73,24 +73,31 @@ export class InstagramImportService {
 
     const apiUrl =
       `https://graph.instagram.com/${INSTAGRAM_API_VERSION}/${userId}/media` +
-      `?fields=${INSTAGRAM_MEDIA_FIELDS}&limit=50&access_token=${token}`
+      `?fields=${INSTAGRAM_MEDIA_FIELDS}&limit=50`
 
-    const res = await fetchWithTimeout(apiUrl)
+    const res = await fetchWithTimeout(apiUrl, { headers: { Authorization: `Bearer ${token}` } })
     if (!res.ok) throw new InternalServerErrorException(`Instagram API hatası: ${await res.text()}`)
 
+    const hashtag = this.config.get<string>('INSTAGRAM_HASHTAG', '#proje').toLowerCase()
     const data = await res.json()
     const posts: any[] = (data.data ?? []).filter(
-      (p: any) => p.caption?.toLowerCase().includes('#proje'),
+      (p: any) => p.caption?.toLowerCase().includes(hashtag),
     )
 
+    // Batch query — tek sorguda tüm mevcut postları bul (N+1 yerine 1 sorgu)
+    const postIds = posts.map(p => p.id)
+    const existing = await this.projectRepo.find({
+      where: { instagramMediaId: In(postIds) },
+      select: ['instagramMediaId'],
+    })
+    const existingIds = new Set(existing.map(p => p.instagramMediaId))
+    const newPosts = posts.filter(p => !existingIds.has(p.id))
+
     let imported = 0
-    let skipped = 0
+    let skipped = posts.length - newPosts.length
     let parseErrors = 0
 
-    for (const post of posts) {
-      const already = await this.projectRepo.findOne({ where: { instagramMediaId: post.id } })
-      if (already) { skipped++; continue }
-
+    for (const post of newPosts) {
       let parsed: any
       try {
         parsed = await this.parseService.parseInstagram(post.caption)
@@ -121,14 +128,15 @@ export class InstagramImportService {
 
     const url =
       `https://graph.instagram.com/${INSTAGRAM_API_VERSION}/${mediaId}` +
-      `?fields=${INSTAGRAM_MEDIA_FIELDS}&access_token=${token}`
+      `?fields=${INSTAGRAM_MEDIA_FIELDS}`
 
-    const res = await fetchWithTimeout(url)
+    const res = await fetchWithTimeout(url, { headers: { Authorization: `Bearer ${token}` } })
     if (!res.ok) throw new InternalServerErrorException(`Instagram API hatası: ${await res.text()}`)
 
     const post = await res.json()
-    if (!post.caption?.toLowerCase().includes('#proje')) {
-      this.logger.log(`Instagram post ${mediaId} #proje etiketi yok, atlanıyor`)
+    const hashtag = this.config.get<string>('INSTAGRAM_HASHTAG', '#proje').toLowerCase()
+    if (!post.caption?.toLowerCase().includes(hashtag)) {
+      this.logger.log(`Instagram post ${mediaId} ${hashtag} etiketi yok, atlanıyor`)
       return
     }
 
@@ -145,7 +153,7 @@ export class InstagramImportService {
 
   private async createProjectFromInstagram(parsed: any, post: any, published: boolean): Promise<Project> {
     const slug = await this.projectsService.uniqueSlug(this.projectsService.toSlug(parsed.name))
-    const project = this.projectRepo.create({
+    const projectData = {
       slug,
       name: parsed.name || 'Instagram Proje',
       location: parsed.location || '',
@@ -159,10 +167,14 @@ export class InstagramImportService {
       category: parsed.category || null,
       published,
       instagramMediaId: post.id,
-    })
+    }
+
     let saved: Project
     try {
-      saved = await this.projectRepo.save(project)
+      saved = await this.projectRepo.manager.transaction(async manager => {
+        const project = manager.create(Project, projectData)
+        return manager.save(project)
+      })
     } catch (err: any) {
       if (err.code === '23505') {
         this.logger.warn(`Instagram post ${post.id} zaten kayıtlı (race condition), atlanıyor`)
@@ -171,6 +183,7 @@ export class InstagramImportService {
       }
       throw err
     }
+
     await this.importInstagramImages(saved, post)
     return saved
   }
@@ -194,10 +207,10 @@ export class InstagramImportService {
       }
     }
 
-    for (const item of items) {
+    await Promise.all(items.map(async item => {
       try {
         const r = await fetchWithTimeout(item.url, undefined, 30000)
-        if (!r.ok) continue
+        if (!r.ok) return
         const buf = Buffer.from(await r.arrayBuffer())
 
         if (item.type === MediaType.VIDEO) {
@@ -212,6 +225,6 @@ export class InstagramImportService {
       } catch (err: any) {
         this.logger.warn(`Instagram medya indirilemedi (${item.url}): ${err.message}`)
       }
-    }
+    }))
   }
 }
