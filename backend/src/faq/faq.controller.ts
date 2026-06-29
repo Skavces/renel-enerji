@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common'
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, UseGuards } from '@nestjs/common'
 import { FaqService } from './faq.service'
 import { CreateFaqDto } from './dto/create-faq.dto'
 import { UpdateFaqDto } from './dto/update-faq.dto'
@@ -40,6 +40,7 @@ export class FaqController {
 
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
+  @HttpCode(204)
   remove(@Param('id') id: string) {
     return this.service.remove(id)
   }

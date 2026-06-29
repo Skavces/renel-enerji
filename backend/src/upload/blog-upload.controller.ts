@@ -3,7 +3,7 @@ import { FileInterceptor } from '@nestjs/platform-express'
 import { rename } from 'fs/promises'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 import { BlogService } from '../blog/blog.service'
-import { imageStorage, ALLOWED_IMAGE_MIMES, logoFilter, assertMagicBytes, toWebp } from './upload.utils'
+import { imageStorage, ALLOWED_IMAGE_MIMES, logoFilter, assertMagicBytes, toWebp, SEO_SUFFIX } from './upload.utils'
 
 @Controller('upload/blog')
 export class BlogUploadController {
@@ -17,7 +17,7 @@ export class BlogUploadController {
     await assertMagicBytes(file.path, ALLOWED_IMAGE_MIMES)
     const post = await this.blogService.findById(id)
     const finalPath = await toWebp(file.path)
-    const seoName = `${post.slug}-gunes-enerjisi-${Date.now()}.webp`
+    const seoName = `${post.slug}-${SEO_SUFFIX}-${Date.now()}.webp`
     await rename(finalPath, `./uploads/${seoName}`)
     return this.blogService.update(id, { coverImage: `/uploads/${seoName}` })
   }

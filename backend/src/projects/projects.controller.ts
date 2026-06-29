@@ -89,12 +89,14 @@ export class ProjectsController {
 
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
+  @HttpCode(204)
   remove(@Param('id') id: string) {
     return this.service.remove(id)
   }
 
   @UseGuards(JwtAuthGuard)
   @Delete(':projectId/media/:mediaId')
+  @HttpCode(204)
   removeMedia(
     @Param('projectId') projectId: string,
     @Param('mediaId') mediaId: string,

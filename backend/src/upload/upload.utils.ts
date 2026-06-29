@@ -21,6 +21,8 @@ export const ALLOWED_LOGO_MIMES = [...ALLOWED_IMAGE_MIMES]
 export const ALLOWED_MEDIA_MIMES = [...ALLOWED_IMAGE_MIMES, 'video/mp4', 'video/quicktime', 'video/webm']
 
 // Video uzantısını MIME'den al, orijinal dosya adına güvenme
+export const SEO_SUFFIX = 'gunes-enerjisi'
+
 export const videoExtMap: Record<string, string> = {
   'video/mp4': '.mp4',
   'video/quicktime': '.mov',
@@ -53,7 +55,7 @@ export async function saveWithSeoName(
   slug: string,
   ext: string,
 ): Promise<string> {
-  const seoName = `${slug}-gunes-enerjisi-${Date.now()}-${Math.round(Math.random() * 1e4)}${ext}`
+  const seoName = `${slug}-${SEO_SUFFIX}-${Date.now()}-${Math.round(Math.random() * 1e4)}${ext}`
   await rename(convertedPath, `./uploads/${seoName}`)
   return `/uploads/${seoName}`
 }

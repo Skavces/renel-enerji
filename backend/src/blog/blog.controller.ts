@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common'
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, UseGuards } from '@nestjs/common'
 import { BlogService } from './blog.service'
 import { CreateBlogPostDto } from './dto/create-blog-post.dto'
 import { UpdateBlogPostDto } from './dto/update-blog-post.dto'
@@ -45,6 +45,7 @@ export class BlogController {
 
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
+  @HttpCode(204)
   remove(@Param('id') id: string) {
     return this.service.remove(id)
   }

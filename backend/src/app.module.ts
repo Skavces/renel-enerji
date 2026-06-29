@@ -1,5 +1,6 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
+import * as Joi from 'joi'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler'
 import { ScheduleModule } from '@nestjs/schedule'
@@ -25,7 +26,17 @@ import { HealthController } from './health.controller'
 @Module({
   imports: [
     SentryModule.forRoot(),
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      validationSchema: Joi.object({
+        JWT_SECRET: Joi.string().required(),
+        DB_PASS: Joi.string().required(),
+        REDIS_URL: Joi.string().required(),
+        FRONTEND_URL: Joi.string().uri().required(),
+        NODE_ENV: Joi.string().valid('development', 'production').default('development'),
+      }),
+      validationOptions: { allowUnknown: true },
+    }),
     ScheduleModule.forRoot(),
     ThrottlerModule.forRootAsync({
       useFactory: () => ({

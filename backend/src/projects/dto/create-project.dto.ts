@@ -1,4 +1,4 @@
-import { IsArray, IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString, Max, MaxLength, Min, ValidateNested } from 'class-validator'
+import { IsArray, IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString, Matches, Max, MaxLength, Min, ValidateNested } from 'class-validator'
 import { Transform, Type } from 'class-transformer'
 
 export class StatBoxDto {
@@ -13,6 +13,7 @@ export class CreateProjectDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(80)
+  @Matches(/^[a-z0-9-]+$/, { message: 'Slug sadece küçük harf, rakam ve tire içerebilir' })
   slug: string
 
   @IsString()

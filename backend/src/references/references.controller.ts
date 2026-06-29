@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common'
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, UseGuards } from '@nestjs/common'
 import { ReferencesService } from './references.service'
 import { CreateReferenceDto } from './dto/create-reference.dto'
 import { UpdateReferenceDto } from './dto/update-reference.dto'
@@ -40,6 +40,7 @@ export class ReferencesController {
 
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
+  @HttpCode(204)
   remove(@Param('id') id: string) {
     return this.service.remove(id)
   }

@@ -57,6 +57,9 @@ export class AuthService implements OnModuleInit {
   async login(username: string, password: string, rememberMe = false) {
     const config = await this.validateCredentials(username, password)
     const bypass = this.cfg.get('TOTP_BYPASS') === '1'
+    if (bypass && this.cfg.get('NODE_ENV') === 'production') {
+      throw new Error('TOTP_BYPASS production ortamında kullanılamaz!')
+    }
 
     if (config.totpSecret && !bypass) {
       const preAuthToken = this.jwtService.sign(

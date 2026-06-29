@@ -3,6 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { AdminConfig } from './admin-config.entity'
 
+const ADMIN_CONFIG_ID = 1
+
 @Injectable()
 export class AdminConfigService {
   constructor(
@@ -11,27 +13,27 @@ export class AdminConfigService {
   ) {}
 
   async getConfig(): Promise<AdminConfig> {
-    let config = await this.repo.findOne({ where: { id: 1 } })
+    let config = await this.repo.findOne({ where: { id: ADMIN_CONFIG_ID } })
     if (!config) {
-      config = this.repo.create({ id: 1, totpSecret: null })
+      config = this.repo.create({ id: ADMIN_CONFIG_ID, totpSecret: null })
       await this.repo.save(config)
     }
     return config
   }
 
   async setTotpSecret(secret: string): Promise<void> {
-    await this.repo.upsert({ id: 1, totpSecret: secret }, ['id'])
+    await this.repo.upsert({ id: ADMIN_CONFIG_ID, totpSecret: secret }, ['id'])
   }
 
   async removeTotpSecret(): Promise<void> {
-    await this.repo.upsert({ id: 1, totpSecret: null }, ['id'])
+    await this.repo.upsert({ id: ADMIN_CONFIG_ID, totpSecret: null }, ['id'])
   }
 
   async setUsername(username: string): Promise<void> {
-    await this.repo.upsert({ id: 1, username }, ['id'])
+    await this.repo.upsert({ id: ADMIN_CONFIG_ID, username }, ['id'])
   }
 
   async setPasswordHash(passwordHash: string): Promise<void> {
-    await this.repo.upsert({ id: 1, passwordHash }, ['id'])
+    await this.repo.upsert({ id: ADMIN_CONFIG_ID, passwordHash }, ['id'])
   }
 }

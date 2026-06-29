@@ -66,11 +66,12 @@ export class ProjectsService {
   }
 
   async reorderProjects(orderedIds: string[]) {
-    await this.projectRepo.manager.transaction(async (manager) => {
-      await Promise.all(
-        orderedIds.map((id, index) => manager.update(Project, id, { sortOrder: index })),
-      )
-    })
+    if (!orderedIds.length) return
+    const cases = orderedIds.map((_, i) => `WHEN $${i + 2} THEN ${i}`).join(' ')
+    await this.projectRepo.manager.query(
+      `UPDATE projects SET sort_order = CASE id ${cases} END WHERE id = ANY($1)`,
+      [orderedIds, ...orderedIds],
+    )
   }
 
   toSlug(name: string): string {
@@ -85,12 +86,19 @@ export class ProjectsService {
   }
 
   async uniqueSlug(base: string): Promise<string> {
-    let slug = base
-    let n = 0
-    while (await this.projectRepo.findOne({ where: { slug } })) {
-      n++
-      slug = `${base}-${n}`
-    }
-    return slug
+    const existing = await this.projectRepo
+      .createQueryBuilder('p')
+      .select('p.slug')
+      .where('p.slug = :base OR p.slug LIKE :pattern', {
+        base,
+        pattern: `${base}-%`,
+      })
+      .getMany()
+
+    const slugs = new Set(existing.map((p) => p.slug))
+    if (!slugs.has(base)) return base
+    let n = 1
+    while (slugs.has(`${base}-${n}`)) n++
+    return `${base}-${n}`
   }
 }
