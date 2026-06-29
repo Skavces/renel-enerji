@@ -4,11 +4,13 @@ import { API } from '../api/config.js'
 
 export default function LogoMarquee() {
   const [refs, setRefs] = useState([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchReferences().then(setRefs).catch(() => {})
+    fetchReferences().then(setRefs).catch(() => {}).finally(() => setLoading(false))
   }, [])
 
+  if (loading) return <div className="pt-10 pb-28 bg-white" style={{ minHeight: 328 }} />
   if (refs.length === 0) return null
 
   const count = Math.ceil(12 / refs.length)
