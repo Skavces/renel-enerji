@@ -7,12 +7,10 @@ import { ProjectsService } from './projects.service'
 import { MediaService } from './media.service'
 import { InstagramParseService } from './instagram-parse.service'
 import { InstagramImportService } from './instagram-import.service'
-import { InstagramSyncService } from './instagram-sync.service'
-
 @Module({
   imports: [TypeOrmModule.forFeature([Project, ProjectMedia])],
   controllers: [ProjectsController],
-  providers: [ProjectsService, MediaService, InstagramParseService, InstagramImportService, InstagramSyncService],
+  providers: [ProjectsService, MediaService, InstagramParseService, InstagramImportService],
   exports: [ProjectsService, MediaService, InstagramImportService],
 })
 export class ProjectsModule {}
