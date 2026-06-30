@@ -5,7 +5,7 @@ const SITE_NAME = 'RenEL Enerji Mühendislik'
 const SITE_URL = 'https://renelenerji.com'
 const DEFAULT_IMAGE = 'https://renelenerji.com/og-image.webp'
 const DEFAULT_DESC =
-  "Soma/Manisa'da güneş enerjisi mühendislik hizmetleri. Tarımsal sulama GES, çatı ve arazi tipi GES, depolamalı GES, EV şarj istasyonu kurulum ve danışmanlık."
+  "Soma/Manisa'da güneş enerjisi mühendislik hizmetleri. GES kurulum, bakım onarım, elektrik altyapı bakımı, EV şarj istasyonu ve proje danışmanlığı."
 
 export default function SEO({
   title,

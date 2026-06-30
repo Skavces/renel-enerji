@@ -1,17 +1,27 @@
 # RenEL Enerji Mühendislik
 
-RenEL Enerji Mühendislik, Soma/Manisa merkezli bir güneş enerjisi mühendislik firmasıdır. Tarımsal sulama GES, çatı ve arazi tipi GES, depolamalı GES ve EV şarj istasyonu kurulum ile danışmanlık hizmetleri sunmaktadır.
+RenEL Enerji Mühendislik, Soma/Manisa merkezli bir güneş enerjisi mühendislik firmasıdır. GES kurulum, bakım onarım, elektrik altyapı bakımı ve proje danışmanlığı hizmetleri sunmaktadır.
 
 ## Sayfalar
 
 - [Ana Sayfa](https://renelenerji.com/)
-- [Projeler](https://renelenerji.com/projeler)
 - [Hizmetler](https://renelenerji.com/hizmetler)
+- [Projelerimiz](https://renelenerji.com/projelerimiz)
 - [Blog](https://renelenerji.com/blog)
 - [Referanslar](https://renelenerji.com/referanslar)
-- [Hakkımızda](https://renelenerji.com/hakkimizda)
+- [Kurumsal](https://renelenerji.com/kurumsal)
 - [İletişim](https://renelenerji.com/iletisim)
 - [SSS](https://renelenerji.com/sss)
+
+## Hizmetler
+
+- [Akıllı Tarımsal Sulama GES](https://renelenerji.com/hizmetler/sulama)
+- [Arazi & Çatı Tipi GES](https://renelenerji.com/hizmetler/cati-arazi)
+- [Bağ Evi Depolamalı GES](https://renelenerji.com/hizmetler/bag-evi)
+- [Elektrikli Araç Şarj İstasyonu](https://renelenerji.com/hizmetler/ev-sarj)
+- [GES Bakım & Onarım](https://renelenerji.com/hizmetler/ges-bakim-onarim)
+- [Elektrik Altyapı Bakımı](https://renelenerji.com/hizmetler/elektrik-altyapi-bakimi)
+- [Proje Danışmanlığı](https://renelenerji.com/hizmetler/proje-danismanlik)
 
 ## İçerik
 

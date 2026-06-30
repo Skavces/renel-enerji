@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useParams, Link, Navigate } from 'react-router-dom'
-import { Droplets, Home, Battery, Car, CheckCircle, ChevronRight } from 'lucide-react'
+import { Droplets, Home, Battery, Car, Wrench, Zap, ClipboardList, CheckCircle, ChevronRight } from 'lucide-react'
 import PageHeader from '../../components/PageHeader'
 import SEO from '../../components/SEO'
 import { waLink } from '../../lib/whatsapp'
@@ -85,6 +85,69 @@ const services = [
       'Kurulum, sertifikasyon ve devreye alma',
     ],
     waMessage: 'Merhaba, elektrikli araç şarj istasyonu kurulumu için teklif almak istiyorum. Güneş enerjili EV şarj sistemi hakkında bilgi alabilir miyim?',
+  },
+  {
+    slug: 'ges-bakim-onarim',
+    icon: Wrench,
+    title: 'GES Bakım & Onarım',
+    photoAlt: 'Güneş paneli bakım onarım - teknisyen panel temizliği ve saha takibi yapıyor',
+    photo: '/ges-bakim-onarim.webp',
+    subtitle: 'GES sisteminizin maksimum verimde çalışması için periyodik bakım, arıza tespiti ve temizlik hizmetleri.',
+    description:
+      'Güneş enerji santrallerinizin yıllar içinde verim kaybı yaşamadan çalışmaya devam etmesi için düzenli bakım ve takip şarttır. RenEl olarak kurulu sistemlerin saha takibini yapıyor, arıza tespiti ve onarımını üstleniyor, panel ve saha temizliğini gerçekleştiriyoruz.',
+    description2:
+      'Periyodik bakım sözleşmelerimiz kapsamında sisteminiz düzenli aralıklarla kontrol edilir, verim düşüklükleri tespit edilip giderilir. Erken müdahale ile büyük arızaların önüne geçilir, yatırımınızın ömrü uzatılır.',
+    features: [
+      'Saha takibi ve performans analizi',
+      'Arıza tespiti ve onarımı',
+      'Panel temizliği',
+      'Saha temizliği',
+      'Periyodik bakım sözleşmesi',
+      'Uzaktan izleme desteği',
+    ],
+    waMessage: 'Merhaba, GES bakım ve onarım hizmeti hakkında bilgi almak istiyorum. Sistemim için periyodik bakım teklifi alabilir miyim?',
+  },
+  {
+    slug: 'elektrik-altyapi-bakimi',
+    icon: Zap,
+    title: 'Elektrik Altyapı Bakımı',
+    photoAlt: 'Elektrik altyapı bakımı - trafo ve AG/OG pano bakım onarım',
+    photo: '/elektrik-altyapi-bakimi.webp',
+    subtitle: 'Trafo, pano ve dağıtım şebekesi bakım onarımıyla elektrik altyapınızın güvenli ve kesintisiz çalışmasını sağlıyoruz.',
+    description:
+      'Elektrik altyapısının güvenli ve verimli çalışması için trafo, AG/OG panoları ve dağıtım şebekesinin düzenli bakımı kritik önem taşır. RenEl olarak tüm bu bileşenlerin periyodik kontrolünü, bakımını ve onarımını uzman ekibimizle yürütüyoruz.',
+    description2:
+      'AG (alçak gerilim) ve OG (orta gerilim) sistemlerde standartlara uygun bakım ve onarım hizmeti sunan ekibimiz, planlı bakımlarla beklenmedik arızaların ve üretim kayıplarının önüne geçer.',
+    features: [
+      'Trafo bakım ve onarımı',
+      'AG/OG pano bakım onarımı',
+      'Dağıtım şebekesi kontrolü',
+      'Periyodik test ve ölçümler',
+      'Arıza tespiti ve onarımı',
+      'Standartlara uygun mühendislik hizmeti',
+    ],
+    waMessage: 'Merhaba, trafo, pano ve elektrik altyapısı bakım onarım hizmeti hakkında bilgi almak istiyorum.',
+  },
+  {
+    slug: 'proje-danismanlik',
+    icon: ClipboardList,
+    title: 'Proje Danışmanlığı',
+    photoAlt: 'GES proje danışmanlığı - mühendisler fizibilite ve yatırım analizi yapıyor',
+    photo: '/proje-danismanlik.webp',
+    subtitle: 'GES yatırımınızı doğru planlamak için fizibilite, mühendislik tasarımı ve mevzuat danışmanlığı.',
+    description:
+      'Güneş enerjisi yatırımına karar vermeden önce doğru verilere ve bağımsız bir mühendislik görüşüne ihtiyaç duyulur. RenEl olarak yatırımcılara fizibilite analizi, yıllık üretim tahmini ve yatırım geri dönüş hesabı sunuyoruz.',
+    description2:
+      'Teşvik mekanizmaları, lisanssız üretim mevzuatı ve şebeke bağlantı süreçleri konularında da rehberlik ediyoruz. Projenizin her aşamasında yanınızda olarak doğru kararları almanıza destek sağlıyoruz.',
+    features: [
+      'Fizibilite analizi ve üretim tahmini',
+      'Yatırım geri dönüş hesabı',
+      'Proje tasarımı ve mühendislik',
+      'Teşvik mekanizmaları danışmanlığı',
+      'Lisanssız üretim mevzuatı',
+      'Şebeke bağlantı süreci yönetimi',
+    ],
+    waMessage: 'Merhaba, GES proje danışmanlığı hakkında bilgi almak istiyorum. Fizibilite ve yatırım analizi için görüşme talep ediyorum.',
   },
 ]
 
@@ -209,8 +272,10 @@ export default function HizmetDetay() {
               <div className="relative rounded-2xl overflow-hidden h-56 sm:h-72 lg:h-96 mb-6 shadow-md">
                 <img
                   src={service.photo}
-                  alt={service.title}
-                  className="w-full h-full object-cover" loading="lazy" />
+                  alt={service.photoAlt ?? service.title}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
                 <div className="absolute inset-0 bg-linear-to-t from-black/65 via-black/15 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-7">
                   <span className="inline-flex items-center gap-1.5 bg-[#448834] text-white text-xs font-bold px-3 py-1 rounded-full mb-3">

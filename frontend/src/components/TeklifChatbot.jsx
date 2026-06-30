@@ -1,16 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
-import { X, Send, Loader2, MessageCircle, Zap, Droplets, Car, Wifi, Battery } from 'lucide-react'
+import { X, Send, Loader2, MessageCircle, Zap, Droplets, Car, Wifi, Battery, Wrench, ClipboardList } from 'lucide-react'
 import { sendChatMessage, generateWhatsappSummary } from '../api/chat'
 import { WA_NUMBER, waLink } from '../lib/whatsapp'
 
 const GREETING = 'Merhaba, RenEl Enerji Mühendislik\'e hoş geldiniz. Size en uygun güneş enerjisi sistemini belirlemek için birkaç soru sormak istiyorum. Hangi konuda bilgi almak istersiniz?'
 
 const QUICK_REPLIES = [
-  { label: 'Çatı Tipi GES', desc: 'Konut veya ticari bina çatısına kurulum', icon: Zap, value: 'Çatı tipi güneş enerjisi sistemi hakkında bilgi almak istiyorum.' },
+  { label: 'Çatı / Arazi GES', desc: 'Konut, ticari bina veya arazi kurulumu', icon: Zap, value: 'Çatı veya arazi tipi güneş enerjisi sistemi hakkında bilgi almak istiyorum.' },
   { label: 'Tarımsal Sulama GES', desc: 'Tarla ve bahçe sulama sistemleri', icon: Droplets, value: 'Tarımsal sulama için güneş enerjisi sistemi hakkında bilgi almak istiyorum.' },
-  { label: 'EV Şarj İstasyonu', desc: 'Elektrikli araç şarj altyapısı', icon: Car, value: 'Elektrikli araç şarj istasyonu hakkında bilgi almak istiyorum.' },
-  { label: 'Off-Grid Sistem', desc: 'Şebekeden tamamen bağımsız çözüm', icon: Wifi, value: 'Şebekeden bağımsız off-grid sistem hakkında bilgi almak istiyorum.' },
-  { label: 'Hibrit GES', desc: 'Bataryalı + şebekeli kombinasyon', icon: Battery, value: 'Bataryalı hibrit güneş enerjisi sistemi hakkında bilgi almak istiyorum.' },
+  { label: 'EV Şarj İstasyonu', desc: 'Güneş enerjili araç şarj altyapısı', icon: Car, value: 'Elektrikli araç şarj istasyonu hakkında bilgi almak istiyorum.' },
+  { label: 'Bağ Evi / Off-Grid GES', desc: 'Bataryalı, şebekeden bağımsız çözüm', icon: Battery, value: 'Bağ evi veya off-grid güneş enerjisi sistemi hakkında bilgi almak istiyorum.' },
+  { label: 'GES Bakım & Onarım', desc: 'Mevcut sistem bakım ve arıza onarımı', icon: Wrench, value: 'Mevcut GES sistemimin bakım ve onarımı hakkında bilgi almak istiyorum.' },
+  { label: 'Elektrik Altyapı Bakımı', desc: 'Trafo, pano, AG/OG şebeke bakımı', icon: Wifi, value: 'Trafo, pano ve elektrik altyapısı bakım onarımı hakkında bilgi almak istiyorum.' },
+  { label: 'Proje Danışmanlığı', desc: 'Fizibilite, yatırım analizi, mevzuat', icon: ClipboardList, value: 'GES yatırımı için proje danışmanlığı ve fizibilite analizi hakkında bilgi almak istiyorum.' },
 ]
 
 export default function TeklifChatbot({ onClose, closing, messages: initialMessages, onMessagesChange }) {
