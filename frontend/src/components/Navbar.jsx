@@ -24,6 +24,7 @@ const hizmetlerDropdown = [
     category: 'Danışmanlık',
     items: [
       { label: 'Proje Danışmanlığı', to: '/hizmetler/proje-danismanlik' },
+      { label: 'Enerji Danışmanlığı', to: '/hizmetler/enerji-danismanlik' },
     ],
   },
 ]

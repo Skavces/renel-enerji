@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { X, Send, Loader2, MessageCircle, Zap, Droplets, Car, Wifi, Battery, Wrench, ClipboardList } from 'lucide-react'
+import { X, Send, Loader2, MessageCircle, Zap, Droplets, Car, Wifi, Battery, Wrench, ClipboardList, FileBarChart } from 'lucide-react'
 import { sendChatMessage, generateWhatsappSummary } from '../api/chat'
 import { WA_NUMBER, waLink } from '../lib/whatsapp'
 
@@ -13,6 +13,7 @@ const QUICK_REPLIES = [
   { label: 'GES Bakım & Onarım', desc: 'Mevcut sistem bakım ve arıza onarımı', icon: Wrench, value: 'Mevcut GES sistemimin bakım ve onarımı hakkında bilgi almak istiyorum.' },
   { label: 'Elektrik Altyapı Bakımı', desc: 'Trafo, pano, AG/OG şebeke bakımı', icon: Wifi, value: 'Trafo, pano ve elektrik altyapısı bakım onarımı hakkında bilgi almak istiyorum.' },
   { label: 'Proje Danışmanlığı', desc: 'Fizibilite, yatırım analizi, mevzuat', icon: ClipboardList, value: 'GES yatırımı için proje danışmanlığı ve fizibilite analizi hakkında bilgi almak istiyorum.' },
+  { label: 'Enerji Danışmanlığı', desc: 'Fatura kontrolü, reaktif ceza, risk analizi', icon: FileBarChart, value: 'Enerji danışmanlığı hizmetleriniz hakkında bilgi almak istiyorum. Elektrik faturası ve reaktif enerji kontrolü konusunda görüşmek istiyorum.' },
 ]
 
 export default function TeklifChatbot({ onClose, closing, messages: initialMessages, onMessagesChange }) {

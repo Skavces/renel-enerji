@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useParams, Link, Navigate } from 'react-router-dom'
-import { Droplets, Home, Battery, Car, Wrench, Zap, ClipboardList, CheckCircle, ChevronRight } from 'lucide-react'
+import { Droplets, Home, Battery, Car, Wrench, Zap, ClipboardList, FileBarChart, CheckCircle, ChevronRight } from 'lucide-react'
 import PageHeader from '../../components/PageHeader'
 import SEO from '../../components/SEO'
 import { waLink } from '../../lib/whatsapp'
@@ -149,6 +149,27 @@ const services = [
     ],
     waMessage: 'Merhaba, GES proje danışmanlığı hakkında bilgi almak istiyorum. Fizibilite ve yatırım analizi için görüşme talep ediyorum.',
   },
+  {
+    slug: 'enerji-danismanlik',
+    icon: FileBarChart,
+    title: 'Enerji Danışmanlığı',
+    photoAlt: 'Enerji danışmanlığı - elektrik faturası analizi ve reaktif enerji izleme',
+    photo: '/enerji-danismanlik.webp',
+    subtitle: 'Elektrik faturalarınızdan reaktif ceza risklerine kadar enerji giderlerinizi uzman gözüyle takip ediyoruz.',
+    description:
+      'İşletmenizin veya tesisinizin enerji giderlerini kontrol altında tutmak, gereksiz cezalardan kaçınmak ve doğru tarifeyi seçmek için uzman desteğine ihtiyaç vardır. RenEl olarak elektrik faturalarınızı düzenli olarak kontrol ediyor, reaktif enerji tüketiminizi izleyerek ceza riskini önceden tespit ediyoruz.',
+    description2:
+      'Fatura analiz ve raporlamanın yanı sıra elektrik abonelik işlemleri, perakende satış sözleşmelerinin takibi ve risk analizi konularında da danışmanlık veriyoruz. Gerektiğinde sahada keşif ve inceleme yaparak tespitlerimizi somut verilerle destekliyoruz.',
+    features: [
+      'Reaktif ceza kontrolü ve reaktif enerji izleme',
+      'Elektrik faturalarının kontrolü',
+      'Fatura analiz ve raporlama',
+      'Elektrik abonelik işlemleri',
+      'Perakende satış sözleşmelerinin takibi',
+      'Risk analizi, keşif ve saha incelemeleri',
+    ],
+    waMessage: 'Merhaba, enerji danışmanlığı hizmetleriniz hakkında bilgi almak istiyorum. Elektrik faturası ve reaktif enerji kontrolü konusunda görüşmek istiyorum.',
+  },
 ]
 
 export default function HizmetDetay() {
@@ -174,6 +195,7 @@ export default function HizmetDetay() {
     '@type': 'Service',
     name: service.title,
     description: service.description,
+    image: `https://renelenerji.com${service.photo}`,
     url: `https://renelenerji.com/hizmetler/${service.slug}`,
     provider: { '@type': 'Organization', name: 'RenEL Enerji Mühendislik', url: 'https://renelenerji.com' },
     areaServed: { '@type': 'Place', name: 'Soma, Manisa, Türkiye' },

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Droplets, Home, Battery, Car, Wrench, Zap, ClipboardList, ArrowRight, CheckCircle } from 'lucide-react'
+import { Droplets, Home, Battery, Car, Wrench, Zap, ClipboardList, FileBarChart, ArrowRight, CheckCircle } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
 import SEO from '../components/SEO'
 import { waLink } from '../lib/whatsapp'
@@ -142,6 +142,24 @@ const categories = [
         highlight: true,
         waMessage: 'Merhaba, GES proje danışmanlığı hakkında bilgi almak istiyorum. Fizibilite ve yatırım analizi için görüşme talep ediyorum.',
       },
+      {
+        icon: FileBarChart,
+        title: 'Enerji Danışmanlığı',
+        slug: 'enerji-danismanlik',
+        description:
+          'Elektrik faturalarınızdan reaktif ceza risklerine kadar enerji giderlerinizin her aşamasını takip ediyor, tasarruf fırsatlarını raporluyoruz. Abonelik işlemlerinden perakende satış sözleşmelerine kadar tüm süreçlerde yanınızdayız.',
+        features: [
+          'Reaktif ceza kontrolü ve reaktif enerji izleme',
+          'Elektrik faturalarının kontrolü',
+          'Fatura analiz ve raporlama',
+          'Elektrik abonelik işlemleri',
+          'Perakende satış sözleşmelerinin takibi',
+          'Risk analizi, keşif ve saha incelemeleri',
+        ],
+        photo: '/enerji-danismanlik.webp',
+        photoAlt: 'Enerji danışmanı elektrik faturasını ve dizüstü bilgisayarda enerji tüketim grafiğini inceliyor',
+        waMessage: 'Merhaba, enerji danışmanlığı hizmetleriniz hakkında bilgi almak istiyorum. Elektrik faturası ve reaktif enerji kontrolü konusunda görüşmek istiyorum.',
+      },
     ],
   },
 ]
@@ -154,7 +172,7 @@ const hizmetlerJsonLd = {
   name: 'Hizmetler | RenEL Enerji Mühendislik',
   url: 'https://renelenerji.com/hizmetler',
   description:
-    'Güneş enerjisi hizmetlerimiz: tarımsal sulama GES, çatı ve arazi tipi GES, bağ evi depolamalı GES, elektrikli araç şarj istasyonu, GES bakım onarım, elektrik altyapı bakımı ve proje danışmanlığı.',
+    'Güneş enerjisi hizmetlerimiz: tarımsal sulama GES, çatı ve arazi tipi GES, bağ evi depolamalı GES, elektrikli araç şarj istasyonu, GES bakım onarım, elektrik altyapı bakımı, proje danışmanlığı ve enerji danışmanlığı.',
   mainEntity: {
     '@type': 'ItemList',
     itemListElement: allServices.map((s, i) => ({
@@ -164,6 +182,8 @@ const hizmetlerJsonLd = {
         '@type': 'Service',
         name: s.title,
         description: s.description,
+        image: `https://renelenerji.com${s.photo}`,
+        url: `https://renelenerji.com/hizmetler/${s.slug}`,
         provider: { '@type': 'Organization', name: 'RenEL Enerji Mühendislik', url: 'https://renelenerji.com' },
         areaServed: { '@type': 'Place', name: 'Soma, Manisa, Türkiye' },
       },
@@ -176,7 +196,7 @@ export default function Hizmetler() {
     <>
       <SEO
         title="GES Kurulum, Bakım & Danışmanlık Hizmetleri | Soma Manisa"
-        description="Soma ve Manisa'da güneş enerjisi hizmetleri: tarımsal sulama GES, çatı ve arazi tipi GES, bağ evi depolamalı GES, EV şarj istasyonu, GES bakım onarım, elektrik altyapı bakımı ve proje danışmanlığı."
+        description="Soma ve Manisa'da güneş enerjisi hizmetleri: tarımsal sulama GES, çatı ve arazi tipi GES, bağ evi depolamalı GES, EV şarj istasyonu, GES bakım onarım, elektrik altyapı bakımı, proje ve enerji danışmanlığı."
         jsonLd={hizmetlerJsonLd}
       />
       <PageHeader title="Hizmetler" />
@@ -220,7 +240,7 @@ export default function Hizmetler() {
                       <div className={`relative h-72 lg:h-auto min-h-85 overflow-hidden ${isEven ? 'lg:order-1' : 'lg:order-2'}`}>
                         <img
                           src={s.photo}
-                          alt={s.title}
+                          alt={s.photoAlt ?? s.title}
                           className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
                           loading="lazy"
                         />

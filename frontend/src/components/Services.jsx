@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Droplets, Home, Battery, Car, Wrench, Zap, ClipboardList, ArrowRight } from 'lucide-react'
+import { Droplets, Home, Battery, Car, Wrench, Zap, ClipboardList, FileBarChart, ArrowRight } from 'lucide-react'
 import { waLink } from '../lib/whatsapp'
 
 const categories = [
@@ -99,6 +99,17 @@ const categories = [
         highlight: true,
         waMessage: 'Merhaba, GES proje danışmanlığı hakkında bilgi almak istiyorum. Fizibilite ve yatırım analizi için görüşme talep ediyorum.',
       },
+      {
+        icon: FileBarChart,
+        title: 'Enerji Danışmanlığı',
+        slug: 'enerji-danismanlik',
+        description: 'Elektrik faturalarınızı ve reaktif enerji tüketiminizi takip ediyor, ceza risklerine karşı sizi koruyoruz.',
+        features: ['Reaktif ceza & enerji izleme', 'Fatura analiz & raporlama', 'Abonelik & sözleşme takibi'],
+        photo: '/enerji-danismanlik.webp',
+        photoAlt: 'Enerji danışmanı elektrik faturasını ve dizüstü bilgisayarda enerji tüketim grafiğini inceliyor',
+        ring: 'ring-2 ring-[#448834]/30',
+        waMessage: 'Merhaba, enerji danışmanlığı hizmetleriniz hakkında bilgi almak istiyorum. Elektrik faturası ve reaktif enerji kontrolü konusunda görüşmek istiyorum.',
+      },
     ],
   },
 ]
@@ -171,7 +182,7 @@ export default function Services() {
                     <Link to={`/hizmetler/${s.slug}`} className="block h-36 overflow-hidden">
                       <img
                         src={s.photo}
-                        alt={s.title}
+                        alt={s.photoAlt ?? s.title}
                         className="w-full h-full object-cover"
                         loading="lazy"
                       />
