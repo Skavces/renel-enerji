@@ -30,6 +30,7 @@ import { HealthController } from './health.controller'
       isGlobal: true,
       validationSchema: Joi.object({
         JWT_SECRET: Joi.string().required(),
+        APP_ENCRYPTION_KEY: Joi.string().pattern(/^[0-9a-f]{64}$/i).required(),
         DB_PASS: Joi.string().required(),
         REDIS_URL: Joi.string().required(),
         FRONTEND_URL: Joi.string().uri().required(),

@@ -8,6 +8,7 @@ import { AuthService } from './auth.service'
 import { JwtStrategy } from './jwt.strategy'
 import { AdminConfig } from './admin-config.entity'
 import { AdminConfigService } from './admin-config.service'
+import { EncryptionService } from '../common/encryption.service'
 
 @Module({
   imports: [
@@ -27,6 +28,6 @@ import { AdminConfigService } from './admin-config.service'
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, AdminConfigService],
+  providers: [AuthService, JwtStrategy, AdminConfigService, EncryptionService],
 })
 export class AuthModule {}
