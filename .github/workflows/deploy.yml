@@ -16,7 +16,7 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             set -e
-            cd /root/renel-enerji
+            cd /home/deploy/renel-enerji
             git pull
             docker compose up -d --build
             docker image prune -f
