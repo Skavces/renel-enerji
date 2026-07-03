@@ -2,7 +2,7 @@ import { BadRequestException } from '@nestjs/common'
 import { diskStorage } from 'multer'
 import { extname } from 'path'
 import { unlink, rename } from 'fs/promises'
-import { fromFile } from 'file-type'
+import { fileTypeFromFile } from 'file-type'
 import sharp from 'sharp'
 
 export const imageStorage = diskStorage({
@@ -42,7 +42,7 @@ export async function toWebp(filePath: string): Promise<string> {
 }
 
 export async function assertMagicBytes(filePath: string, allowedMimes: string[]): Promise<string> {
-  const detected = await fromFile(filePath)
+  const detected = await fileTypeFromFile(filePath)
   if (!detected || !allowedMimes.includes(detected.mime)) {
     await unlink(filePath)
     throw new BadRequestException('Dosya içeriği izin verilen türlerle eşleşmiyor')

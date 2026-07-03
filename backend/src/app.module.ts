@@ -85,6 +85,6 @@ import { HealthController } from './health.controller'
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(LoggingMiddleware).forRoutes('*')
+    consumer.apply(LoggingMiddleware).forRoutes('{*splat}')
   }
 }
