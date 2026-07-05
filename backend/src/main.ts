@@ -8,9 +8,13 @@ import { join } from 'path'
 import helmet from 'helmet'
 import cookieParser from 'cookie-parser'
 import { AppModule } from './app.module'
+import { TelegramLogger } from './notifications/telegram-logger.service'
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule, { rawBody: true })
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, { rawBody: true, bufferLogs: true })
+
+  // Tüm Logger.error çağrıları Telegram'a da bildirilir (token yoksa no-op)
+  app.useLogger(app.get(TelegramLogger))
 
   // Trust the first proxy hop (Nginx) so req.ip reflects the real client IP
   app.set('trust proxy', 1)

@@ -21,6 +21,7 @@ import { WebhooksModule } from './webhooks/webhooks.module'
 import { InstagramTokenModule } from './instagram-token/instagram-token.module'
 import { GroqModule } from './groq/groq.module'
 import { WeatherModule } from './weather/weather.module'
+import { NotificationsModule } from './notifications/notifications.module'
 import { HealthController } from './health.controller'
 
 @Module({
@@ -40,6 +41,8 @@ import { HealthController } from './health.controller'
         INSTAGRAM_APP_SECRET: Joi.string().required(),
         INSTAGRAM_WEBHOOK_VERIFY_TOKEN: Joi.string().required(),
         UMAMI_PASS: Joi.string().required(),
+        TELEGRAM_BOT_TOKEN: Joi.string().optional(),
+        TELEGRAM_CHAT_ID: Joi.string().optional(),
       }),
       validationOptions: { allowUnknown: true },
     }),
@@ -79,6 +82,7 @@ import { HealthController } from './health.controller'
     InstagramTokenModule,
     GroqModule,
     WeatherModule,
+    NotificationsModule,
   ],
   controllers: [HealthController],
   providers: [
