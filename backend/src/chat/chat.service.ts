@@ -107,6 +107,17 @@ export const INJECTION_PATTERNS = [
   // istekleri 400'e düşürüyordu (konuşma kalıcı kilitleniyordu).
 ]
 
+// Model "yalnızca Türkçe" kuralını deldiğinde (Kiril/CJK/Arap alfabesi vb.) yanıtı
+// kullanıcıya göstermemek için harf bazında Latin dışı oran ölçülür
+export function nonLatinLetterRatio(text: string): number {
+  const letters = text.match(/\p{L}/gu) ?? []
+  if (letters.length === 0) return 0
+  const nonLatin = letters.filter(ch => !/\p{Script=Latin}/u.test(ch)).length
+  return nonLatin / letters.length
+}
+
+const NON_LATIN_THRESHOLD = 0.3
+
 export function sanitizeContent(text: string): string {
   return text
     // null bytes and non-printable control chars (keep newline/tab)
@@ -155,10 +166,21 @@ export class ChatService {
   }
 
   async chat(messages: ChatMessage[]): Promise<string> {
-    return this.callGroq(SYSTEM_PROMPT, messages, 400)
+    const reply = await this.callGroq(SYSTEM_PROMPT, messages, 400)
+    if (nonLatinLetterRatio(reply) > NON_LATIN_THRESHOLD) {
+      this.logger.warn(`Türkçe olmayan yanıt sabit mesaja düşürüldü: "${reply.slice(0, 120)}"`)
+      return 'Üzgünüm, yanıt oluşturulurken bir sorun yaşandı. Sorunuzu tekrar yazar mısınız?'
+    }
+    return reply
   }
 
   async generateSummary(messages: ChatMessage[]): Promise<string> {
-    return this.callGroq(SUMMARY_PROMPT, messages, 300)
+    const text = await this.callGroq(SUMMARY_PROMPT, messages, 300)
+    if (nonLatinLetterRatio(text) > NON_LATIN_THRESHOLD) {
+      // Frontend hata durumunda düz wa.me linkine düşüyor; bozuk özeti mesaj yapma
+      this.logger.warn(`Türkçe olmayan özet reddedildi: "${text.slice(0, 120)}"`)
+      throw new ServiceUnavailableException('Özet oluşturulamadı')
+    }
+    return text
   }
 }
