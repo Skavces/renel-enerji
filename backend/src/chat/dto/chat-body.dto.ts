@@ -1,7 +1,7 @@
 import { Type } from 'class-transformer'
 import { IsArray, IsIn, IsString, MaxLength, ValidateNested, ArrayMaxSize, ArrayMinSize } from 'class-validator'
 
-class ChatMessageDto {
+export class ChatMessageDto {
   @IsIn(['user', 'assistant'])
   role: 'user' | 'assistant'
 

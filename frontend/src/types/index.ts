@@ -66,6 +66,20 @@ export interface ChatMessage {
   content: string
 }
 
+export interface ChatRating {
+  id: string
+  rating: number
+  messageCount: number
+  conversation: ChatMessage[] | null
+  createdAt: string
+}
+
+export interface ChatRatingStats {
+  total: number
+  average: number
+  counts: Record<1 | 2 | 3 | 4 | 5, number>
+}
+
 export interface SyncStatus {
   running: boolean
   lastRun: string | null

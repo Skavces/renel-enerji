@@ -1,5 +1,5 @@
 import { API } from './config'
-import type { Project, ProjectMedia, Reference, BlogPost, Faq, SyncStatus } from '../types'
+import type { Project, ProjectMedia, Reference, BlogPost, Faq, SyncStatus, ChatRating, ChatRatingStats } from '../types'
 
 function authOptions(extra: RequestInit = {}): RequestInit {
   return {
@@ -332,6 +332,13 @@ export async function updateFaq(id: string, data: Partial<Faq>): Promise<Faq> {
 export async function deleteFaq(id: string): Promise<void> {
   const res = await fetch(`${API}/api/faq/${id}`, authOptions({ method: 'DELETE' }))
   if (!res.ok) throw new Error('SSS silinemedi')
+}
+
+// Chat değerlendirmeleri
+export async function fetchChatRatings(): Promise<{ stats: ChatRatingStats; ratings: ChatRating[] }> {
+  const res = await fetch(`${API}/api/chat/rating/admin/all`, authOptions())
+  if (!res.ok) throw new Error('Değerlendirmeler yüklenemedi')
+  return res.json()
 }
 
 export async function reorderFaqs(orderedIds: string[]): Promise<void> {

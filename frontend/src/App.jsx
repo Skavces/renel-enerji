@@ -30,6 +30,7 @@ const ReferansForm = lazy(() => import('./pages/admin/ReferansForm'))
 const BlogAdmin = lazy(() => import('./pages/admin/BlogAdmin'))
 const BlogForm = lazy(() => import('./pages/admin/BlogForm'))
 const SSSAdmin = lazy(() => import('./pages/admin/SSSAdmin'))
+const ChatDegerlendirme = lazy(() => import('./pages/admin/ChatDegerlendirme'))
 const Analitik = lazy(() => import('./pages/admin/Analitik'))
 const Guvenlik = lazy(() => import('./pages/admin/Guvenlik'))
 
@@ -127,6 +128,7 @@ function AdminRoutes() {
             <Route path="blog/yeni" element={<BlogForm />} />
             <Route path="blog/:id/duzenle" element={<BlogForm />} />
             <Route path="sss" element={<SSSAdmin />} />
+            <Route path="degerlendirmeler" element={<ChatDegerlendirme />} />
             <Route path="analitik" element={<Analitik />} />
             <Route path="guvenlik" element={<Guvenlik />} />
           </Route>

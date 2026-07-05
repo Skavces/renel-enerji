@@ -30,3 +30,12 @@ export async function generateWhatsappSummary(messages: ChatMessage[]): Promise<
   if (!res.ok) throw new Error('Özet oluşturulamadı')
   return res.json()
 }
+
+export async function submitChatRating(rating: number, messages: ChatMessage[]): Promise<void> {
+  const res = await fetch(`${API}/api/chat/rating`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ rating, messages }),
+  })
+  if (!res.ok) throw new Error('Değerlendirme gönderilemedi')
+}

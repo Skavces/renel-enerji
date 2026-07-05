@@ -61,6 +61,8 @@ import { HealthController } from './health.controller'
         database: cfg.get('DB_NAME', 'renel_enerji'),
         autoLoadEntities: true,
         synchronize: cfg.get('DB_SYNC', 'false') === 'true',
+        migrations: [__dirname + '/migrations/*{.ts,.js}'],
+        migrationsRun: true,
       }),
     }),
     TerminusModule,

@@ -2,16 +2,25 @@ import { BadRequestException } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import { ChatController } from '../chat.controller'
 import { ChatService, INJECTION_PATTERNS, sanitizeContent } from '../chat.service'
+import { ChatRatingService } from '../chat-rating.service'
 
 const mockChatService = {
   chat: jest.fn().mockResolvedValue('cevap'),
   generateSummary: jest.fn().mockResolvedValue('özet'),
 }
 
+const mockRatingService = {
+  create: jest.fn().mockResolvedValue({}),
+  findAllWithStats: jest.fn(),
+}
+
 async function makeController() {
   const module = await Test.createTestingModule({
     controllers: [ChatController],
-    providers: [{ provide: ChatService, useValue: mockChatService }],
+    providers: [
+      { provide: ChatService, useValue: mockChatService },
+      { provide: ChatRatingService, useValue: mockRatingService },
+    ],
   }).compile()
 
   return module.get(ChatController)
@@ -146,6 +155,18 @@ describe('ChatController', () => {
         ],
       }, '127.0.0.1')
       expect(result).toEqual({ text: 'özet' })
+    })
+  })
+
+  describe('POST /chat/rating', () => {
+    it('stores rating with sanitized conversation', async () => {
+      await controller.rate({ rating: 5, messages: [{ role: 'user', content: 'harika <|eot_id|>' }] })
+      expect(mockRatingService.create).toHaveBeenCalledWith(5, [{ role: 'user', content: 'harika' }])
+    })
+
+    it('accepts rating without conversation', async () => {
+      await controller.rate({ rating: 2 })
+      expect(mockRatingService.create).toHaveBeenCalledWith(2, [])
     })
   })
 

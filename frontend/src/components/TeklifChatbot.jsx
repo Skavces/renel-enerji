@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { X, Send, Loader2, MessageCircle, Zap, Droplets, Car, Wifi, Battery, Wrench, ClipboardList, FileBarChart } from 'lucide-react'
-import { sendChatMessage, generateWhatsappSummary } from '../api/chat'
+import { X, Send, Loader2, MessageCircle, Star, Zap, Droplets, Car, Wifi, Battery, Wrench, ClipboardList, FileBarChart } from 'lucide-react'
+import { sendChatMessage, generateWhatsappSummary, submitChatRating } from '../api/chat'
 import { WA_NUMBER, waLink } from '../lib/whatsapp'
+
+const RATED_KEY = 'chatRated'
 
 const GREETING = 'Merhaba, RenEl Enerji Mühendislik\'e hoş geldiniz. Size en uygun güneş enerjisi sistemini belirlemek için birkaç soru sormak istiyorum. Hangi konuda bilgi almak istersiniz?'
 
@@ -23,6 +25,9 @@ export default function TeklifChatbot({ onClose, closing, messages: initialMessa
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [summaryLoading, setSummaryLoading] = useState(false)
+  const [ratingView, setRatingView] = useState(false) // false | 'rate' | 'thanks'
+  const [hoverStar, setHoverStar] = useState(0)
+  const [selectedStar, setSelectedStar] = useState(0)
   const messagesRef = useRef(null)
   const inputRef = useRef(null)
 
@@ -94,9 +99,29 @@ export default function TeklifChatbot({ onClose, closing, messages: initialMessa
     }
   }
 
+  function requestClose() {
+    const alreadyRated = sessionStorage.getItem(RATED_KEY)
+    if (!ratingView && !alreadyRated && userMessageCount >= 2) {
+      setRatingView('rate')
+      return
+    }
+    onClose()
+  }
+
+  function handleRate(star) {
+    setSelectedStar(star)
+    setRatingView('thanks')
+    sessionStorage.setItem(RATED_KEY, '1')
+    const history = messages.filter(
+      m => !(m.role === 'assistant' && m.content === GREETING)
+    )
+    submitChatRating(star, history).catch(() => {})
+    setTimeout(onClose, 1200)
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:inset-auto sm:bottom-20 sm:right-6">
-      <div className={`absolute inset-0 bg-black/50 backdrop-blur-sm sm:hidden ${closing ? 'backdrop-exit' : 'backdrop-enter'}`} onClick={onClose} />
+      <div className={`absolute inset-0 bg-black/50 backdrop-blur-sm sm:hidden ${closing ? 'backdrop-exit' : 'backdrop-enter'}`} onClick={requestClose} />
 
       <div className={`relative w-full sm:w-100 h-[85vh] sm:h-140 bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden origin-bottom sm:origin-bottom-right ${closing ? 'chatbot-exit' : 'chatbot-enter'}`}>
         {/* Header */}
@@ -107,13 +132,64 @@ export default function TeklifChatbot({ onClose, closing, messages: initialMessa
             <p className="text-white/70 text-xs">Size en uygun sistemi belirleyelim</p>
           </div>
           <button
-            onClick={onClose}
+            onClick={requestClose}
             className="w-8 h-8 flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-colors"
             aria-label="Kapat"
           >
             <X size={18} />
           </button>
         </div>
+
+        {/* Değerlendirme overlay */}
+        {ratingView && (
+          <div className="absolute inset-0 top-[72px] z-10 bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center gap-5 px-8 text-center">
+            {ratingView === 'rate' ? (
+              <>
+                <div>
+                  <p className="font-semibold text-gray-800">Görüşmemizi değerlendirir misiniz?</p>
+                  <p className="text-sm text-gray-400 mt-1">Danışmanımızı geliştirmemize yardımcı olur</p>
+                </div>
+                <div className="flex gap-2" onMouseLeave={() => setHoverStar(0)}>
+                  {[1, 2, 3, 4, 5].map(star => (
+                    <button
+                      key={star}
+                      onClick={() => handleRate(star)}
+                      onMouseEnter={() => setHoverStar(star)}
+                      className="p-1 transition-transform hover:scale-115"
+                      aria-label={`${star} yıldız`}
+                    >
+                      <Star
+                        size={30}
+                        className={star <= hoverStar ? 'text-amber-400' : 'text-gray-300'}
+                        fill={star <= hoverStar ? 'currentColor' : 'none'}
+                      />
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={onClose}
+                  className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  Şimdi değil
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="flex gap-1.5">
+                  {[1, 2, 3, 4, 5].map(star => (
+                    <Star
+                      key={star}
+                      size={26}
+                      className={star <= selectedStar ? 'text-amber-400' : 'text-gray-200'}
+                      fill={star <= selectedStar ? 'currentColor' : 'none'}
+                    />
+                  ))}
+                </div>
+                <p className="font-semibold text-gray-800">Teşekkür ederiz!</p>
+              </>
+            )}
+          </div>
+        )}
 
         {/* Messages */}
         <div
@@ -195,7 +271,7 @@ export default function TeklifChatbot({ onClose, closing, messages: initialMessa
         )}
 
         {/* Input */}
-        <div className="px-4 py-3 bg-white shrink-0">
+        <div className="px-4 pt-3 pb-2 bg-white shrink-0">
           <div className="flex items-end gap-2">
             <textarea
               ref={inputRef}
