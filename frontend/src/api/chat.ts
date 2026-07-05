@@ -31,6 +31,15 @@ export async function generateWhatsappSummary(messages: ChatMessage[], sessionId
   return res.json()
 }
 
+// Huni sayacı; hata sessizce yutulur, istatistik kaybı akışı etkilememeli
+export function trackChatOpen(): void {
+  fetch(`${API}/api/chat/event`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type: 'open' }),
+  }).catch(() => {})
+}
+
 export async function submitChatRating(rating: number, messages: ChatMessage[], sessionId?: string): Promise<void> {
   const res = await fetch(`${API}/api/chat/rating`, {
     method: 'POST',

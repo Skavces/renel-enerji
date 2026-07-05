@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Star, ChevronDown, MessageCircle, Bot, Users } from 'lucide-react'
-import { fetchChatRatings, fetchChatLeads } from '../../api/admin'
+import { Star, ChevronDown, MessageCircle, Bot, Users, ChevronRight } from 'lucide-react'
+import { fetchChatRatings, fetchChatLeads, fetchChatFunnel } from '../../api/admin'
 import { useAdminAuth } from '../../contexts/AdminAuthContext'
 
 function Stars({ value, size = 15 }) {
@@ -107,6 +107,62 @@ function LeadRow({ lead }) {
       </button>
 
       {expanded && <Transcript conversation={lead.conversation} />}
+    </div>
+  )
+}
+
+function percent(part, whole) {
+  if (!whole) return '—'
+  return `%${Math.round((part / whole) * 100)}`
+}
+
+function FunnelSection() {
+  const [days, setDays] = useState(30)
+  const [funnel, setFunnel] = useState(null)
+
+  useEffect(() => {
+    fetchChatFunnel(days).then(setFunnel).catch(() => {})
+  }, [days])
+
+  const steps = [
+    { label: 'Chat Açılma', value: funnel?.opened ?? 0, rate: null },
+    { label: 'Mesaj Yazan', value: funnel?.messaged ?? 0, rate: percent(funnel?.messaged, funnel?.opened) },
+    { label: "WhatsApp'a Geçen", value: funnel?.whatsapp ?? 0, rate: percent(funnel?.whatsapp, funnel?.messaged) },
+  ]
+
+  return (
+    <div className="bg-white border border-gray-100 rounded-xl p-5 mb-6">
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-xs uppercase tracking-widest text-gray-400 font-semibold">Dönüşüm Hunisi</p>
+        <div className="flex gap-1">
+          {[7, 30].map(d => (
+            <button
+              key={d}
+              onClick={() => setDays(d)}
+              className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
+                days === d ? 'bg-[#448834] text-white' : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
+              }`}
+            >
+              {d} Gün
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="flex items-center">
+        {steps.map((step, i) => (
+          <div key={step.label} className="flex items-center flex-1 min-w-0">
+            {i > 0 && <ChevronRight size={18} className="text-gray-300 shrink-0 mx-1" />}
+            <div className="flex-1 text-center">
+              <p className="text-3xl font-bold font-['Rajdhani'] text-[#448834]">{step.value}</p>
+              <p className="text-xs text-gray-500">{step.label}</p>
+              {step.rate !== null && <p className="text-[11px] text-gray-400 mt-0.5">dönüşüm {step.rate}</p>}
+            </div>
+          </div>
+        ))}
+      </div>
+      <p className="text-[11px] text-gray-300 mt-3">
+        Açılma sayacı özelliğin yayına alındığı tarihten itibaren toplanır.
+      </p>
     </div>
   )
 }
@@ -230,6 +286,8 @@ export default function ChatDegerlendirme() {
           {leadData?.stats?.total ?? 0} talep · {ratingData?.stats?.total ?? 0} değerlendirme
         </p>
       </div>
+
+      <FunnelSection />
 
       <div className="flex gap-2 mb-6">
         {[

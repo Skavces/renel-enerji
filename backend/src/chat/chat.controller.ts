@@ -1,11 +1,13 @@
-import { BadRequestException, Body, Controller, Get, Ip, Logger, Post, UseGuards } from '@nestjs/common'
+import { BadRequestException, Body, Controller, Get, Ip, Logger, Post, Query, UseGuards } from '@nestjs/common'
 import { Throttle } from '@nestjs/throttler'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 import { ChatMessage, ChatService, INJECTION_PATTERNS, sanitizeContent } from './chat.service'
 import { ChatRatingService } from './chat-rating.service'
 import { ChatLeadService } from './chat-lead.service'
+import { ChatStatsService } from './chat-stats.service'
 import { ChatBodyDto, SummaryBodyDto } from './dto/chat-body.dto'
 import { RatingBodyDto } from './dto/rating-body.dto'
+import { EventBodyDto } from './dto/event-body.dto'
 
 @Controller('chat')
 export class ChatController {
@@ -15,6 +17,7 @@ export class ChatController {
     private readonly chatService: ChatService,
     private readonly ratingService: ChatRatingService,
     private readonly leadService: ChatLeadService,
+    private readonly statsService: ChatStatsService,
   ) {}
 
   // Lead takibi asıl akışı asla bozmamalı; hatalar loglanıp yutulur
@@ -76,9 +79,22 @@ export class ChatController {
     return this.ratingService.findAllWithStats()
   }
 
+  @Post('event')
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
+  async event(@Body() dto: EventBodyDto) {
+    if (dto.type === 'open') this.trackLead(this.statsService.recordOpen())
+    return { ok: true }
+  }
+
   @UseGuards(JwtAuthGuard)
   @Get('lead/admin/all')
   adminLeads() {
     return this.leadService.findAllWithStats()
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('lead/admin/funnel')
+  adminFunnel(@Query('days') days?: string) {
+    return this.statsService.funnel(days === '7' ? 7 : 30)
   }
 }

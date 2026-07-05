@@ -4,6 +4,7 @@ import { ChatController } from '../chat.controller'
 import { ChatService, INJECTION_PATTERNS, sanitizeContent } from '../chat.service'
 import { ChatRatingService } from '../chat-rating.service'
 import { ChatLeadService } from '../chat-lead.service'
+import { ChatStatsService } from '../chat-stats.service'
 
 const mockChatService = {
   chat: jest.fn().mockResolvedValue('cevap'),
@@ -22,6 +23,11 @@ const mockLeadService = {
   findAllWithStats: jest.fn(),
 }
 
+const mockStatsService = {
+  recordOpen: jest.fn().mockResolvedValue(undefined),
+  funnel: jest.fn().mockResolvedValue({ days: 30, opened: 0, messaged: 0, whatsapp: 0, rated: 0 }),
+}
+
 async function makeController() {
   const module = await Test.createTestingModule({
     controllers: [ChatController],
@@ -29,6 +35,7 @@ async function makeController() {
       { provide: ChatService, useValue: mockChatService },
       { provide: ChatRatingService, useValue: mockRatingService },
       { provide: ChatLeadService, useValue: mockLeadService },
+      { provide: ChatStatsService, useValue: mockStatsService },
     ],
   }).compile()
 
@@ -226,6 +233,23 @@ describe('ChatController', () => {
     it('admin leads endpoint delegates to service', () => {
       controller.adminLeads()
       expect(mockLeadService.findAllWithStats).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  describe('funnel tracking', () => {
+    it('open event increments the daily counter', async () => {
+      const result = await controller.event({ type: 'open' })
+      expect(result).toEqual({ ok: true })
+      expect(mockStatsService.recordOpen).toHaveBeenCalledTimes(1)
+    })
+
+    it('funnel endpoint defaults to 30 days and accepts 7', () => {
+      controller.adminFunnel(undefined)
+      expect(mockStatsService.funnel).toHaveBeenCalledWith(30)
+      controller.adminFunnel('7')
+      expect(mockStatsService.funnel).toHaveBeenCalledWith(7)
+      controller.adminFunnel('999')
+      expect(mockStatsService.funnel).toHaveBeenLastCalledWith(30)
     })
   })
 

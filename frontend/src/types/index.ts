@@ -97,6 +97,14 @@ export interface ChatLeadStats {
   whatsapp: number
 }
 
+export interface ChatFunnel {
+  days: number
+  opened: number
+  messaged: number
+  whatsapp: number
+  rated: number
+}
+
 export interface SyncStatus {
   running: boolean
   lastRun: string | null

@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { X, Send, Loader2, MessageCircle, Star, Zap, Droplets, Car, Wifi, Battery, Wrench, ClipboardList, FileBarChart } from 'lucide-react'
-import { sendChatMessage, generateWhatsappSummary, submitChatRating } from '../api/chat'
+import { sendChatMessage, generateWhatsappSummary, submitChatRating, trackChatOpen } from '../api/chat'
 import { WA_NUMBER, waLink } from '../lib/whatsapp'
 
 const RATED_KEY = 'chatRated'
+
+// Sayfa yüklemesi başına tek açılma eventi (aynı konuşmanın aç/kapa'sı tekrar sayılmaz)
+let openTracked = false
 
 const GREETING = 'Merhaba, RenEl Enerji Mühendislik\'e hoş geldiniz. Size en uygun güneş enerjisi sistemini belirlemek için birkaç soru sormak istiyorum. Hangi konuda bilgi almak istersiniz?'
 
@@ -47,6 +50,10 @@ export default function TeklifChatbot({ onClose, closing, messages: initialMessa
   useEffect(() => {
     if (messagesRef.current) messagesRef.current.scrollTop = 0
     inputRef.current?.focus()
+    if (!openTracked) {
+      openTracked = true
+      trackChatOpen()
+    }
   }, [])
 
   async function send(text) {

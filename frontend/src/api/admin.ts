@@ -1,5 +1,5 @@
 import { API } from './config'
-import type { Project, ProjectMedia, Reference, BlogPost, Faq, SyncStatus, ChatRating, ChatRatingStats, ChatLead, ChatLeadStats } from '../types'
+import type { Project, ProjectMedia, Reference, BlogPost, Faq, SyncStatus, ChatRating, ChatRatingStats, ChatLead, ChatLeadStats, ChatFunnel } from '../types'
 
 function authOptions(extra: RequestInit = {}): RequestInit {
   return {
@@ -345,6 +345,13 @@ export async function fetchChatRatings(): Promise<{ stats: ChatRatingStats; rati
 export async function fetchChatLeads(): Promise<{ stats: ChatLeadStats; leads: ChatLead[] }> {
   const res = await fetch(`${API}/api/chat/lead/admin/all`, authOptions())
   if (!res.ok) throw new Error('Talepler yüklenemedi')
+  return res.json()
+}
+
+// Chatbot dönüşüm hunisi (açılma → mesaj → WhatsApp)
+export async function fetchChatFunnel(days: 7 | 30): Promise<ChatFunnel> {
+  const res = await fetch(`${API}/api/chat/lead/admin/funnel?days=${days}`, authOptions())
+  if (!res.ok) throw new Error('Huni istatistikleri yüklenemedi')
   return res.json()
 }
 
