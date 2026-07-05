@@ -89,6 +89,8 @@ export default function TeklifChatbot({ onClose, closing, messages: initialMessa
       window.open(`https://wa.me/${WA_NUMBER}`, '_blank', 'noopener,noreferrer')
     } finally {
       setSummaryLoading(false)
+      // WhatsApp'a geçiş görüşmenin doğal sonu — sekmeye dönünce değerlendirme sor
+      if (!sessionStorage.getItem(RATED_KEY)) setRatingView('rate')
     }
   }
 
