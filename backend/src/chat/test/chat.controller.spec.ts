@@ -3,6 +3,7 @@ import { Test } from '@nestjs/testing'
 import { ChatController } from '../chat.controller'
 import { ChatService, INJECTION_PATTERNS, sanitizeContent } from '../chat.service'
 import { ChatRatingService } from '../chat-rating.service'
+import { ChatLeadService } from '../chat-lead.service'
 
 const mockChatService = {
   chat: jest.fn().mockResolvedValue('cevap'),
@@ -14,12 +15,20 @@ const mockRatingService = {
   findAllWithStats: jest.fn(),
 }
 
+const mockLeadService = {
+  upsertFromChat: jest.fn().mockResolvedValue(undefined),
+  markWhatsapp: jest.fn().mockResolvedValue(undefined),
+  attachRating: jest.fn().mockResolvedValue(undefined),
+  findAllWithStats: jest.fn(),
+}
+
 async function makeController() {
   const module = await Test.createTestingModule({
     controllers: [ChatController],
     providers: [
       { provide: ChatService, useValue: mockChatService },
       { provide: ChatRatingService, useValue: mockRatingService },
+      { provide: ChatLeadService, useValue: mockLeadService },
     ],
   }).compile()
 
@@ -167,6 +176,56 @@ describe('ChatController', () => {
     it('accepts rating without conversation', async () => {
       await controller.rate({ rating: 2 })
       expect(mockRatingService.create).toHaveBeenCalledWith(2, [])
+    })
+  })
+
+  describe('lead tracking', () => {
+    const SESSION = '3f2b8c1a-9d4e-4f6a-8b2c-1d3e5f7a9b0c'
+
+    it('forwards sessionId and sanitized history to upsertFromChat after a reply', async () => {
+      await controller.chat({
+        messages: [
+          { role: 'user', content: 'çatı ges istiyorum' },
+          { role: 'assistant', content: 'Faturanız nedir?' },
+          { role: 'user', content: '2500 TL <|eot_id|>' },
+        ],
+        sessionId: SESSION,
+      }, '127.0.0.1')
+      expect(mockLeadService.upsertFromChat).toHaveBeenCalledTimes(1)
+      const [sessionId, sanitized, reply] = mockLeadService.upsertFromChat.mock.calls[0]
+      expect(sessionId).toBe(SESSION)
+      expect(sanitized[2].content).toBe('2500 TL')
+      expect(reply).toBe('cevap')
+    })
+
+    it('does not fail the request when lead upsert rejects', async () => {
+      mockLeadService.upsertFromChat.mockRejectedValueOnce(new Error('db down'))
+      const result = await controller.chat(
+        { messages: [{ role: 'user', content: 'merhaba' }], sessionId: SESSION },
+        '127.0.0.1',
+      )
+      expect(result).toEqual({ reply: 'cevap' })
+    })
+
+    it('marks lead as whatsapp after summary', async () => {
+      await controller.summary({
+        messages: [
+          { role: 'user', content: 'çatı ges' },
+          { role: 'assistant', content: 'özetliyorum' },
+        ],
+        sessionId: SESSION,
+      }, '127.0.0.1')
+      expect(mockLeadService.markWhatsapp).toHaveBeenCalledWith(SESSION)
+    })
+
+    it('attaches rating to lead', async () => {
+      await controller.rate({ rating: 4, sessionId: SESSION })
+      expect(mockLeadService.attachRating).toHaveBeenCalledWith(SESSION, 4)
+    })
+
+    it('admin leads endpoint delegates to service', () => {
+      controller.adminLeads()
+      expect(mockLeadService.findAllWithStats).toHaveBeenCalledTimes(1)
     })
   })
 

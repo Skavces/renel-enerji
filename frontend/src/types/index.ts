@@ -80,6 +80,23 @@ export interface ChatRatingStats {
   counts: Record<1 | 2 | 3 | 4 | 5, number>
 }
 
+export interface ChatLead {
+  id: string
+  sessionId: string
+  conversation: ChatMessage[] | null
+  messageCount: number
+  status: 'active' | 'whatsapp'
+  rating: number | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ChatLeadStats {
+  total: number
+  active: number
+  whatsapp: number
+}
+
 export interface SyncStatus {
   running: boolean
   lastRun: string | null

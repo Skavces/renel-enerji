@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer'
-import { IsArray, IsIn, IsString, MaxLength, ValidateNested, ArrayMaxSize, ArrayMinSize } from 'class-validator'
+import { IsArray, IsIn, IsOptional, IsString, IsUUID, MaxLength, ValidateNested, ArrayMaxSize, ArrayMinSize } from 'class-validator'
 
 export class ChatMessageDto {
   @IsIn(['user', 'assistant'])
@@ -17,6 +17,11 @@ export class ChatBodyDto {
   @ValidateNested({ each: true })
   @Type(() => ChatMessageDto)
   messages: ChatMessageDto[]
+
+  // Konuşma başına frontend'de üretilen UUID; lead takibi için
+  @IsOptional()
+  @IsUUID('4')
+  sessionId?: string
 }
 
 export class SummaryBodyDto {
@@ -26,4 +31,8 @@ export class SummaryBodyDto {
   @ValidateNested({ each: true })
   @Type(() => ChatMessageDto)
   messages: ChatMessageDto[]
+
+  @IsOptional()
+  @IsUUID('4')
+  sessionId?: string
 }

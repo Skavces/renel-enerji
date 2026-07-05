@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer'
-import { ArrayMaxSize, IsArray, IsInt, IsOptional, Max, Min, ValidateNested } from 'class-validator'
+import { ArrayMaxSize, IsArray, IsInt, IsOptional, IsUUID, Max, Min, ValidateNested } from 'class-validator'
 import { ChatMessageDto } from './chat-body.dto'
 
 export class RatingBodyDto {
@@ -7,6 +7,10 @@ export class RatingBodyDto {
   @Min(1)
   @Max(5)
   rating: number
+
+  @IsOptional()
+  @IsUUID('4')
+  sessionId?: string
 
   @IsOptional()
   @IsArray()

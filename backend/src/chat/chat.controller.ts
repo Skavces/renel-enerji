@@ -3,6 +3,7 @@ import { Throttle } from '@nestjs/throttler'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 import { ChatMessage, ChatService, INJECTION_PATTERNS, sanitizeContent } from './chat.service'
 import { ChatRatingService } from './chat-rating.service'
+import { ChatLeadService } from './chat-lead.service'
 import { ChatBodyDto, SummaryBodyDto } from './dto/chat-body.dto'
 import { RatingBodyDto } from './dto/rating-body.dto'
 
@@ -13,7 +14,15 @@ export class ChatController {
   constructor(
     private readonly chatService: ChatService,
     private readonly ratingService: ChatRatingService,
+    private readonly leadService: ChatLeadService,
   ) {}
+
+  // Lead takibi asıl akışı asla bozmamalı; hatalar loglanıp yutulur
+  private trackLead(promise: Promise<void>): void {
+    promise.catch(err =>
+      this.logger.warn(`Lead kaydı başarısız: ${err instanceof Error ? err.message : err}`),
+    )
+  }
 
   private sanitizeAndGuard(messages: ChatBodyDto['messages'], ip: string): ChatMessage[] {
     return messages.map(m => {
@@ -35,7 +44,9 @@ export class ChatController {
     if (dto.messages[0]?.role !== 'user')
       throw new BadRequestException('İlk mesaj kullanıcıdan olmalı')
 
-    const reply = await this.chatService.chat(this.sanitizeAndGuard(dto.messages, ip))
+    const sanitized = this.sanitizeAndGuard(dto.messages, ip)
+    const reply = await this.chatService.chat(sanitized)
+    this.trackLead(this.leadService.upsertFromChat(dto.sessionId, sanitized, reply))
     return { reply }
   }
 
@@ -43,6 +54,7 @@ export class ChatController {
   @Throttle({ default: { limit: 10, ttl: 60000 } })
   async summary(@Body() dto: SummaryBodyDto, @Ip() ip: string) {
     const text = await this.chatService.generateSummary(this.sanitizeAndGuard(dto.messages, ip))
+    this.trackLead(this.leadService.markWhatsapp(dto.sessionId))
     return { text }
   }
 
@@ -54,6 +66,7 @@ export class ChatController {
       content: sanitizeContent(m.content),
     }))
     await this.ratingService.create(dto.rating, conversation)
+    this.trackLead(this.leadService.attachRating(dto.sessionId, dto.rating))
     return { ok: true }
   }
 
@@ -61,5 +74,11 @@ export class ChatController {
   @Get('rating/admin/all')
   adminRatings() {
     return this.ratingService.findAllWithStats()
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('lead/admin/all')
+  adminLeads() {
+    return this.leadService.findAllWithStats()
   }
 }

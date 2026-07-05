@@ -1,5 +1,5 @@
 import { API } from './config'
-import type { Project, ProjectMedia, Reference, BlogPost, Faq, SyncStatus, ChatRating, ChatRatingStats } from '../types'
+import type { Project, ProjectMedia, Reference, BlogPost, Faq, SyncStatus, ChatRating, ChatRatingStats, ChatLead, ChatLeadStats } from '../types'
 
 function authOptions(extra: RequestInit = {}): RequestInit {
   return {
@@ -338,6 +338,13 @@ export async function deleteFaq(id: string): Promise<void> {
 export async function fetchChatRatings(): Promise<{ stats: ChatRatingStats; ratings: ChatRating[] }> {
   const res = await fetch(`${API}/api/chat/rating/admin/all`, authOptions())
   if (!res.ok) throw new Error('Değerlendirmeler yüklenemedi')
+  return res.json()
+}
+
+// Chat potansiyel talepleri (lead)
+export async function fetchChatLeads(): Promise<{ stats: ChatLeadStats; leads: ChatLead[] }> {
+  const res = await fetch(`${API}/api/chat/lead/admin/all`, authOptions())
+  if (!res.ok) throw new Error('Talepler yüklenemedi')
   return res.json()
 }
 

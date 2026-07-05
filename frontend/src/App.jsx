@@ -59,6 +59,8 @@ function PublicLayout() {
   const [chatOpen, setChatOpen] = useState(false)
   const [chatClosing, setChatClosing] = useState(false)
   const [chatMessages, setChatMessages] = useState(null)
+  // Konuşma başına lead takibi için kimlik; sayfa yenilenene kadar sabit (mesajlar gibi)
+  const [chatSessionId] = useState(() => crypto.randomUUID())
 
   function handleCloseChat() {
     setChatClosing(true)
@@ -106,6 +108,7 @@ function PublicLayout() {
           closing={chatClosing}
           messages={chatMessages}
           onMessagesChange={setChatMessages}
+          sessionId={chatSessionId}
         />
       )}
     </>

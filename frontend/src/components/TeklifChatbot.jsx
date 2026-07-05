@@ -18,7 +18,7 @@ const QUICK_REPLIES = [
   { label: 'Enerji Danışmanlığı', desc: 'Fatura kontrolü, reaktif ceza, risk analizi', icon: FileBarChart, value: 'Enerji danışmanlığı hizmetleriniz hakkında bilgi almak istiyorum. Elektrik faturası ve reaktif enerji kontrolü konusunda görüşmek istiyorum.' },
 ]
 
-export default function TeklifChatbot({ onClose, closing, messages: initialMessages, onMessagesChange }) {
+export default function TeklifChatbot({ onClose, closing, messages: initialMessages, onMessagesChange, sessionId }) {
   const [messages, setMessages] = useState(
     initialMessages ?? [{ role: 'assistant', content: GREETING }]
   )
@@ -63,7 +63,7 @@ export default function TeklifChatbot({ onClose, closing, messages: initialMessa
       const history = updated.filter(
         m => !(m.role === 'assistant' && m.content === GREETING)
       )
-      const { reply } = await sendChatMessage(history)
+      const { reply } = await sendChatMessage(history, sessionId)
       const withReply = [...updated, { role: 'assistant', content: reply }]
       saveMessages(withReply)
     } catch {
@@ -83,7 +83,7 @@ export default function TeklifChatbot({ onClose, closing, messages: initialMessa
       const history = messages.filter(
         m => !(m.role === 'assistant' && m.content === GREETING)
       )
-      const { text } = await generateWhatsappSummary(history)
+      const { text } = await generateWhatsappSummary(history, sessionId)
       window.open(waLink(text), '_blank', 'noopener,noreferrer')
     } catch {
       window.open(`https://wa.me/${WA_NUMBER}`, '_blank', 'noopener,noreferrer')
@@ -117,7 +117,7 @@ export default function TeklifChatbot({ onClose, closing, messages: initialMessa
     const history = messages.filter(
       m => !(m.role === 'assistant' && m.content === GREETING)
     )
-    submitChatRating(star, history).catch(() => {})
+    submitChatRating(star, history, sessionId).catch(() => {})
     setTimeout(onClose, 1200)
   }
 
