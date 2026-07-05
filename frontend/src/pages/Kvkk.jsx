@@ -12,7 +12,7 @@ const SECTIONS = [
     title: '2. İşlenen Kişisel Veriler',
     body: `Web sitemizi kullandığınızda aşağıdaki veriler işlenebilir:
 
-• Dijital danışman (chatbot) görüşme kayıtları: Sohbet sırasında yazdığınız mesajlar ve görüşme sonunda verdiğiniz değerlendirme puanı. Mesajlarınızda paylaşmayı tercih ettiğiniz bilgiler (ör. konum, elektrik tüketimi) bu kapsamdadır.
+• Dijital danışman (chatbot) görüşme kayıtları: Sohbet sırasında yazdığınız mesajlar, talebinizin durumu ve görüşme sonunda verdiğiniz değerlendirme puanı. Mesajlarınızda paylaşmayı tercih ettiğiniz bilgiler (ör. konum, elektrik tüketimi) bu kapsamdadır.
 • Teknik veriler: IP adresi ve sunucu erişim kayıtları (güvenlik amacıyla).
 • Anonim ziyaret istatistikleri: Sayfa görüntüleme sayıları gibi kimliğinizle ilişkilendirilmeyen kullanım verileri.
 
@@ -20,11 +20,11 @@ Sitemizde üyelik veya iletişim formu bulunmamaktadır; WhatsApp üzerinden kur
   },
   {
     title: '3. İşleme Amaçları ve Hukuki Sebep',
-    body: `Görüşme kayıtları ve değerlendirme puanları, danışmanlık hizmetinin sunulması ve hizmet kalitesinin ölçülüp iyileştirilmesi amacıyla; teknik veriler ise sitenin güvenliğinin sağlanması amacıyla, KVKK md. 5/2-f kapsamındaki meşru menfaat hukuki sebebine dayanılarak işlenir. Verileriniz pazarlama amacıyla kullanılmaz ve üçüncü kişilerle paylaşılmaz.`,
+    body: `Görüşme kayıtları ve değerlendirme puanları, danışmanlık hizmetinin sunulması, teklif taleplerinizin takip edilebilmesi ve hizmet kalitesinin ölçülüp iyileştirilmesi amacıyla; teknik veriler ise sitenin güvenliğinin sağlanması amacıyla, KVKK md. 5/2-f kapsamındaki meşru menfaat hukuki sebebine dayanılarak işlenir. Verileriniz pazarlama amacıyla kullanılmaz ve üçüncü kişilerle paylaşılmaz.`,
   },
   {
     title: '4. Saklama Süresi',
-    body: `Chatbot görüşme kayıtları ve değerlendirmeler, hizmet kalitesi analizi tamamlandıktan sonra makul bir süre içinde; sunucu erişim kayıtları ise ilgili mevzuattaki sürelere uygun olarak silinir.`,
+    body: `Chatbot görüşme dökümleri (mesaj içerikleri), kaydedildikleri tarihten itibaren 6 ay sonra otomatik olarak silinir; geriye yalnızca kimliğinizle ilişkilendirilemeyen istatistiksel veriler (puan ortalaması, talep sayısı gibi) kalır. Sunucu erişim kayıtları ilgili mevzuattaki sürelere uygun olarak silinir.`,
   },
   {
     title: '5. Haklarınız',
