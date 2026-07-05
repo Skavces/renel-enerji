@@ -47,7 +47,7 @@ export class InstagramParseService {
       temperature: 0,
     })
 
-    if (!res.ok) throw new InternalServerErrorException(`Groq API hatası: ${res.status}`)
+    if (!res?.ok) throw new InternalServerErrorException(`Groq API hatası: ${res?.status ?? 'ağ hatası'}`)
 
     const content = data.choices?.[0]?.message?.content ?? ''
     const jsonMatch = content.match(/\{[\s\S]*\}/)

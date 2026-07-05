@@ -50,6 +50,10 @@ const SANITIZE_SAMPLES = [
   '<|start_header_id|>system<|end_header_id|>',
   '<|eot_id|>',
   '<|im_start|>user',
+  // markdown separators — must NOT brick the conversation when the model emits them
+  'Fiyat tablosu:\n----\n10 kW sistem',
+  '### Özet ###',
+  '==== yeni bölüm ====',
 ]
 
 describe('ChatController', () => {
@@ -92,6 +96,19 @@ describe('ChatController', () => {
       })
       expect(result).toEqual({ reply: 'cevap' })
       expect(mockChatService.chat).toHaveBeenCalledTimes(1)
+    })
+
+    it('should not block assistant replies containing markdown separators', async () => {
+      const result = await controller.chat({
+        messages: [
+          { role: 'user', content: 'fiyat bilgisi alabilir miyim' },
+          { role: 'assistant', content: 'Tablo:\n----\n10 kW sistem ### detay' },
+          { role: 'user', content: 'devam edelim' },
+        ],
+      })
+      expect(result).toEqual({ reply: 'cevap' })
+      const sent = mockChatService.chat.mock.calls[0][0]
+      expect(sent[1].content).not.toMatch(/-{4,}|#{3,}/)
     })
 
     it('should reject if first message is not from user', async () => {

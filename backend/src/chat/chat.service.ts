@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common'
+import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { GroqService, GROQ_MODEL } from '../groq/groq.service'
 
@@ -102,10 +102,9 @@ export const INJECTION_PATTERNS = [
   /\[INST\]/i,
   /\[\/INST\]/i,
   /<s>|<\/s>/i,
-  // Markdown separator abuse (dead code for \n{3,} removed — sanitizeContent handles it)
-  /#{3,}/,
-  /-{4,}/,
-  /={4,}/,
+  // NOT: Markdown ayraçları (###, ----, ====) burada ENGELLENMEZ, sanitizeContent'te
+  // temizlenir. Model cevabında ayraç üretirse geçmişteki o mesaj sonraki tüm
+  // istekleri 400'e düşürüyordu (konuşma kalıcı kilitleniyordu).
 ]
 
 export function sanitizeContent(text: string): string {
@@ -114,6 +113,8 @@ export function sanitizeContent(text: string): string {
     .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
     // strip Llama/ChatML special tokens that survive printable-char filter
     .replace(/<\|[^|>]{1,30}\|>/g, '')
+    // strip markdown separators used to fake prompt boundaries (###, ----, ====)
+    .replace(/#{3,}|-{4,}|={4,}/g, '')
     // collapse excessive whitespace/newlines
     .replace(/\n{3,}/g, '\n\n')
     .trim()
@@ -121,6 +122,8 @@ export function sanitizeContent(text: string): string {
 
 @Injectable()
 export class ChatService {
+  private readonly logger = new Logger(ChatService.name)
+
   constructor(
     private config: ConfigService,
     private groq: GroqService,
@@ -129,7 +132,10 @@ export class ChatService {
   private async callGroq(systemPrompt: string, messages: ChatMessage[], maxTokens = 400): Promise<string> {
     const key1 = this.config.get<string>('GROQ_API_KEY_3') ?? this.config.get<string>('GROQ_API_KEY')
     const key2 = this.config.get<string>('GROQ_API_KEY_2')
-    if (!key1) throw new BadRequestException('Chatbot şu anda kullanılamıyor')
+    if (!key1) {
+      this.logger.error('GROQ_API_KEY tanımlı değil')
+      throw new ServiceUnavailableException('Chatbot şu anda kullanılamıyor')
+    }
 
     const { res, data } = await this.groq.call(key1, key2, {
       model: GROQ_MODEL,
@@ -138,8 +144,14 @@ export class ChatService {
       temperature: 0.4,
     })
 
-    if (!res.ok) throw new BadRequestException('Yanıt alınamadı, lütfen tekrar deneyin')
-    return data.choices[0].message.content
+    const content = data?.choices?.[0]?.message?.content
+    if (!res?.ok || typeof content !== 'string' || !content.trim()) {
+      this.logger.error(`Groq yanıtı kullanılamadı (durum: ${res?.status ?? 'ağ hatası'})`)
+      throw new ServiceUnavailableException('Yanıt alınamadı, lütfen tekrar deneyin')
+    }
+    // Cevap geçmişe geri döneceği için modeli de sanitize et; ayraç vb. kalıntılar
+    // sonraki isteklerde injection filtresine takılmasın
+    return sanitizeContent(content)
   }
 
   async chat(messages: ChatMessage[]): Promise<string> {
