@@ -18,6 +18,7 @@ const NedenBizDetay = lazy(() => import('./pages/neden-biz/NedenBizDetay'))
 const Blog = lazy(() => import('./pages/Blog'))
 const BlogDetay = lazy(() => import('./pages/BlogDetay'))
 const SSS = lazy(() => import('./pages/SSS'))
+const Kvkk = lazy(() => import('./pages/Kvkk'))
 const NotFound = lazy(() => import('./pages/NotFound'))
 
 const AdminLogin = lazy(() => import('./pages/admin/AdminLogin'))
@@ -85,6 +86,7 @@ function PublicLayout() {
             <Route path="/blog" element={<Blog />} />
             <Route path="/blog/:slug" element={<BlogDetay />} />
             <Route path="/sss" element={<SSS />} />
+            <Route path="/kvkk" element={<Kvkk />} />
             <Route path="/iletisim" element={<Iletisim />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

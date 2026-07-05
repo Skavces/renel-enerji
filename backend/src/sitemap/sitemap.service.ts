@@ -22,6 +22,7 @@ const STATIC_URLS = [
   { loc: '/blog', priority: '0.8', changefreq: 'weekly' },
   { loc: '/sss', priority: '0.7', changefreq: 'monthly' },
   { loc: '/iletisim', priority: '0.6', changefreq: 'yearly' },
+  { loc: '/kvkk', priority: '0.3', changefreq: 'yearly' },
   { loc: '/neden-biz/muhendislik-altyapisi', priority: '0.6', changefreq: 'monthly' },
   { loc: '/neden-biz/anahtar-teslim-hizmet', priority: '0.6', changefreq: 'monthly' },
   { loc: '/neden-biz/surdurulebilir-enerji', priority: '0.6', changefreq: 'monthly' },

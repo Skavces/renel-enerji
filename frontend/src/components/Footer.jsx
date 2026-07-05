@@ -105,6 +105,7 @@ export default function Footer() {
         <div className="mt-12 pt-6 border-t border-white/10 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs">
           <p>© {new Date().getFullYear()} RenEl Enerji Mühendislik. Tüm hakları saklıdır.</p>
           <div className="flex items-center gap-6">
+            <Link to="/kvkk" className="text-xs hover:text-[#f5ce31] transition-colors">KVKK Aydınlatma Metni</Link>
             <p className="text-xs">Tasarım & Kodlama <a href="https://selimkavaklicesme.com" target="_blank" rel="noopener noreferrer" className="text-[#f5ce31] hover:text-[#448834] transition-colors">Selim Kavaklıçeşme</a></p>
           </div>
         </div>

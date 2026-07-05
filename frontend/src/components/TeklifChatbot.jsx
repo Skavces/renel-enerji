@@ -291,6 +291,10 @@ export default function TeklifChatbot({ onClose, closing, messages: initialMessa
               <Send size={16} />
             </button>
           </div>
+          <p className="text-[10px] text-gray-300 text-center mt-1.5">
+            Görüşme kayıtları hizmet kalitesi için saklanır ·{' '}
+            <a href="/kvkk" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-400">KVKK</a>
+          </p>
         </div>
       </div>
     </div>
