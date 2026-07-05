@@ -66,6 +66,7 @@ export default function Footer() {
               <li><Link to="/kurumsal" className="text-sm hover:text-[#f5ce31] transition-colors">Kurumsal</Link></li>
               <li><Link to="/referanslar" className="text-sm hover:text-[#f5ce31] transition-colors">Referanslar</Link></li>
               <li><Link to="/blog" className="text-sm hover:text-[#f5ce31] transition-colors">Blog</Link></li>
+              <li><Link to="/tasarruf-hesaplayici" className="text-sm hover:text-[#f5ce31] transition-colors">Tasarruf Hesaplayıcı</Link></li>
               <li><Link to="/sss" className="text-sm hover:text-[#f5ce31] transition-colors">S.S.S.</Link></li>
               <li><Link to="/iletisim" className="text-sm hover:text-[#f5ce31] transition-colors">İletişim</Link></li>
             </ul>

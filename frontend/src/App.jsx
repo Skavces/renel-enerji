@@ -19,6 +19,7 @@ const Blog = lazy(() => import('./pages/Blog'))
 const BlogDetay = lazy(() => import('./pages/BlogDetay'))
 const SSS = lazy(() => import('./pages/SSS'))
 const Kvkk = lazy(() => import('./pages/Kvkk'))
+const TasarrufHesaplayici = lazy(() => import('./pages/TasarrufHesaplayici'))
 const NotFound = lazy(() => import('./pages/NotFound'))
 
 const AdminLogin = lazy(() => import('./pages/admin/AdminLogin'))
@@ -70,6 +71,13 @@ function PublicLayout() {
     }, 220)
   }
 
+  // Sayfa içi CTA'lar (örn. tasarruf hesaplayıcı) chatbot'u bu event ile açar
+  useEffect(() => {
+    const open = () => setChatOpen(true)
+    window.addEventListener('open-chat', open)
+    return () => window.removeEventListener('open-chat', open)
+  }, [])
+
   return (
     <>
       <ScrollToTop />
@@ -89,6 +97,7 @@ function PublicLayout() {
             <Route path="/blog/:slug" element={<BlogDetay />} />
             <Route path="/sss" element={<SSS />} />
             <Route path="/kvkk" element={<Kvkk />} />
+            <Route path="/tasarruf-hesaplayici" element={<TasarrufHesaplayici />} />
             <Route path="/iletisim" element={<Iletisim />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

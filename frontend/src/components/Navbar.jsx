@@ -27,6 +27,12 @@ const hizmetlerDropdown = [
       { label: 'Enerji Danışmanlığı', to: '/hizmetler/enerji-danismanlik' },
     ],
   },
+  {
+    category: 'Araçlar',
+    items: [
+      { label: 'Tasarruf Hesaplayıcı', to: '/tasarruf-hesaplayici' },
+    ],
+  },
 ]
 
 const navLinks = [
