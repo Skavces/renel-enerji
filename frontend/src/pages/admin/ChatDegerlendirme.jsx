@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Star, ChevronDown, MessageCircle, Bot, Users, ChevronRight } from 'lucide-react'
+import { Star, ChevronDown, ChevronRight, MessageCircle, Bot, Users, Send, Clock, TrendingUp } from 'lucide-react'
 import { fetchChatRatings, fetchChatLeads, fetchChatFunnel } from '../../api/admin'
 import { useAdminAuth } from '../../contexts/AdminAuthContext'
 
@@ -45,12 +45,24 @@ function formatDate(value) {
   })
 }
 
+function StatCard({ label, value, icon: Icon }) {
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 p-5">
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-xs font-medium text-gray-400 uppercase tracking-widest">{label}</span>
+        <Icon size={14} className="text-gray-300" />
+      </div>
+      <p className="text-3xl font-bold text-gray-900 font-['Rajdhani']">{value}</p>
+    </div>
+  )
+}
+
 function RatingRow({ rating }) {
   const [expanded, setExpanded] = useState(false)
   const hasConversation = rating.conversation?.length > 0
 
   return (
-    <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+    <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
       <button
         onClick={() => hasConversation && setExpanded(e => !e)}
         className={`w-full flex items-center gap-4 px-5 py-4 text-left ${hasConversation ? '' : 'cursor-default'}`}
@@ -80,18 +92,20 @@ function LeadRow({ lead }) {
   const isWhatsapp = lead.status === 'whatsapp'
 
   return (
-    <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+    <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
       <button
         onClick={() => hasConversation && setExpanded(e => !e)}
-        className={`w-full flex items-center gap-3 px-5 py-4 text-left ${hasConversation ? '' : 'cursor-default'}`}
+        className={`w-full flex items-center gap-4 px-5 py-4 text-left ${hasConversation ? '' : 'cursor-default'}`}
       >
-        <span
-          className={`text-[11px] font-semibold px-2.5 py-1 rounded-full shrink-0 ${
-            isWhatsapp ? 'bg-[#e7f5e3] text-[#2d6124]' : 'bg-amber-50 text-amber-700'
-          }`}
-        >
-          {isWhatsapp ? "WhatsApp'a geçti" : 'WhatsApp\'a geçmedi'}
-        </span>
+        {isWhatsapp ? (
+          <span className="flex items-center gap-1.5 text-sm text-green-600 font-medium shrink-0">
+            <Send size={13} /> WhatsApp'a geçti
+          </span>
+        ) : (
+          <span className="flex items-center gap-1.5 text-sm text-amber-600 font-medium shrink-0">
+            <Clock size={13} /> WhatsApp'a geçmedi
+          </span>
+        )}
         <span className="text-sm text-gray-500 flex items-center gap-1.5">
           <MessageCircle size={14} className="text-gray-300" />
           {lead.messageCount} mesaj
@@ -131,16 +145,19 @@ function FunnelSection() {
   ]
 
   return (
-    <div className="bg-white border border-gray-100 rounded-xl p-5 mb-6">
-      <div className="flex items-center justify-between mb-4">
-        <p className="text-xs uppercase tracking-widest text-gray-400 font-semibold">Dönüşüm Hunisi</p>
-        <div className="flex gap-1">
+    <div className="bg-white rounded-2xl border border-gray-100 p-5 mb-6">
+      <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center gap-2">
+          <TrendingUp size={13} className="text-gray-300" />
+          <h3 className="font-semibold text-gray-700 text-sm">Dönüşüm Hunisi</h3>
+        </div>
+        <div className="flex bg-gray-100 rounded-xl p-1 gap-0.5">
           {[7, 30].map(d => (
             <button
               key={d}
               onClick={() => setDays(d)}
-              className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
-                days === d ? 'bg-[#448834] text-white' : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                days === d ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
               }`}
             >
               {d} Gün
@@ -153,14 +170,14 @@ function FunnelSection() {
           <div key={step.label} className="flex items-center flex-1 min-w-0">
             {i > 0 && <ChevronRight size={18} className="text-gray-300 shrink-0 mx-1" />}
             <div className="flex-1 text-center">
-              <p className="text-3xl font-bold font-['Rajdhani'] text-[#448834]">{step.value}</p>
+              <p className="text-3xl font-bold font-['Rajdhani'] text-gray-900">{step.value}</p>
               <p className="text-xs text-gray-500">{step.label}</p>
               {step.rate !== null && <p className="text-[11px] text-gray-400 mt-0.5">dönüşüm {step.rate}</p>}
             </div>
           </div>
         ))}
       </div>
-      <p className="text-[11px] text-gray-300 mt-3">
+      <p className="text-[11px] text-gray-300 mt-4">
         Açılma sayacı özelliğin yayına alındığı tarihten itibaren toplanır.
       </p>
     </div>
@@ -184,16 +201,9 @@ function LeadsTab({ leadData }) {
   return (
     <>
       <div className="grid grid-cols-3 gap-4 mb-6">
-        {[
-          { label: 'Toplam Talep', value: stats.total },
-          { label: "WhatsApp'a Geçen", value: stats.whatsapp },
-          { label: 'Kaçan (geçmeyen)', value: stats.active },
-        ].map(card => (
-          <div key={card.label} className="bg-white border border-gray-100 rounded-xl p-5 text-center">
-            <p className="text-3xl font-bold font-['Rajdhani'] text-[#448834]">{card.value}</p>
-            <p className="text-xs text-gray-400 mt-1">{card.label}</p>
-          </div>
-        ))}
+        <StatCard label="Toplam Talep" value={stats.total} icon={Users} />
+        <StatCard label="WhatsApp'a Geçen" value={stats.whatsapp} icon={Send} />
+        <StatCard label="Kaçan (Geçmeyen)" value={stats.active} icon={Clock} />
       </div>
       <div className="space-y-3">
         {leads.map(l => <LeadRow key={l.id} lead={l} />)}
@@ -219,17 +229,17 @@ function RatingsTab({ ratingData }) {
   return (
     <>
       <div className="grid sm:grid-cols-2 gap-4 mb-6">
-        <div className="bg-white border border-gray-100 rounded-xl p-6 flex flex-col items-center justify-center gap-2">
-          <p className="text-4xl font-bold text-gray-900">{stats.average.toFixed(1).replace('.', ',')}</p>
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 flex flex-col items-center justify-center gap-2">
+          <p className="text-4xl font-bold text-gray-900 font-['Rajdhani']">{stats.average.toFixed(1).replace('.', ',')}</p>
           <Stars value={Math.round(stats.average)} size={18} />
-          <p className="text-xs text-gray-400">ortalama puan</p>
+          <p className="text-xs text-gray-400 uppercase tracking-widest">ortalama puan</p>
         </div>
-        <div className="bg-white border border-gray-100 rounded-xl p-6 space-y-2">
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-2">
           {[5, 4, 3, 2, 1].map(star => (
             <div key={star} className="flex items-center gap-3">
               <span className="text-xs text-gray-500 w-3 text-right">{star}</span>
               <Star size={12} className="text-amber-400 shrink-0" fill="currentColor" />
-              <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+              <div className="flex-1 h-1 bg-gray-100 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-[#448834] rounded-full"
                   style={{ width: `${(stats.counts[star] / maxCount) * 100}%` }}
@@ -272,39 +282,40 @@ export default function ChatDegerlendirme() {
 
   if (loading) {
     return (
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+      <main className="max-w-6xl mx-auto px-6 py-8">
         <div className="text-center py-20 text-gray-400">Yükleniyor...</div>
       </main>
     )
   }
 
   return (
-    <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
-      <div className="mb-6">
-        <h1 className="text-xl font-bold text-gray-900">Chatbot</h1>
-        <p className="text-sm text-gray-400 mt-0.5">
-          {leadData?.stats?.total ?? 0} talep · {ratingData?.stats?.total ?? 0} değerlendirme
-        </p>
+    <main className="max-w-6xl mx-auto px-6 py-8">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-xl font-bold text-gray-900">Chatbot</h1>
+          <p className="text-sm text-gray-400 mt-0.5">
+            {leadData?.stats?.total ?? 0} talep · {ratingData?.stats?.total ?? 0} değerlendirme
+          </p>
+        </div>
+        <div className="flex bg-gray-100 rounded-xl p-1 gap-0.5">
+          {[
+            { id: 'leads', label: 'Potansiyel Talepler' },
+            { id: 'ratings', label: 'Değerlendirmeler' },
+          ].map(t => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+                tab === t.id ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <FunnelSection />
-
-      <div className="flex gap-2 mb-6">
-        {[
-          { id: 'leads', label: 'Potansiyel Talepler' },
-          { id: 'ratings', label: 'Değerlendirmeler' },
-        ].map(t => (
-          <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              tab === t.id ? 'bg-[#448834] text-white' : 'bg-white border border-gray-200 text-gray-600 hover:border-[#448834]'
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
 
       {tab === 'leads' ? <LeadsTab leadData={leadData} /> : <RatingsTab ratingData={ratingData} />}
     </main>
