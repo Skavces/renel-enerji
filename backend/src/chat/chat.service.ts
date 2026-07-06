@@ -121,6 +121,38 @@ export function nonLatinLetterRatio(text: string): number {
 
 const NON_LATIN_THRESHOLD = 0.3
 
+// Türkçe metinde geçmesi normal olan Latin kökenli terimler (marka/birim/jargon)
+const ALLOWED_FOREIGN_WORDS = new Set([
+  'whatsapp', 'web', 'www', 'wp', 'kw', 'kwp', 'kwh', 'watt', 'wi', 'fi', 'off', 'grid', 'on',
+])
+
+// Sadece q/w/x içermeyen yaygın İngilizce kelimeler; Türkçe eş yazılışlılar
+// (on, can, her, not, but, is...) bilinçli olarak listede YOK
+const COMMON_ENGLISH_WORDS = new Set([
+  'the', 'and', 'you', 'your', 'please', 'monthly', 'daily', 'yearly', 'about', 'thanks',
+  'thank', 'hello', 'could', 'should', 'have', 'are', 'this', 'that', 'these', 'those',
+  'price', 'cost', 'system', 'energy', 'install', 'installation', 'roof', 'contact', 'help',
+  'sorry', 'here', 'there', 'from', 'also', 'very', 'more', 'most', 'need', 'like', 'good',
+  'best', 'our', 'their', 'for',
+])
+
+// Model kelimeyi Türkçe kelimeye bitişik de üretebiliyor ("içinmonthly");
+// 5+ harfli İngilizce kelimeler önek/sonek olarak da aranır (kısa kelimelerde
+// yanlış pozitif riski yüksek olduğundan onlar yalnızca tam eşleşmeyle bakılır)
+const LONG_ENGLISH_WORDS = [...COMMON_ENGLISH_WORDS].filter(w => w.length >= 5)
+
+// nonLatinLetterRatio farklı alfabeleri yakalar ama Latin alfabeli sızıntıları
+// ("monthly", "tentang" vb.) göremez; bu kontrol o boşluğu kapatır.
+// q/w/x harfleri Türkçe alfabede yoktur — beyaz listede olmayan her q/w/x'li kelime sızıntıdır.
+export function hasForeignWordLeak(text: string): boolean {
+  const words = text.toLowerCase().match(/[a-zçğıöşüâîû]+/g) ?? []
+  return words.some(w => {
+    if (ALLOWED_FOREIGN_WORDS.has(w)) return false
+    if (/[qwx]/.test(w) || COMMON_ENGLISH_WORDS.has(w)) return true
+    return LONG_ENGLISH_WORDS.some(ew => w.startsWith(ew) || w.endsWith(ew))
+  })
+}
+
 export function sanitizeContent(text: string): string {
   return text
     // null bytes and non-printable control chars (keep newline/tab)
@@ -168,10 +200,19 @@ export class ChatService {
     return sanitizeContent(content)
   }
 
+  private isContaminated(reply: string): boolean {
+    return nonLatinLetterRatio(reply) > NON_LATIN_THRESHOLD || hasForeignWordLeak(reply)
+  }
+
   async chat(messages: ChatMessage[]): Promise<string> {
-    const reply = await this.callGroq(SYSTEM_PROMPT, messages, 400)
-    if (nonLatinLetterRatio(reply) > NON_LATIN_THRESHOLD) {
-      this.logger.warn(`Türkçe olmayan yanıt sabit mesaja düşürüldü: "${reply.slice(0, 120)}"`)
+    let reply = await this.callGroq(SYSTEM_PROMPT, messages, 400)
+    if (this.isContaminated(reply)) {
+      // Kullanıcıya göstermeden tek sefer yeniden üret; sampling farklı sonuç verir
+      this.logger.warn(`Yabancı dil sızıntısı, yanıt yeniden üretiliyor: "${reply.slice(0, 120)}"`)
+      reply = await this.callGroq(SYSTEM_PROMPT, messages, 400)
+    }
+    if (this.isContaminated(reply)) {
+      this.logger.warn(`Yeniden denemede de sızıntı, sabit mesaja düşürüldü: "${reply.slice(0, 120)}"`)
       return 'Üzgünüm, yanıt oluşturulurken bir sorun yaşandı. Sorunuzu tekrar yazar mısınız?'
     }
     return reply

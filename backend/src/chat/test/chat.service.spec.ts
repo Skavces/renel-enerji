@@ -1,17 +1,22 @@
 import { ServiceUnavailableException } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
-import { ChatService, nonLatinLetterRatio } from '../chat.service'
+import { ChatService, hasForeignWordLeak, nonLatinLetterRatio } from '../chat.service'
 import { GroqService } from '../../groq/groq.service'
 
-function makeService(replyContent: string): ChatService {
+function makeService(...replies: string[]): { service: ChatService; call: jest.Mock } {
   const config = { get: (key: string) => (key === 'GROQ_API_KEY' ? 'key1' : undefined) }
-  const groq = {
-    call: jest.fn().mockResolvedValue({
+  const call = jest.fn()
+  for (const reply of replies) {
+    call.mockResolvedValueOnce({
       res: { ok: true, status: 200 },
-      data: { choices: [{ message: { content: replyContent } }] },
-    }),
+      data: { choices: [{ message: { content: reply } }] },
+    })
   }
-  return new ChatService(config as unknown as ConfigService, groq as unknown as GroqService)
+  const groq = { call }
+  return {
+    service: new ChatService(config as unknown as ConfigService, groq as unknown as GroqService),
+    call,
+  }
 }
 
 const MESSAGES = [{ role: 'user' as const, content: 'merhaba' }]
@@ -36,20 +41,71 @@ describe('nonLatinLetterRatio', () => {
   })
 })
 
+describe('hasForeignWordLeak', () => {
+  it('is false for clean Turkish replies', () => {
+    expect(hasForeignWordLeak('Çatı GES için aylık elektrik faturanız nedir?')).toBe(false)
+    expect(hasForeignWordLeak('Teşekkürler, gerekli bilgileri aldım.')).toBe(false)
+  })
+
+  it('allows whitelisted brand/unit terms', () => {
+    expect(hasForeignWordLeak("Aşağıdaki WhatsApp'tan Teklif Al butonuna basın.")).toBe(false)
+    expect(hasForeignWordLeak('10 kWp sistem yıllık 15.000 kWh üretir; off-grid de mümkün.')).toBe(false)
+  })
+
+  it('catches common English words', () => {
+    expect(hasForeignWordLeak('Çatı GES için monthly elektrik faturanız nedir?')).toBe(true)
+  })
+
+  it('catches English words glued to Turkish words', () => {
+    expect(hasForeignWordLeak('Bilgi almak içinmonthly elektrik faturanız nedir?')).toBe(true)
+  })
+
+  it('catches words with q/w/x letters', () => {
+    expect(hasForeignWordLeak('Sistem kurulumu için planladığınız yer tentang wattage nedir?')).toBe(true)
+    expect(hasForeignWordLeak('Fiyat quotation için bilgi verin.')).toBe(true)
+  })
+
+  it('does not flag Turkish homographs of English words', () => {
+    expect(hasForeignWordLeak('On kişilik ekibimiz her an hazır; bu bölgeye has bir çözüm.')).toBe(false)
+  })
+})
+
 describe('ChatService — non-Turkish output guard', () => {
   it('returns Groq reply unchanged when Turkish', async () => {
-    const service = makeService('Çatı GES için aylık faturanız nedir?')
+    const { service } = makeService('Çatı GES için aylık faturanız nedir?')
     await expect(service.chat(MESSAGES)).resolves.toBe('Çatı GES için aylık faturanız nedir?')
   })
 
-  it('replaces non-Latin chat reply with fixed Turkish message', async () => {
-    const service = makeService('Солнечная энергия очень выгодна для вашего дома')
+  it('regenerates once when reply leaks foreign words, then returns the clean retry', async () => {
+    const { service, call } = makeService(
+      'Çatı GES için monthly elektrik faturanız nedir?',
+      'Çatı GES için aylık elektrik faturanız nedir?',
+    )
+    await expect(service.chat(MESSAGES)).resolves.toBe('Çatı GES için aylık elektrik faturanız nedir?')
+    expect(call).toHaveBeenCalledTimes(2)
+  })
+
+  it('falls back to fixed Turkish message when the retry also leaks', async () => {
+    const { service, call } = makeService(
+      'Bilgi almak içinmonthly elektrik faturanız nedir?',
+      'Kurulum yeriniz about bir konut çatısı mı?',
+    )
+    const reply = await service.chat(MESSAGES)
+    expect(reply).toBe('Üzgünüm, yanıt oluşturulurken bir sorun yaşandı. Sorunuzu tekrar yazar mısınız?')
+    expect(call).toHaveBeenCalledTimes(2)
+  })
+
+  it('replaces non-Latin chat reply with fixed Turkish message after retry', async () => {
+    const { service } = makeService(
+      'Солнечная энергия очень выгодна для вашего дома',
+      'Солнечная энергия очень выгодна для вашего дома',
+    )
     const reply = await service.chat(MESSAGES)
     expect(reply).toBe('Üzgünüm, yanıt oluşturulurken bir sorun yaşandı. Sorunuzu tekrar yazar mısınız?')
   })
 
   it('throws 503 for non-Latin summary so frontend falls back to plain WhatsApp link', async () => {
-    const service = makeService('Здравствуйте, я использовал систему консультаций')
+    const { service } = makeService('Здравствуйте, я использовал систему консультаций')
     await expect(service.generateSummary(MESSAGES)).rejects.toThrow(ServiceUnavailableException)
   })
 })
