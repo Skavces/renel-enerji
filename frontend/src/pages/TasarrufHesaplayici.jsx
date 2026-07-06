@@ -70,9 +70,7 @@ export default function TasarrufHesaplayici() {
                 <div className="grid sm:grid-cols-2 gap-4 mb-6">
                   {cards.map(({ icon: Icon, label, value }) => (
                     <div key={label} className="bg-gray-50 border border-gray-100 rounded-xl p-5 flex items-center gap-4">
-                      <div className="w-11 h-11 bg-[#e7f5e3] rounded-xl flex items-center justify-center shrink-0">
-                        <Icon size={20} className="text-[#448834]" />
-                      </div>
+                      <Icon size={32} className="text-[#448834] shrink-0" />
                       <div>
                         <p className="text-2xl font-bold font-['Rajdhani'] text-gray-900 leading-tight">{value}</p>
                         <p className="text-xs text-gray-500">{label}</p>
