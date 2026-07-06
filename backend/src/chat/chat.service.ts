@@ -76,6 +76,8 @@ Kullanım yeri: [yer/tür]
 
 Detaylı teklif almak istiyorum."
 
+[Varsa ek notlar] kısmına yalnızca teklif/keşif talebi DIŞINDAKİ bilgileri (konum, zamanlama, özel talepler vb.) ekleyin. Mesaj zaten "Detaylı teklif almak istiyorum." ile bittiği için "teklif istiyorum", "keşif istiyorum" gibi ifadeleri tekrar yazmayın.
+
 Sadece mesaj metnini döndürün, başka hiçbir şey yazmayın.`
 
 export const INJECTION_PATTERNS = [
