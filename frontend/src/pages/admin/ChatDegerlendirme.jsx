@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Star, ChevronDown, ChevronRight, MessageCircle, Bot, Users, Send, Clock, TrendingUp } from 'lucide-react'
-import { fetchChatRatings, fetchChatLeads, fetchChatFunnel } from '../../api/admin'
+import { Star, ChevronDown, ChevronRight, MessageCircle, Bot, Users, Send, Clock, TrendingUp, Trash2 } from 'lucide-react'
+import { fetchChatRatings, fetchChatLeads, fetchChatFunnel, deleteChatLead, deleteChatRating } from '../../api/admin'
 import { useAdminAuth } from '../../contexts/AdminAuthContext'
 
 function Stars({ value, size = 15 }) {
@@ -45,80 +45,100 @@ function formatDate(value) {
   })
 }
 
-function StatCard({ label, value, icon: Icon }) {
+function StatCard(props) {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-5">
       <div className="flex items-center justify-between mb-3">
-        <span className="text-xs font-medium text-gray-400 uppercase tracking-widest">{label}</span>
-        <Icon size={14} className="text-gray-300" />
+        <span className="text-xs font-medium text-gray-400 uppercase tracking-widest">{props.label}</span>
+        <props.icon size={14} className="text-gray-300" />
       </div>
-      <p className="text-3xl font-bold text-gray-900 font-['Rajdhani']">{value}</p>
+      <p className="text-3xl font-bold text-gray-900 font-['Rajdhani']">{props.value}</p>
     </div>
   )
 }
 
-function RatingRow({ rating }) {
+function RatingRow({ rating, onDelete, deleting }) {
   const [expanded, setExpanded] = useState(false)
   const hasConversation = rating.conversation?.length > 0
 
   return (
     <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
-      <button
-        onClick={() => hasConversation && setExpanded(e => !e)}
-        className={`w-full flex items-center gap-4 px-5 py-4 text-left ${hasConversation ? '' : 'cursor-default'}`}
-      >
-        <Stars value={rating.rating} />
-        <span className="text-sm text-gray-500 flex items-center gap-1.5">
-          <MessageCircle size={14} className="text-gray-300" />
-          {rating.messageCount} mesaj
-        </span>
-        <span className="flex-1 text-right text-xs text-gray-400">{formatDate(rating.createdAt)}</span>
-        {hasConversation && (
-          <ChevronDown
-            size={16}
-            className={`text-gray-400 shrink-0 transition-transform ${expanded ? 'rotate-180' : ''}`}
-          />
-        )}
-      </button>
+      <div className="w-full flex items-center gap-2 pr-3">
+        <button
+          onClick={() => hasConversation && setExpanded(e => !e)}
+          className={`flex-1 min-w-0 flex items-center gap-4 pl-5 py-4 text-left ${hasConversation ? '' : 'cursor-default'}`}
+        >
+          <Stars value={rating.rating} />
+          <span className="text-sm text-gray-500 flex items-center gap-1.5">
+            <MessageCircle size={14} className="text-gray-300" />
+            {rating.messageCount} mesaj
+          </span>
+          <span className="flex-1 text-right text-xs text-gray-400">{formatDate(rating.createdAt)}</span>
+          {hasConversation && (
+            <ChevronDown
+              size={16}
+              className={`text-gray-400 shrink-0 transition-transform ${expanded ? 'rotate-180' : ''}`}
+            />
+          )}
+        </button>
+        <button
+          onClick={() => onDelete(rating.id)}
+          disabled={deleting}
+          className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-40 shrink-0"
+          aria-label="Değerlendirmeyi sil"
+        >
+          <Trash2 size={16} />
+        </button>
+      </div>
 
       {expanded && <Transcript conversation={rating.conversation} />}
     </div>
   )
 }
 
-function LeadRow({ lead }) {
+function LeadRow({ lead, onDelete, deleting }) {
   const [expanded, setExpanded] = useState(false)
   const hasConversation = lead.conversation?.length > 0
   const isWhatsapp = lead.status === 'whatsapp'
 
   return (
     <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
-      <button
-        onClick={() => hasConversation && setExpanded(e => !e)}
-        className={`w-full flex items-center gap-4 px-5 py-4 text-left ${hasConversation ? '' : 'cursor-default'}`}
-      >
-        {isWhatsapp ? (
-          <span className="flex items-center gap-1.5 text-sm text-green-600 font-medium shrink-0">
-            <Send size={13} /> WhatsApp'a geçti
+      <div className="w-full flex items-center gap-2 pr-3">
+        <button
+          onClick={() => hasConversation && setExpanded(e => !e)}
+          className={`flex-1 min-w-0 flex items-center gap-4 pl-5 py-4 text-left ${hasConversation ? '' : 'cursor-default'}`}
+        >
+          {isWhatsapp ? (
+            <span className="flex items-center gap-1.5 text-sm text-green-600 font-medium shrink-0">
+              <Send size={13} /> WhatsApp'a geçti
+            </span>
+          ) : (
+            <span className="flex items-center gap-1.5 text-sm text-amber-600 font-medium shrink-0">
+              <Clock size={13} /> WhatsApp'a geçmedi
+            </span>
+          )}
+          <span className="text-sm text-gray-500 flex items-center gap-1.5">
+            <MessageCircle size={14} className="text-gray-300" />
+            {lead.messageCount} mesaj
           </span>
-        ) : (
-          <span className="flex items-center gap-1.5 text-sm text-amber-600 font-medium shrink-0">
-            <Clock size={13} /> WhatsApp'a geçmedi
-          </span>
-        )}
-        <span className="text-sm text-gray-500 flex items-center gap-1.5">
-          <MessageCircle size={14} className="text-gray-300" />
-          {lead.messageCount} mesaj
-        </span>
-        {lead.rating != null && <Stars value={lead.rating} size={13} />}
-        <span className="flex-1 text-right text-xs text-gray-400">{formatDate(lead.updatedAt)}</span>
-        {hasConversation && (
-          <ChevronDown
-            size={16}
-            className={`text-gray-400 shrink-0 transition-transform ${expanded ? 'rotate-180' : ''}`}
-          />
-        )}
-      </button>
+          {lead.rating != null && <Stars value={lead.rating} size={13} />}
+          <span className="flex-1 text-right text-xs text-gray-400">{formatDate(lead.updatedAt)}</span>
+          {hasConversation && (
+            <ChevronDown
+              size={16}
+              className={`text-gray-400 shrink-0 transition-transform ${expanded ? 'rotate-180' : ''}`}
+            />
+          )}
+        </button>
+        <button
+          onClick={() => onDelete(lead.id)}
+          disabled={deleting}
+          className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-40 shrink-0"
+          aria-label="Talebi sil"
+        >
+          <Trash2 size={16} />
+        </button>
+      </div>
 
       {expanded && <Transcript conversation={lead.conversation} />}
     </div>
@@ -184,7 +204,7 @@ function FunnelSection() {
   )
 }
 
-function LeadsTab({ leadData }) {
+function LeadsTab({ leadData, onDeleteLead, deletingId }) {
   const stats = leadData?.stats ?? { total: 0, active: 0, whatsapp: 0 }
   const leads = leadData?.leads ?? []
 
@@ -206,13 +226,15 @@ function LeadsTab({ leadData }) {
         <StatCard label="Kaçan (Geçmeyen)" value={stats.active} icon={Clock} />
       </div>
       <div className="space-y-3">
-        {leads.map(l => <LeadRow key={l.id} lead={l} />)}
+        {leads.map(l => (
+          <LeadRow key={l.id} lead={l} onDelete={onDeleteLead} deleting={deletingId === l.id} />
+        ))}
       </div>
     </>
   )
 }
 
-function RatingsTab({ ratingData }) {
+function RatingsTab({ ratingData, onDeleteRating, deletingId }) {
   const stats = ratingData?.stats ?? { total: 0, average: 0, counts: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 } }
   const ratings = ratingData?.ratings ?? []
   const maxCount = Math.max(1, ...Object.values(stats.counts))
@@ -251,7 +273,9 @@ function RatingsTab({ ratingData }) {
         </div>
       </div>
       <div className="space-y-3">
-        {ratings.map(r => <RatingRow key={r.id} rating={r} />)}
+        {ratings.map(r => (
+          <RatingRow key={r.id} rating={r} onDelete={onDeleteRating} deleting={deletingId === r.id} />
+        ))}
       </div>
     </>
   )
@@ -264,6 +288,7 @@ export default function ChatDegerlendirme() {
   const [ratingData, setRatingData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState('leads') // 'leads' | 'ratings'
+  const [deletingId, setDeletingId] = useState(null)
 
   useEffect(() => {
     Promise.all([fetchChatLeads(), fetchChatRatings()])
@@ -279,6 +304,47 @@ export default function ChatDegerlendirme() {
       })
       .finally(() => setLoading(false))
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function handleDeleteLead(id) {
+    if (!confirm('Bu talebi silmek istediğinize emin misiniz?')) return
+    setDeletingId(id)
+    try {
+      await deleteChatLead(id)
+      setLeadData(prev => {
+        const lead = prev.leads.find(l => l.id === id)
+        const leads = prev.leads.filter(l => l.id !== id)
+        const stats = { ...prev.stats, total: prev.stats.total - 1 }
+        if (lead?.status === 'whatsapp') stats.whatsapp -= 1
+        else stats.active -= 1
+        return { stats, leads }
+      })
+    } catch (err) {
+      alert('Silinemedi: ' + err.message)
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
+  async function handleDeleteRating(id) {
+    if (!confirm('Bu değerlendirmeyi silmek istediğinize emin misiniz?')) return
+    setDeletingId(id)
+    try {
+      await deleteChatRating(id)
+      setRatingData(prev => {
+        const rating = prev.ratings.find(r => r.id === id)
+        const ratings = prev.ratings.filter(r => r.id !== id)
+        const counts = { ...prev.stats.counts }
+        if (rating) counts[rating.rating] -= 1
+        const total = prev.stats.total - 1
+        const sum = [1, 2, 3, 4, 5].reduce((s, star) => s + star * counts[star], 0)
+        return { stats: { total, average: total ? Number((sum / total).toFixed(2)) : 0, counts }, ratings }
+      })
+    } catch (err) {
+      alert('Silinemedi: ' + err.message)
+    } finally {
+      setDeletingId(null)
+    }
+  }
 
   if (loading) {
     return (
@@ -317,7 +383,11 @@ export default function ChatDegerlendirme() {
 
       <FunnelSection />
 
-      {tab === 'leads' ? <LeadsTab leadData={leadData} /> : <RatingsTab ratingData={ratingData} />}
+      {tab === 'leads' ? (
+        <LeadsTab leadData={leadData} onDeleteLead={handleDeleteLead} deletingId={deletingId} />
+      ) : (
+        <RatingsTab ratingData={ratingData} onDeleteRating={handleDeleteRating} deletingId={deletingId} />
+      )}
     </main>
   )
 }

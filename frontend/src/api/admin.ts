@@ -355,6 +355,16 @@ export async function fetchChatFunnel(days: 7 | 30): Promise<ChatFunnel> {
   return res.json()
 }
 
+export async function deleteChatLead(id: string): Promise<void> {
+  const res = await fetch(`${API}/api/chat/lead/admin/${id}`, authOptions({ method: 'DELETE' }))
+  if (!res.ok) throw new Error('Talep silinemedi')
+}
+
+export async function deleteChatRating(id: string): Promise<void> {
+  const res = await fetch(`${API}/api/chat/rating/admin/${id}`, authOptions({ method: 'DELETE' }))
+  if (!res.ok) throw new Error('Değerlendirme silinemedi')
+}
+
 export async function reorderFaqs(orderedIds: string[]): Promise<void> {
   const res = await fetch(`${API}/api/faq/reorder`, {
     ...authOptions({ method: 'PATCH' }),

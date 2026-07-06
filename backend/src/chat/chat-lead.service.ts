@@ -55,6 +55,10 @@ export class ChatLeadService {
     await this.repo.update({ sessionId }, { rating })
   }
 
+  async remove(id: string): Promise<void> {
+    await this.repo.delete(id)
+  }
+
   async findAllWithStats(): Promise<{ stats: LeadStats; leads: ChatLead[] }> {
     const [leads, total, whatsapp] = await Promise.all([
       this.repo.find({ order: { updatedAt: 'DESC' }, take: 200 }),

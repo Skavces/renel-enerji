@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Get, Ip, Logger, Post, Query, UseGuards } from '@nestjs/common'
+import { BadRequestException, Body, Controller, Delete, Get, HttpCode, Ip, Logger, Param, Post, Query, UseGuards } from '@nestjs/common'
 import { Throttle } from '@nestjs/throttler'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 import { ChatMessage, ChatService, INJECTION_PATTERNS, sanitizeContent } from './chat.service'
@@ -79,6 +79,13 @@ export class ChatController {
     return this.ratingService.findAllWithStats()
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Delete('rating/admin/:id')
+  @HttpCode(204)
+  removeRating(@Param('id') id: string) {
+    return this.ratingService.remove(id)
+  }
+
   @Post('event')
   @Throttle({ default: { limit: 30, ttl: 60000 } })
   async event(@Body() dto: EventBodyDto) {
@@ -90,6 +97,13 @@ export class ChatController {
   @Get('lead/admin/all')
   adminLeads() {
     return this.leadService.findAllWithStats()
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('lead/admin/:id')
+  @HttpCode(204)
+  removeLead(@Param('id') id: string) {
+    return this.leadService.remove(id)
   }
 
   @UseGuards(JwtAuthGuard)

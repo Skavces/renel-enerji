@@ -27,6 +27,10 @@ export class ChatRatingService {
     )
   }
 
+  async remove(id: string): Promise<void> {
+    await this.repo.delete(id)
+  }
+
   async findAllWithStats(): Promise<{ stats: RatingStats; ratings: ChatRating[] }> {
     const [ratings, grouped] = await Promise.all([
       this.repo.find({ order: { createdAt: 'DESC' }, take: 200 }),
