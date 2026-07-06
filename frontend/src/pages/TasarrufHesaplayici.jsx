@@ -1,14 +1,18 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Sun, Zap, PanelTop, Ruler, TrendingUp, MessageCircle } from 'lucide-react'
 import SEO from '../components/SEO'
 import PageHeader from '../components/PageHeader'
-import { TARIFFS, calculateGes } from '../lib/gesCalc'
+import { TARIFFS, calculateGes, parseBillInput } from '../lib/gesCalc'
 
 const formatTl = value => value.toLocaleString('tr-TR')
 
 export default function TasarrufHesaplayici() {
-  const [bill, setBill] = useState('')
-  const [tariff, setTariff] = useState('mesken')
+  const [searchParams] = useSearchParams()
+  const [bill, setBill] = useState(parseBillInput(searchParams.get('fatura') || ''))
+  const [tariff, setTariff] = useState(
+    TARIFFS.some(t => t.id === searchParams.get('tarife')) ? searchParams.get('tarife') : 'mesken'
+  )
 
   const result = calculateGes(Number(bill), tariff)
 
@@ -54,11 +58,10 @@ export default function TasarrufHesaplayici() {
 
             <div className="relative mb-8">
               <input
-                type="number"
+                type="text"
                 inputMode="numeric"
-                min="0"
-                value={bill}
-                onChange={e => setBill(e.target.value)}
+                value={bill ? Number(bill).toLocaleString('tr-TR') : ''}
+                onChange={e => setBill(parseBillInput(e.target.value))}
                 placeholder="Aylık elektrik faturanız"
                 className="w-full px-4 py-3 pr-12 rounded-xl border border-gray-200 text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#448834] transition-colors"
               />
@@ -68,12 +71,12 @@ export default function TasarrufHesaplayici() {
             {result ? (
               <>
                 <div className="grid sm:grid-cols-2 gap-4 mb-6">
-                  {cards.map(({ icon: Icon, label, value }) => (
-                    <div key={label} className="bg-gray-50 border border-gray-100 rounded-xl p-5 flex items-center gap-4">
-                      <Icon size={32} className="text-[#448834] shrink-0" />
+                  {cards.map(card => (
+                    <div key={card.label} className="bg-gray-50 border border-gray-100 rounded-xl p-5 flex items-center gap-4">
+                      <card.icon size={32} className="text-[#448834] shrink-0" />
                       <div>
-                        <p className="text-2xl font-bold font-['Rajdhani'] text-gray-900 leading-tight">{value}</p>
-                        <p className="text-xs text-gray-500">{label}</p>
+                        <p className="text-2xl font-bold font-['Rajdhani'] text-gray-900 leading-tight">{card.value}</p>
+                        <p className="text-xs text-gray-500">{card.label}</p>
                       </div>
                     </div>
                   ))}

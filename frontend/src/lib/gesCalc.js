@@ -13,6 +13,15 @@ const PANEL_KWP = 0.55
 // kWp başına gereken yaklaşık çatı alanı (m²)
 const AREA_M2_PER_KWP = 5
 
+const MAX_BILL = 10000000
+
+// Kullanıcı yazarken binlik ayraçlarla girilen değeri ham rakamlara indirger (üst sınırla kırpar).
+export function parseBillInput(rawValue) {
+  const digits = rawValue.replace(/\D/g, '')
+  if (!digits) return ''
+  return String(Math.min(Number(digits), MAX_BILL))
+}
+
 export function calculateGes(monthlyBill, tariffId) {
   const tariff = TARIFFS.find(t => t.id === tariffId) ?? TARIFFS[0]
   if (!monthlyBill || monthlyBill <= 0) return null

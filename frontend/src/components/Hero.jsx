@@ -1,25 +1,13 @@
 import { Link } from 'react-router-dom'
-import { ArrowRight } from 'lucide-react'
-import { useState, useEffect } from 'react'
-import { fetchProjects, mediaUrl } from '../api/projects'
+import { ArrowRight, Sun, TrendingUp } from 'lucide-react'
+import { useState } from 'react'
+import { TARIFFS, calculateGes, parseBillInput } from '../lib/gesCalc'
 
 export default function Hero() {
-  const [current, setCurrent] = useState(0)
-  const [projects, setProjects] = useState([])
+  const [bill, setBill] = useState('')
+  const [tariff, setTariff] = useState('mesken')
 
-  useEffect(() => {
-    fetchProjects().then(setProjects).catch(() => {})
-  }, [])
-
-  useEffect(() => {
-    if (projects.length < 2) return
-    const interval = setInterval(() => {
-      setCurrent(i => (i + 1) % projects.length)
-    }, 3500)
-    return () => clearInterval(interval)
-  }, [projects.length])
-
-  const project = projects[current]
+  const result = calculateGes(Number(bill), tariff)
 
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden -mt-24">
@@ -54,51 +42,87 @@ export default function Hero() {
             güneş enerjisinde tam kapsamlı mühendislik hizmeti.
           </p>
 
-          <Link
-            to="/projelerimiz"
-            className="inline-flex items-center gap-2 bg-[#3d7a2e] hover:bg-[#357228] text-white font-bold px-6 sm:px-7 py-3 sm:py-3.5 rounded-xl transition-colors shadow-lg shadow-black/30"
-          >
-            Projelerimizi Gör
-            <ArrowRight size={17} />
-          </Link>
-        </div>
+          <div className="flex flex-wrap gap-3">
+            <Link
+              to="/projelerimiz"
+              className="inline-flex items-center gap-2 bg-[#3d7a2e] hover:bg-[#357228] text-white font-bold px-6 sm:px-7 py-3 sm:py-3.5 rounded-xl transition-colors shadow-lg shadow-black/30"
+            >
+              Projelerimizi Gör
+              <ArrowRight size={17} />
+            </Link>
 
-        {/* Right — auto-rotating project card */}
-        {projects.length > 0 && project && (
-          <div className="hidden lg:block shrink-0 w-75 xl:w-100 border-2 border-[#f5ce31]/60 rounded-3xl p-3">
-            <p className="text-white/80 text-sm font-semibold mb-3">
-              Son Projeler
-            </p>
-            <Link to={`/projelerimiz/${project.slug}`} className="group block relative rounded-2xl overflow-hidden aspect-3/4">
-              {projects.map((p, i) => {
-                const cover = p.media?.find(m => m.type === 'thumbnail') ?? p.media?.find(m => m.type === 'image')
-                return cover ? (
-                  <img
-                    key={p.id}
-                    src={mediaUrl(cover.src)}
-                    alt={`${p.name} - ${p.location} güneş enerjisi sistemi kurulumu`}
-                    className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${i === current ? 'opacity-100' : 'opacity-0'}`}
-                  />
-                ) : null
-              })}
-              <div className="absolute inset-0 bg-linear-to-t from-black/75 via-black/10 to-transparent" />
-              {projects.map((p, i) => (
-                <div
-                  key={p.id}
-                  className={`absolute bottom-0 left-0 right-0 p-5 transition-opacity duration-1000 ease-in-out ${i === current ? 'opacity-100' : 'opacity-0'}`}
-                >
-                  <p className="text-white font-bold text-base leading-tight">{p.name}</p>
-                  <p className="text-[#f5ce31] font-bold text-xl font-['Rajdhani'] mt-1">{p.kw} kW</p>
-                </div>
-              ))}
-              <div className="absolute top-3 right-3 flex gap-1.5">
-                {projects.map((_, i) => (
-                  <span key={i} className={`block rounded-full transition-all duration-500 ${i === current ? 'w-4 h-1.5 bg-white' : 'w-1.5 h-1.5 bg-white/40'}`} />
-                ))}
-              </div>
+            <Link
+              to="/tasarruf-hesaplayici"
+              className="lg:hidden inline-flex items-center gap-2 bg-[#f5ce31] hover:bg-[#e0ba24] text-gray-900 font-bold px-6 sm:px-7 py-3 sm:py-3.5 rounded-xl transition-colors shadow-lg shadow-black/30"
+            >
+              Tasarruf Hesaplayıcı
+              <ArrowRight size={17} />
             </Link>
           </div>
-        )}
+        </div>
+
+        {/* Right — mini savings calculator */}
+        <div className="hidden lg:block shrink-0 w-90 xl:w-115 border-2 border-[#f5ce31]/60 rounded-[2rem] p-2">
+          <div className="bg-white rounded-3xl p-7 shadow-xl shadow-black/30">
+            <p className="text-gray-900 font-bold text-lg mb-1">Tasarruf Hesaplayıcı</p>
+            <p className="text-gray-500 text-sm mb-5">Faturanızı girin, sisteminizi görün.</p>
+
+            <div className="flex flex-wrap gap-2 mb-4">
+              {TARIFFS.map(t => (
+                <button
+                  key={t.id}
+                  onClick={() => setTariff(t.id)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    tariff === t.id
+                      ? 'bg-[#448834] text-white'
+                      : 'bg-gray-50 border border-gray-200 text-gray-600 hover:border-[#448834]'
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="relative mb-5">
+              <input
+                type="text"
+                inputMode="numeric"
+                value={bill ? Number(bill).toLocaleString('tr-TR') : ''}
+                onChange={e => setBill(parseBillInput(e.target.value))}
+                placeholder="Aylık elektrik faturanız"
+                className="w-full px-4 py-3 pr-12 rounded-xl border-2 border-[#448834] text-gray-800 placeholder-gray-400 focus:outline-none transition-colors"
+              />
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">TL</span>
+            </div>
+
+            {result ? (
+              <div className="grid grid-cols-2 gap-3 mb-5">
+                <div className="bg-gray-50 border border-gray-100 rounded-xl p-4">
+                  <Sun size={22} className="text-[#448834] mb-2" />
+                  <p className="text-gray-900 font-bold text-2xl font-['Rajdhani'] leading-tight">{result.systemKwp} kWp</p>
+                  <p className="text-gray-500 text-xs">Sistem Gücü</p>
+                </div>
+                <div className="bg-gray-50 border border-gray-100 rounded-xl p-4">
+                  <TrendingUp size={22} className="text-[#448834] mb-2" />
+                  <p className="text-gray-900 font-bold text-2xl font-['Rajdhani'] leading-tight">{result.annualSavings.toLocaleString('tr-TR')} TL</p>
+                  <p className="text-gray-500 text-xs">Yıllık Tasarruf</p>
+                </div>
+              </div>
+            ) : (
+              <p className="text-gray-400 text-sm text-center py-6 mb-5">
+                Faturanızı girdiğinizde sonuç burada görünecek.
+              </p>
+            )}
+
+            <Link
+              to={bill ? `/tasarruf-hesaplayici?fatura=${encodeURIComponent(bill)}&tarife=${tariff}` : '/tasarruf-hesaplayici'}
+              className="w-full flex items-center justify-center gap-2 bg-[#448834] hover:bg-[#357228] text-white font-semibold text-base py-3.5 rounded-xl transition-colors"
+            >
+              Detaylı Analizi Gör
+              <ArrowRight size={17} />
+            </Link>
+          </div>
+        </div>
       </div>
 
       {/* Bottom wave */}
