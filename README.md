@@ -7,9 +7,12 @@ Corporate website and admin panel for **RenEL Enerji**, a solar energy solutions
 | Layer | Technology |
 |-------|------------|
 | Frontend | React 19, Vite 8, Tailwind CSS 4 |
-| Backend | NestJS, TypeORM, PostgreSQL |
+| Backend | NestJS, TypeORM, PostgreSQL, Redis |
+| AI / Chatbot | Groq |
 | Analytics | Umami |
-| Deployment | Docker Compose, Nginx |
+| Notifications | Telegram (error alerts, missed-lead alerts) |
+| Error Tracking | Sentry (optional) |
+| Deployment | Docker Compose, Nginx, prerender (SEO for SPA) |
 
 ## Project Structure
 
@@ -21,22 +24,29 @@ renel-enerji/
 │   │   ├── pages/         # Pages
 │   │   │   ├── admin/     # Admin panel pages
 │   │   │   ├── projeler/  # Project detail pages
+│   │   │   ├── hizmetler/ # Service detail pages
 │   │   │   └── neden-biz/ # Why Us detail pages
+│   │   ├── lib/           # Shared client-side logic (e.g. savings calculator)
 │   │   ├── api/           # API request functions
 │   │   └── contexts/      # React contexts
 │   └── public/            # Static assets
 ├── backend/           # NestJS REST API
 │   └── src/
-│       ├── auth/          # JWT authentication
-│       ├── projects/      # Projects module
-│       ├── references/    # References module
-│       ├── blog/          # Blog module
-│       ├── faq/           # FAQ module
-│       ├── chat/          # AI chatbot module
-│       ├── analytics/     # Umami analytics integration
-│       ├── sitemap/       # Dynamic sitemap generation
-│       ├── weather/       # Weather integration
-│       └── upload/        # File upload
+│       ├── auth/            # JWT authentication + 2FA + login rate limiting
+│       ├── projects/        # Projects module (incl. Instagram import)
+│       ├── references/      # References module
+│       ├── blog/            # Blog module
+│       ├── faq/             # FAQ module
+│       ├── chat/            # AI chatbot: conversations, lead capture, funnel tracking, KVKK retention purge
+│       ├── analytics/       # Umami analytics integration
+│       ├── sitemap/         # Dynamic sitemap generation
+│       ├── weather/         # Weather integration
+│       ├── upload/          # File upload
+│       ├── groq/            # Groq AI client (chatbot + Instagram parsing)
+│       ├── instagram-token/ # Instagram Graph API token refresh
+│       ├── notifications/   # Telegram error/lead alerts
+│       ├── webhooks/        # Instagram webhook receiver
+│       └── common/          # Shared DTOs, encryption, logging, fetch helpers
 └── docker-compose.yml # All services
 ```
 
@@ -80,14 +90,19 @@ docker compose up -d --build
 **Required `.env` variables:**
 
 ```env
-JWT_SECRET=          # Random string, min 32 characters
-ADMIN_USERNAME=      # Admin username
-ADMIN_PASSWORD=      # Admin password
-UMAMI_WEBSITE_ID=    # Website ID from Umami dashboard
-UMAMI_USER=          # Umami username
-UMAMI_PASS=          # Umami password
-UMAMI_APP_SECRET=    # Umami app secret
+JWT_SECRET=            # Random string, min 32 characters
+ADMIN_USERNAME=        # Admin username
+ADMIN_PASSWORD_HASH=   # bcrypt hash, never a plain-text password
+FRONTEND_URL=          # Frontend origin, required for CORS
+REDIS_PASS=            # Random string, min 32 characters
+APP_ENCRYPTION_KEY=    # openssl rand -hex 32 — encrypts stored 2FA/TOTP secrets
+UMAMI_WEBSITE_ID=      # Website ID from Umami dashboard
+UMAMI_USER=            # Umami username
+UMAMI_PASS=            # Umami password
+UMAMI_APP_SECRET=      # Umami app secret
 ```
+
+Optional integrations (Groq chatbot, Telegram alerts, Instagram import, OpenWeather, Sentry) are documented with setup notes in `backend/.env.example` — leave them blank to disable.
 
 ## Services
 
@@ -97,6 +112,8 @@ UMAMI_APP_SECRET=    # Umami app secret
 | Backend (NestJS) | 3001 | REST API (internal) |
 | Umami | 3002 | Analytics dashboard |
 | PostgreSQL | 5432 | Main database (internal) |
+| Redis | — | Login rate limiting / caching (internal) |
+| Prerender | 3000 | Serves pre-rendered HTML to crawlers/bots for SEO (internal) |
 
 ## Database Backup & Restore
 
@@ -119,9 +136,10 @@ Uploaded files (project/blog media) live in the `uploads` volume — back up the
 Accessible at `/admin`, protected by JWT authentication.
 
 **Features:**
-- Project management (create, edit, delete, media upload)
+- Project management (create, edit, delete, media upload, Instagram import)
 - References management
 - Blog management
 - FAQ management
+- Chatbot lead management: transcripts, missed-lead alerts, conversion funnel (KVKK: 6-month retention purge)
 - Site analytics (Umami integration)
-- Two-factor authentication (2FA)
+- Account security: credential changes, two-factor authentication (2FA) setup
