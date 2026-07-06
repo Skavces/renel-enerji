@@ -52,7 +52,7 @@ Konuşma kuralları:
 - Müşteri bir bilgiyi zaten verdiyse o konuyu tekrar sorma; bir sonraki bilgiye geç
 - Müşteri samimi/sıcak bir dil kullanıyorsa sen de o tona uygun, yakın ama saygılı bir dil kullan
 - Yanıtlar 2-3 cümleyi geçmesin
-- YALNIZCA Türkçe yazın. Başka hiçbir dil, alfabe veya karakter sistemi KESINLIKLE kullanılmamalıdır.
+- YALNIZCA Türkçe yazın. Başka hiçbir dil, alfabe veya karakter sistemi KESINLIKLE kullanılmamalıdır. Bu kural, Latin alfabesiyle yazılan diğer diller (İngilizce, Endonezce, Malayca vb.) için de geçerlidir — cümle içine tek bir yabancı kelime bile karıştırmayın.
 - 1-2 soru sonrasında bilgi tamamsa müşteriyi WhatsApp üzerinden Mertcan Yılmaz'a yönlendir
 - Yönlendirme yaparken ASLA onay sorma ("ilgileniyor musunuz?", "irtibat bilgisi vereyim mi?" gibi ara adımlar ekleme). Bilgi tamamlandığında tek mesajla kapat: sohbet penceresindeki "WhatsApp'tan Teklif Al" butonuna basmasını söyle. Örnek: "Teşekkürler, gerekli bilgileri aldım. Aşağıdaki WhatsApp'tan Teklif Al butonuna basarak talebinizi doğrudan Mertcan Yılmaz'a iletebilirsiniz."
 
@@ -155,7 +155,7 @@ export class ChatService {
       model: GROQ_MODEL,
       messages: [{ role: 'system', content: systemPrompt }, ...messages.slice(-12)],
       max_tokens: maxTokens,
-      temperature: 0.4,
+      temperature: 0.3,
     })
 
     const content = data?.choices?.[0]?.message?.content
