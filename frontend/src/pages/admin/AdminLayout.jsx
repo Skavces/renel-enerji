@@ -50,12 +50,14 @@ export default function AdminLayout() {
       <header className="bg-white shadow-lg shrink-0 relative z-20">
         <div className="max-w-6xl mx-auto flex items-center h-16 lg:h-24 px-4 lg:px-6 gap-4 lg:gap-8">
           {/* Logo */}
-          <Link to="/admin" className="shrink-0">
-            <Logo className="h-14 lg:h-20 w-auto" />
-          </Link>
+          <div className="flex items-center lg:flex-1">
+            <Link to="/admin" className="shrink-0">
+              <Logo className="h-14 lg:h-20 w-auto" />
+            </Link>
+          </div>
 
           {/* Nav links — desktop only */}
-          <nav className="hidden lg:flex items-center gap-0.5 flex-1 justify-center">
+          <nav className="hidden lg:flex items-center gap-0.5 shrink-0">
             {/* eslint-disable-next-line no-unused-vars */}
             {NAV.map(({ to, label, icon: Icon, match }) => {
               const active = match(pathname)
@@ -77,7 +79,7 @@ export default function AdminLayout() {
           </nav>
 
           {/* Right actions — desktop only */}
-          <div className="hidden lg:flex items-center gap-0.5 shrink-0">
+          <div className="hidden lg:flex items-center gap-0.5 flex-1 justify-end">
             <a
               href="/"
               target="_blank"
