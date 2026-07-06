@@ -25,7 +25,7 @@ export default function TeklifChatbot({ onClose, closing, messages: initialMessa
   const [messages, setMessages] = useState(
     initialMessages ?? [{ role: 'assistant', content: GREETING }]
   )
-  const [input, setInput] = useState(prefill || '')
+  const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [summaryLoading, setSummaryLoading] = useState(false)
   const [ratingView, setRatingView] = useState(false) // false | 'rate' | 'thanks'
@@ -49,11 +49,16 @@ export default function TeklifChatbot({ onClose, closing, messages: initialMessa
 
   useEffect(() => {
     if (messagesRef.current) messagesRef.current.scrollTop = 0
-    inputRef.current?.focus()
+    if (prefill) {
+      send(prefill)
+    } else {
+      inputRef.current?.focus()
+    }
     if (!openTracked) {
       openTracked = true
       trackChatOpen()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   async function send(text) {
