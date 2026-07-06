@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 const stats = [
   { value: 100, suffix: '+', label: 'Mutlu Müşteri', sub: 'tamamlanan proje' },
   { value: 25, suffix: ' Yıl', label: 'Panel Garantisi', sub: 'üretici garantisi' },
-  { value: 4, suffix: '', label: 'Hizmet Alanı', sub: 'farklı çözüm' },
+  { value: 8, suffix: '', label: 'Hizmet Alanı', sub: 'farklı çözüm' },
 ]
 
 function Counter({ value, suffix }) {
