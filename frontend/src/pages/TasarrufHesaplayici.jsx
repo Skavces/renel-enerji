@@ -7,6 +7,19 @@ import { TARIFFS, calculateGes, parseBillInput } from '../lib/gesCalc'
 
 const formatTl = value => value.toLocaleString('tr-TR')
 
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Güneş Enerjisi Tasarruf Hesaplayıcı',
+  url: 'https://renelenerji.com/tasarruf-hesaplayici',
+  description:
+    'Aylık elektrik faturanızı girin; size uygun güneş enerjisi sistemi gücünü, panel sayısını, gerekli çatı alanını ve yıllık tasarrufunuzu anında hesaplayın.',
+  applicationCategory: 'UtilitiesApplication',
+  operatingSystem: 'Web',
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'TRY' },
+  provider: { '@type': 'Organization', name: 'RenEL Enerji Mühendislik', url: 'https://renelenerji.com' },
+}
+
 export default function TasarrufHesaplayici() {
   const [searchParams] = useSearchParams()
   const [bill, setBill] = useState(parseBillInput(searchParams.get('fatura') || ''))
@@ -29,6 +42,7 @@ export default function TasarrufHesaplayici() {
       <SEO
         title="Güneş Enerjisi Tasarruf Hesaplayıcı"
         description="Aylık elektrik faturanızı girin; size uygun güneş enerjisi sistemi gücünü, panel sayısını, gerekli çatı alanını ve yıllık tasarrufunuzu anında hesaplayın."
+        jsonLd={jsonLd}
       />
       <PageHeader title="Tasarruf Hesaplayıcı" />
 
@@ -89,7 +103,11 @@ export default function TasarrufHesaplayici() {
                 </p>
 
                 <button
-                  onClick={() => window.dispatchEvent(new CustomEvent('open-chat'))}
+                  onClick={() => window.dispatchEvent(new CustomEvent('open-chat', {
+                    detail: {
+                      prefill: `Tasarruf hesaplayıcıda ${TARIFFS.find(t => t.id === tariff)?.label} tarifesinde aylık ${formatTl(Number(bill))} TL faturamla hesapladım: yaklaşık ${result.systemKwp} kWp sistem, yıllık ${formatTl(result.annualSavings)} TL tasarruf öneriliyor. Ücretsiz keşif ve teklif almak istiyorum.`,
+                    },
+                  }))}
                   className="w-full flex items-center justify-center gap-2 bg-[#448834] hover:bg-[#357228] text-white font-semibold text-sm py-3.5 rounded-xl transition-colors"
                 >
                   <MessageCircle size={16} />

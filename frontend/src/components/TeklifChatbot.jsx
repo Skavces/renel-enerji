@@ -21,11 +21,11 @@ const QUICK_REPLIES = [
   { label: 'Enerji Danışmanlığı', desc: 'Fatura kontrolü, reaktif ceza, risk analizi', icon: FileBarChart, value: 'Enerji danışmanlığı hizmetleriniz hakkında bilgi almak istiyorum. Elektrik faturası ve reaktif enerji kontrolü konusunda görüşmek istiyorum.' },
 ]
 
-export default function TeklifChatbot({ onClose, closing, messages: initialMessages, onMessagesChange, sessionId }) {
+export default function TeklifChatbot({ onClose, closing, messages: initialMessages, onMessagesChange, sessionId, prefill }) {
   const [messages, setMessages] = useState(
     initialMessages ?? [{ role: 'assistant', content: GREETING }]
   )
-  const [input, setInput] = useState('')
+  const [input, setInput] = useState(prefill || '')
   const [loading, setLoading] = useState(false)
   const [summaryLoading, setSummaryLoading] = useState(false)
   const [ratingView, setRatingView] = useState(false) // false | 'rate' | 'thanks'

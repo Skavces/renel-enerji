@@ -52,7 +52,8 @@ function PageLoader() {
   return <div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-2 border-[#448834] border-t-transparent rounded-full animate-spin" /></div>
 }
 
-function openChat(setChatOpen) {
+function openChat(setChatOpen, setChatPrefill) {
+  setChatPrefill('')
   setChatOpen(true)
 }
 
@@ -60,6 +61,7 @@ function PublicLayout() {
   const [chatOpen, setChatOpen] = useState(false)
   const [chatClosing, setChatClosing] = useState(false)
   const [chatMessages, setChatMessages] = useState(null)
+  const [chatPrefill, setChatPrefill] = useState('')
   // Konuşma başına lead takibi için kimlik; sayfa yenilenene kadar sabit (mesajlar gibi)
   const [chatSessionId] = useState(() => crypto.randomUUID())
 
@@ -73,7 +75,10 @@ function PublicLayout() {
 
   // Sayfa içi CTA'lar (örn. tasarruf hesaplayıcı) chatbot'u bu event ile açar
   useEffect(() => {
-    const open = () => setChatOpen(true)
+    const open = e => {
+      setChatPrefill(e.detail?.prefill || '')
+      setChatOpen(true)
+    }
     window.addEventListener('open-chat', open)
     return () => window.removeEventListener('open-chat', open)
   }, [])
@@ -105,7 +110,7 @@ function PublicLayout() {
       </main>
       <Footer />
       <button
-        onClick={() => openChat(setChatOpen)}
+        onClick={() => openChat(setChatOpen, setChatPrefill)}
         className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 bg-[#357228] hover:bg-[#2d6124] text-white font-semibold text-sm px-5 py-3 rounded-full shadow-lg shadow-black/15 transition-all hover:scale-105"
       >
         <Bot size={18} />
@@ -118,6 +123,7 @@ function PublicLayout() {
           messages={chatMessages}
           onMessagesChange={setChatMessages}
           sessionId={chatSessionId}
+          prefill={chatPrefill}
         />
       )}
     </>
