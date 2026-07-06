@@ -310,14 +310,7 @@ export default function ChatDegerlendirme() {
     setDeletingId(id)
     try {
       await deleteChatLead(id)
-      setLeadData(prev => {
-        const lead = prev.leads.find(l => l.id === id)
-        const leads = prev.leads.filter(l => l.id !== id)
-        const stats = { ...prev.stats, total: prev.stats.total - 1 }
-        if (lead?.status === 'whatsapp') stats.whatsapp -= 1
-        else stats.active -= 1
-        return { stats, leads }
-      })
+      setLeadData(await fetchChatLeads())
     } catch (err) {
       alert('Silinemedi: ' + err.message)
     } finally {
@@ -330,15 +323,7 @@ export default function ChatDegerlendirme() {
     setDeletingId(id)
     try {
       await deleteChatRating(id)
-      setRatingData(prev => {
-        const rating = prev.ratings.find(r => r.id === id)
-        const ratings = prev.ratings.filter(r => r.id !== id)
-        const counts = { ...prev.stats.counts }
-        if (rating) counts[rating.rating] -= 1
-        const total = prev.stats.total - 1
-        const sum = [1, 2, 3, 4, 5].reduce((s, star) => s + star * counts[star], 0)
-        return { stats: { total, average: total ? Number((sum / total).toFixed(2)) : 0, counts }, ratings }
-      })
+      setRatingData(await fetchChatRatings())
     } catch (err) {
       alert('Silinemedi: ' + err.message)
     } finally {
