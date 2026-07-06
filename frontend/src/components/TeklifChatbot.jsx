@@ -40,7 +40,8 @@ export default function TeklifChatbot({ onClose, closing, messages: initialMessa
   }
 
   const userMessageCount = messages.filter(m => m.role === 'user').length
-  const showWhatsapp = userMessageCount >= 2
+  const lastAssistant = [...messages].reverse().find(m => m.role === 'assistant')
+  const showWhatsapp = !!lastAssistant && lastAssistant.content !== GREETING && /whatsapp/i.test(lastAssistant.content)
 
   useEffect(() => {
     if (messagesRef.current)
