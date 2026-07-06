@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common'
+import { Injectable, Logger, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Cron, CronExpression } from '@nestjs/schedule'
 import { IsNull, LessThan, Repository } from 'typeorm'
@@ -56,7 +56,9 @@ export class ChatLeadService {
   }
 
   async remove(id: string): Promise<void> {
-    await this.repo.delete(id)
+    const lead = await this.repo.findOne({ where: { id } })
+    if (!lead) throw new NotFoundException('Talep bulunamadı')
+    await this.repo.remove(lead)
   }
 
   async findAllWithStats(): Promise<{ stats: LeadStats; leads: ChatLead[] }> {

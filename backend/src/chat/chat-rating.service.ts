@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { ChatRating } from './entities/chat-rating.entity'
@@ -28,7 +28,9 @@ export class ChatRatingService {
   }
 
   async remove(id: string): Promise<void> {
-    await this.repo.delete(id)
+    const rating = await this.repo.findOne({ where: { id } })
+    if (!rating) throw new NotFoundException('Değerlendirme bulunamadı')
+    await this.repo.remove(rating)
   }
 
   async findAllWithStats(): Promise<{ stats: RatingStats; ratings: ChatRating[] }> {
