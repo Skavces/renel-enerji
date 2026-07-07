@@ -48,11 +48,11 @@ export default function AdminLayout() {
     <div className="flex flex-col h-screen overflow-hidden bg-gray-50">
       {/* Navbar */}
       <header className="bg-white shadow-lg shrink-0 relative z-20">
-        <div className="max-w-6xl mx-auto flex items-center h-16 lg:h-24 px-4 lg:px-6 gap-4 lg:gap-8">
+        <div className="max-w-6xl mx-auto flex items-center h-16 lg:h-24 px-4 min-[1400px]:px-6 gap-4 min-[1400px]:gap-8">
           {/* Logo */}
           <div className="flex items-center lg:flex-1">
             <Link to="/admin" className="shrink-0">
-              <Logo className="h-14 lg:h-20 w-auto" />
+              <Logo className="h-14 lg:h-16 min-[1400px]:h-20 w-auto" />
             </Link>
           </div>
 
@@ -65,7 +65,7 @@ export default function AdminLayout() {
                 <Link
                   key={to}
                   to={to}
-                  className={`flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 whitespace-nowrap ${
+                  className={`flex items-center gap-1 min-[1400px]:gap-1.5 px-2 min-[1400px]:px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 whitespace-nowrap ${
                     active
                       ? 'bg-[#448834] text-white'
                       : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
@@ -84,17 +84,19 @@ export default function AdminLayout() {
               href="/"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-all duration-150 whitespace-nowrap"
+              title="Siteyi Gör"
+              className="flex items-center gap-2 px-2 min-[1400px]:px-4 py-2.5 rounded-lg text-sm text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-all duration-150 whitespace-nowrap"
             >
               <ExternalLink size={17} className="shrink-0" />
-              <span>Siteyi Gör</span>
+              <span className="hidden min-[1400px]:inline">Siteyi Gör</span>
             </a>
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm text-gray-500 hover:text-red-500 hover:bg-red-50 transition-all duration-150 whitespace-nowrap"
+              title="Çıkış"
+              className="flex items-center gap-2 px-2 min-[1400px]:px-4 py-2.5 rounded-lg text-sm text-gray-500 hover:text-red-500 hover:bg-red-50 transition-all duration-150 whitespace-nowrap"
             >
               <LogOut size={17} className="shrink-0" />
-              <span>Çıkış</span>
+              <span className="hidden min-[1400px]:inline">Çıkış</span>
             </button>
           </div>
 

@@ -66,20 +66,24 @@ function RatingRow({ rating, onDelete, deleting }) {
       <div className="w-full flex items-center gap-2 pr-3">
         <button
           onClick={() => hasConversation && setExpanded(e => !e)}
-          className={`flex-1 min-w-0 flex items-center gap-4 pl-5 py-4 text-left ${hasConversation ? '' : 'cursor-default'}`}
+          className={`flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 pl-5 py-4 text-left ${hasConversation ? '' : 'cursor-default'}`}
         >
-          <Stars value={rating.rating} />
-          <span className="text-sm text-gray-500 flex items-center gap-1.5">
-            <MessageCircle size={14} className="text-gray-300" />
-            {rating.messageCount} mesaj
-          </span>
-          <span className="flex-1 text-right text-xs text-gray-400">{formatDate(rating.createdAt)}</span>
-          {hasConversation && (
-            <ChevronDown
-              size={16}
-              className={`text-gray-400 shrink-0 transition-transform ${expanded ? 'rotate-180' : ''}`}
-            />
-          )}
+          <div className="flex items-center gap-4 flex-wrap">
+            <Stars value={rating.rating} />
+            <span className="text-sm text-gray-500 flex items-center gap-1.5">
+              <MessageCircle size={14} className="text-gray-300" />
+              {rating.messageCount} mesaj
+            </span>
+          </div>
+          <div className="flex items-center gap-2 sm:ml-auto">
+            <span className="text-xs text-gray-400">{formatDate(rating.createdAt)}</span>
+            {hasConversation && (
+              <ChevronDown
+                size={16}
+                className={`text-gray-400 shrink-0 transition-transform ${expanded ? 'rotate-180' : ''}`}
+              />
+            )}
+          </div>
         </button>
         <button
           onClick={() => onDelete(rating.id)}
@@ -106,29 +110,33 @@ function LeadRow({ lead, onDelete, deleting }) {
       <div className="w-full flex items-center gap-2 pr-3">
         <button
           onClick={() => hasConversation && setExpanded(e => !e)}
-          className={`flex-1 min-w-0 flex items-center gap-4 pl-5 py-4 text-left ${hasConversation ? '' : 'cursor-default'}`}
+          className={`flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 pl-5 py-4 text-left ${hasConversation ? '' : 'cursor-default'}`}
         >
-          {isWhatsapp ? (
-            <span className="flex items-center gap-1.5 text-sm text-green-600 font-medium shrink-0">
-              <Send size={13} /> WhatsApp'a geçti
+          <div className="flex items-center gap-4 flex-wrap">
+            {isWhatsapp ? (
+              <span className="flex items-center gap-1.5 text-sm text-green-600 font-medium shrink-0">
+                <Send size={13} /> WhatsApp'a geçti
+              </span>
+            ) : (
+              <span className="flex items-center gap-1.5 text-sm text-amber-600 font-medium shrink-0">
+                <Clock size={13} /> WhatsApp'a geçmedi
+              </span>
+            )}
+            <span className="text-sm text-gray-500 flex items-center gap-1.5">
+              <MessageCircle size={14} className="text-gray-300" />
+              {lead.messageCount} mesaj
             </span>
-          ) : (
-            <span className="flex items-center gap-1.5 text-sm text-amber-600 font-medium shrink-0">
-              <Clock size={13} /> WhatsApp'a geçmedi
-            </span>
-          )}
-          <span className="text-sm text-gray-500 flex items-center gap-1.5">
-            <MessageCircle size={14} className="text-gray-300" />
-            {lead.messageCount} mesaj
-          </span>
-          {lead.rating != null && <Stars value={lead.rating} size={13} />}
-          <span className="flex-1 text-right text-xs text-gray-400">{formatDate(lead.updatedAt)}</span>
-          {hasConversation && (
-            <ChevronDown
-              size={16}
-              className={`text-gray-400 shrink-0 transition-transform ${expanded ? 'rotate-180' : ''}`}
-            />
-          )}
+            {lead.rating != null && <Stars value={lead.rating} size={13} />}
+          </div>
+          <div className="flex items-center gap-2 sm:ml-auto">
+            <span className="text-xs text-gray-400">{formatDate(lead.updatedAt)}</span>
+            {hasConversation && (
+              <ChevronDown
+                size={16}
+                className={`text-gray-400 shrink-0 transition-transform ${expanded ? 'rotate-180' : ''}`}
+              />
+            )}
+          </div>
         </button>
         <button
           onClick={() => onDelete(lead.id)}
@@ -341,7 +349,7 @@ export default function ChatDegerlendirme() {
 
   return (
     <main className="max-w-6xl mx-auto px-6 py-8">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div>
           <h1 className="text-xl font-bold text-gray-900">Chatbot</h1>
           <p className="text-sm text-gray-400 mt-0.5">
