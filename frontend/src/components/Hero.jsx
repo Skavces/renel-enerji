@@ -67,6 +67,7 @@ export default function Hero() {
             <p className="text-gray-900 font-bold text-lg mb-1">Tasarruf Hesaplayıcı</p>
             <p className="text-gray-500 text-sm mb-5">Faturanızı girin, sisteminizi görün.</p>
 
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Tüketim Tipi</p>
             <div className="flex flex-wrap gap-2 mb-4">
               {TARIFFS.map(t => (
                 <button

@@ -3,7 +3,7 @@
 export const TARIFFS = [
   { id: 'mesken', label: 'Mesken', unitPrice: 2.9 },
   { id: 'ticarethane', label: 'Ticarethane', unitPrice: 3.7 },
-  { id: 'tarimsal', label: 'Tarımsal Sulama', unitPrice: 3.1 },
+  { id: 'sanayi', label: 'Sanayi', unitPrice: 3.3 },
 ]
 
 // Ege bölgesi ortalama özgül üretim (kWh/kWp/yıl)
