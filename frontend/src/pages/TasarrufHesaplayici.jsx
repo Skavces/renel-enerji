@@ -164,8 +164,8 @@ export default function TasarrufHesaplayici() {
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Güneş Enerjisi Tasarrufu Nasıl Hesaplanır?</h2>
           <div className="text-gray-600 leading-relaxed space-y-4">
             <p>
-              Hesaplayıcı, girdiğiniz aylık elektrik faturası tutarını seçtiğiniz tarifenin (mesken, ticarethane
-              veya sanayi) birim fiyatına bölerek yıllık elektrik tüketiminizi bulur. Bu tüketimi
+              Hesaplayıcı, girdiğiniz aylık elektrik faturası tutarından seçtiğiniz tarifenin (mesken, ticarethane
+              veya sanayi) güncel kademeli birim fiyatlarını kullanarak yıllık elektrik tüketiminizi bulur. Bu tüketimi
               karşılayacak sistem gücü (kWp), Ege bölgesi ortalama güneşlenme verimi kullanılarak hesaplanır;
               panel sayısı ve gerekli çatı alanı da bu güce göre belirlenir.
             </p>
