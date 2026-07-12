@@ -4,7 +4,7 @@ import { Cron, CronExpression } from '@nestjs/schedule'
 import { IsNull, LessThan, Repository } from 'typeorm'
 import { ChatLead } from './entities/chat-lead.entity'
 import { ChatMessage } from './chat.service'
-import { TelegramService } from '../notifications/telegram.service'
+import { NtfyService } from '../notifications/ntfy.service'
 
 export interface LeadStats {
   total: number
@@ -26,7 +26,7 @@ export class ChatLeadService {
   constructor(
     @InjectRepository(ChatLead)
     private repo: Repository<ChatLead>,
-    private telegram: TelegramService,
+    private ntfy: NtfyService,
   ) {}
 
   async upsertFromChat(sessionId: string | undefined, messages: ChatMessage[], reply: string): Promise<void> {
@@ -82,7 +82,7 @@ export class ChatLeadService {
         take: 10,
       })
       for (const lead of missed) {
-        await this.telegram.send(this.formatMissedLead(lead))
+        await this.ntfy.send(this.formatMissedLead(lead))
         lead.notifiedAt = new Date()
         await this.repo.save(lead)
       }

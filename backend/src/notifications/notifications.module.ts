@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common'
-import { TelegramService } from './telegram.service'
-import { TelegramLogger } from './telegram-logger.service'
+import { NtfyService } from './ntfy.service'
+import { NtfyLogger } from './ntfy-logger.service'
 
 @Module({
-  providers: [TelegramService, TelegramLogger],
-  exports: [TelegramService, TelegramLogger],
+  providers: [NtfyService, NtfyLogger],
+  exports: [NtfyService, NtfyLogger],
 })
 export class NotificationsModule {}

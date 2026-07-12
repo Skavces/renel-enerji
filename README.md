@@ -10,7 +10,7 @@ Corporate website and admin panel for **RenEL Enerji**, a solar energy solutions
 | Backend | NestJS, TypeORM, PostgreSQL, Redis |
 | AI / Chatbot | Groq |
 | Analytics | Umami |
-| Notifications | Telegram (error alerts, missed-lead alerts) |
+| Notifications | ntfy, self-hosted (error alerts, missed-lead alerts) |
 | Error Tracking | Sentry (optional) |
 | Deployment | Docker Compose, Nginx, prerender (SEO for SPA) |
 
@@ -44,7 +44,7 @@ renel-enerji/
 │       ├── upload/          # File upload
 │       ├── groq/            # Groq AI client (chatbot + Instagram parsing)
 │       ├── instagram-token/ # Instagram Graph API token refresh
-│       ├── notifications/   # Telegram error/lead alerts
+│       ├── notifications/   # ntfy error/lead alerts
 │       ├── webhooks/        # Instagram webhook receiver
 │       └── common/          # Shared DTOs, encryption, logging, fetch helpers
 └── docker-compose.yml # All services
@@ -102,7 +102,7 @@ UMAMI_PASS=            # Umami password
 UMAMI_APP_SECRET=      # Umami app secret
 ```
 
-Optional integrations (Groq chatbot, Telegram alerts, Instagram import, OpenWeather, Sentry) are documented with setup notes in `backend/.env.example` — leave them blank to disable.
+Optional integrations (Groq chatbot, ntfy alerts, Instagram import, OpenWeather, Sentry) are documented with setup notes in `backend/.env.example` — leave them blank to disable.
 
 ## Services
 

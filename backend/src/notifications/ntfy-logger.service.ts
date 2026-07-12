@@ -1,11 +1,11 @@
 import { ConsoleLogger, Injectable } from '@nestjs/common'
-import { TelegramService } from './telegram.service'
+import { NtfyService } from './ntfy.service'
 
-// Uygulama genelinde Logger.error çağrılarını Telegram'a kopyalayan logger.
-// main.ts'te app.useLogger(app.get(TelegramLogger)) ile devreye girer.
+// Uygulama genelinde Logger.error çağrılarını ntfy'ye kopyalayan logger.
+// main.ts'te app.useLogger(app.get(NtfyLogger)) ile devreye girer.
 @Injectable()
-export class TelegramLogger extends ConsoleLogger {
-  constructor(private readonly telegram: TelegramService) {
+export class NtfyLogger extends ConsoleLogger {
+  constructor(private readonly ntfy: NtfyService) {
     super()
   }
 
@@ -15,6 +15,6 @@ export class TelegramLogger extends ConsoleLogger {
     const last = optionalParams[optionalParams.length - 1]
     const context = typeof last === 'string' && !last.includes('\n') ? last : undefined
     const text = typeof message === 'string' ? message : JSON.stringify(message)
-    void this.telegram.notifyError(`❌ ${context ? `[${context}] ` : ''}${text}`)
+    void this.ntfy.notifyError(`❌ ${context ? `[${context}] ` : ''}${text}`)
   }
 }
