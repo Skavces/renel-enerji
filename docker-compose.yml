@@ -108,7 +108,8 @@ services:
     expose:
       - "80"
     environment:
-      NTFY_BASE_URL: https://renelenerji.com/ntfy
+      # DİKKAT: NTFY_BASE_URL path içeremez ("sub-path is not supported" diye çöker) — boş bırakıldı.
+      # Yalnızca attachment/e-posta linki üretiminde kullanılıyor, publish/subscribe için gerekmez.
       NTFY_BEHIND_PROXY: "true"
       NTFY_AUTH_FILE: /var/lib/ntfy/auth.db
       NTFY_AUTH_DEFAULT_ACCESS: deny-all
