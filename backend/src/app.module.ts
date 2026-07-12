@@ -61,7 +61,8 @@ import { HealthController } from './health.controller'
         password: cfg.get('DB_PASS'),
         database: cfg.get('DB_NAME', 'renel_enerji'),
         autoLoadEntities: true,
-        synchronize: cfg.get('DB_SYNC', 'false') === 'true',
+        // Şema yalnızca migration'larla yönetilir (Baseline dahil); synchronize asla açılmaz
+        synchronize: false,
         migrations: [__dirname + '/migrations/*{.ts,.js}'],
         migrationsRun: true,
       }),
