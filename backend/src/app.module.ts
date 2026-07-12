@@ -41,9 +41,10 @@ import { HealthController } from './health.controller'
         INSTAGRAM_APP_SECRET: Joi.string().required(),
         INSTAGRAM_WEBHOOK_VERIFY_TOKEN: Joi.string().required(),
         UMAMI_PASS: Joi.string().required(),
-        NTFY_URL: Joi.string().uri().optional(),
-        NTFY_TOPIC: Joi.string().optional(),
-        NTFY_TOKEN: Joi.string().optional(),
+        // Compose ${VAR:-} boş string geçirir — boş değer "tanımsız" sayılır (bildirimler kapalı)
+        NTFY_URL: Joi.string().uri().allow('').optional(),
+        NTFY_TOPIC: Joi.string().allow('').optional(),
+        NTFY_TOKEN: Joi.string().allow('').optional(),
       }),
       validationOptions: { allowUnknown: true },
     }),
