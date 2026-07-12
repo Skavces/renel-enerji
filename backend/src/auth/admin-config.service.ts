@@ -15,10 +15,13 @@ export class AdminConfigService {
   ) {}
 
   async getConfig(): Promise<AdminConfig> {
-    await this.repo.upsert({ id: ADMIN_CONFIG_ID, totpSecret: null }, {
-      conflictPaths: ['id'],
-      skipUpdateIfNoValuesChanged: true,
-    })
+    // Satır yoksa oluştur; varsa HİÇBİR kolona dokunma. upsert({ totpSecret: null })
+    // kullanılamaz: null overwrite kolonuna girer ve kayıtlı secret'ı siler.
+    await this.repo.createQueryBuilder()
+      .insert()
+      .values({ id: ADMIN_CONFIG_ID })
+      .orIgnore()
+      .execute()
     const config = await this.repo.findOne({ where: { id: ADMIN_CONFIG_ID } })
     if (config?.totpSecret) {
       if (this.encryption.isEncrypted(config.totpSecret)) {
@@ -50,5 +53,10 @@ export class AdminConfigService {
 
   async setPasswordHash(passwordHash: string): Promise<void> {
     await this.repo.upsert({ id: ADMIN_CONFIG_ID, passwordHash }, ['id'])
+  }
+
+  // Kimlik bilgisi değişiminde çağrılır; tüm mevcut oturumları geçersiz kılar
+  async incrementTokenVersion(): Promise<void> {
+    await this.repo.increment({ id: ADMIN_CONFIG_ID }, 'tokenVersion', 1)
   }
 }
