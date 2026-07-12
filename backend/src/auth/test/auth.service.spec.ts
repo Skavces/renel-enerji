@@ -19,6 +19,7 @@ const mockAdminConfig = {
   username: 'admin',
   passwordHash: null as string | null,
   totpSecret: null as string | null,
+  tokenVersion: 0,
 }
 
 function makeService(overrides: Partial<typeof mockAdminConfig> = {}) {
@@ -49,6 +50,7 @@ function makeService(overrides: Partial<typeof mockAdminConfig> = {}) {
     removeTotpSecret: jest.fn(),
     setUsername: jest.fn(),
     setPasswordHash: jest.fn(),
+    incrementTokenVersion: jest.fn(),
   } as unknown as AdminConfigService
 
   const service = new AuthService(jwtService, configService, adminConfigService)
@@ -93,6 +95,38 @@ describe('AuthService', () => {
       const { service } = makeService({ passwordHash: hash, totpSecret: null })
 
       await expect(service.login('admin', 'wrong')).rejects.toThrow(UnauthorizedException)
+    })
+
+    it('should embed current tokenVersion as ver claim', async () => {
+      const hash = await bcrypt.hash('secret', 10)
+      const { service } = makeService({ passwordHash: hash, totpSecret: null, tokenVersion: 3 })
+
+      const result = await service.login('admin', 'secret') as any
+
+      const payload = JSON.parse(result.access_token)
+      expect(payload.ver).toBe(3)
+    })
+  })
+
+  describe('changeCredentials', () => {
+    it('should increment tokenVersion so other sessions are invalidated', async () => {
+      const hash = await bcrypt.hash('current', 10)
+      const { service, adminConfigService } = makeService({ passwordHash: hash, totpSecret: null })
+
+      await service.changeCredentials('current', undefined, 'admin', undefined, 'yeni-sifre-123')
+
+      expect(adminConfigService.setPasswordHash).toHaveBeenCalled()
+      expect(adminConfigService.incrementTokenVersion).toHaveBeenCalledTimes(1)
+    })
+
+    it('should not increment tokenVersion when current password is wrong', async () => {
+      const hash = await bcrypt.hash('current', 10)
+      const { service, adminConfigService } = makeService({ passwordHash: hash, totpSecret: null })
+
+      await expect(
+        service.changeCredentials('wrong', undefined, 'admin', undefined, 'yeni-sifre-123'),
+      ).rejects.toThrow(UnauthorizedException)
+      expect(adminConfigService.incrementTokenVersion).not.toHaveBeenCalled()
     })
   })
 

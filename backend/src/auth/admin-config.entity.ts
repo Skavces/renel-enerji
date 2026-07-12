@@ -13,4 +13,8 @@ export class AdminConfig {
 
   @Column({ nullable: true, type: 'text' })
   passwordHash: string | null
+
+  // Şifre/kullanıcı adı değişiminde artar; eski JWT'ler (ver claim'i eşleşmeyen) geçersizleşir
+  @Column({ default: 0 })
+  tokenVersion: number
 }

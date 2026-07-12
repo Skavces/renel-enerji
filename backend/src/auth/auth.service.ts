@@ -1,4 +1,4 @@
-import { Injectable, Logger, UnauthorizedException, OnModuleInit } from '@nestjs/common'
+import { Injectable, Logger, UnauthorizedException, OnModuleInit, OnModuleDestroy } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { ConfigService } from '@nestjs/config'
 import * as bcrypt from 'bcrypt'
@@ -9,7 +9,7 @@ import { AdminConfig } from './admin-config.entity'
 import Redis from 'ioredis'
 
 @Injectable()
-export class AuthService implements OnModuleInit {
+export class AuthService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(AuthService.name)
   private redis: Redis
 
@@ -22,6 +22,15 @@ export class AuthService implements OnModuleInit {
   onModuleInit() {
     this.redis = new Redis(this.cfg.get<string>('REDIS_URL') ?? 'redis://localhost:6379')
     this.redis.on('error', (err) => this.logger.error('Redis bağlantı hatası', err))
+  }
+
+  async onModuleDestroy() {
+    await this.redis.quit().catch(() => {})
+  }
+
+  // Health check için: Redis erişilemezse throw eder
+  async pingRedis(): Promise<void> {
+    await this.redis.ping()
   }
 
   async isTokenBlacklisted(jti: string): Promise<boolean> {
@@ -72,7 +81,10 @@ export class AuthService implements OnModuleInit {
     const jti = crypto.randomUUID()
     const expiresIn = rememberMe ? '30d' : this.cfg.get('JWT_EXPIRES_IN', '8h')
     return {
-      access_token: this.jwtService.sign({ username, sub: 'admin', jti }, { expiresIn }),
+      access_token: this.jwtService.sign(
+        { username, sub: 'admin', jti, ver: config.tokenVersion ?? 0 },
+        { expiresIn },
+      ),
       rememberMe,
     }
   }
@@ -129,6 +141,9 @@ export class AuthService implements OnModuleInit {
       const hash = await bcrypt.hash(newPassword, 12)
       await this.adminConfigService.setPasswordHash(hash)
     }
+
+    // Diğer cihazlardaki (örn. 30 günlük rememberMe) oturumlar da düşsün
+    await this.adminConfigService.incrementTokenVersion()
   }
 
   async verify2FA(preAuthToken: string, code: string) {
@@ -172,7 +187,7 @@ export class AuthService implements OnModuleInit {
     const expiresIn = rememberMe ? '30d' : this.cfg.get('JWT_EXPIRES_IN', '8h')
     return {
       access_token: this.jwtService.sign(
-        { username: payload.username, sub: 'admin', jti },
+        { username: payload.username, sub: 'admin', jti, ver: config.tokenVersion ?? 0 },
         { expiresIn },
       ),
       rememberMe,
