@@ -105,11 +105,13 @@ services:
     image: binwiederhier/ntfy
     restart: unless-stopped
     command: serve
-    expose:
-      - "80"
+    # Host nginx, ntfy.renelenerji.com'u buraya proxy'ler (telefon uygulaması
+    # path'li sunucu URL'si kabul etmiyor, subdomain şart)
+    ports:
+      - "127.0.0.1:8090:80"
     environment:
-      # DİKKAT: NTFY_BASE_URL path içeremez ("sub-path is not supported" diye çöker) — boş bırakıldı.
-      # Yalnızca attachment/e-posta linki üretiminde kullanılıyor, publish/subscribe için gerekmez.
+      # DİKKAT: base-url path içeremez ("sub-path is not supported" diye çöker)
+      NTFY_BASE_URL: https://ntfy.renelenerji.com
       NTFY_BEHIND_PROXY: "true"
       NTFY_AUTH_FILE: /var/lib/ntfy/auth.db
       NTFY_AUTH_DEFAULT_ACCESS: deny-all
