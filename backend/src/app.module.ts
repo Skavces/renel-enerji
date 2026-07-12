@@ -42,9 +42,8 @@ import { HealthController } from './health.controller'
         INSTAGRAM_WEBHOOK_VERIFY_TOKEN: Joi.string().required(),
         UMAMI_PASS: Joi.string().required(),
         // Compose ${VAR:-} boş string geçirir — boş değer "tanımsız" sayılır (bildirimler kapalı)
-        NTFY_URL: Joi.string().uri().allow('').optional(),
-        NTFY_TOPIC: Joi.string().allow('').optional(),
-        NTFY_TOKEN: Joi.string().allow('').optional(),
+        TELEGRAM_BOT_TOKEN: Joi.string().allow('').optional(),
+        TELEGRAM_CHAT_ID: Joi.string().allow('').optional(),
       }),
       validationOptions: { allowUnknown: true },
     }),

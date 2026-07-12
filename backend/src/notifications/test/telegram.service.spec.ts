@@ -1,62 +1,56 @@
 import { ConfigService } from '@nestjs/config'
-import { NtfyService } from '../ntfy.service'
-import { NtfyLogger } from '../ntfy-logger.service'
+import { TelegramService } from '../telegram.service'
+import { TelegramLogger } from '../telegram-logger.service'
 import { fetchWithTimeout } from '../../common/fetch-with-timeout'
 
 jest.mock('../../common/fetch-with-timeout')
 
 const mockFetch = fetchWithTimeout as jest.MockedFunction<typeof fetchWithTimeout>
 
-function makeService(env: Record<string, string> = {}): NtfyService {
+function makeService(env: Record<string, string> = {}): TelegramService {
   const config = { get: (key: string) => env[key] } as unknown as ConfigService
-  return new NtfyService(config)
+  return new TelegramService(config)
 }
 
-const FULL_ENV = { NTFY_URL: 'https://renelenerji.com/ntfy', NTFY_TOPIC: 'renel-lead', NTFY_TOKEN: 'tk_test' }
+const FULL_ENV = { TELEGRAM_BOT_TOKEN: 'test-token', TELEGRAM_CHAT_ID: '12345' }
 
-describe('NtfyService', () => {
+describe('TelegramService', () => {
   beforeEach(() => {
     jest.restoreAllMocks()
     mockFetch.mockReset()
     mockFetch.mockResolvedValue({ ok: true } as Response)
   })
 
-  it('URL tanımlı değilse fetch çağrılmaz', async () => {
+  it('token tanımlı değilse fetch çağrılmaz', async () => {
     const service = makeService({})
     await service.send('merhaba')
     await service.notifyError('hata')
     expect(mockFetch).not.toHaveBeenCalled()
   })
 
-  it('topic tanımlı değilse fetch çağrılmaz', async () => {
-    const service = makeService({ NTFY_URL: 'https://renelenerji.com/ntfy' })
+  it('chat id tanımlı değilse fetch çağrılmaz', async () => {
+    const service = makeService({ TELEGRAM_BOT_TOKEN: 'test-token' })
     await service.send('merhaba')
     expect(mockFetch).not.toHaveBeenCalled()
   })
 
-  it('send doğru URL, Authorization header ve body ile POST atar', async () => {
+  it('send doğru URL ve body ile POST atar', async () => {
     const service = makeService(FULL_ENV)
     await service.send('merhaba dünya')
     expect(mockFetch).toHaveBeenCalledTimes(1)
     const [url, options] = mockFetch.mock.calls[0]
-    expect(url).toBe('https://renelenerji.com/ntfy/renel-lead')
-    const init = options as RequestInit
-    expect(init.body).toBe('merhaba dünya')
-    expect((init.headers as Record<string, string>).Authorization).toBe('Bearer tk_test')
-  })
-
-  it('token yoksa Authorization header eklenmez', async () => {
-    const service = makeService({ NTFY_URL: 'https://renelenerji.com/ntfy', NTFY_TOPIC: 'renel-lead' })
-    await service.send('merhaba')
-    const init = mockFetch.mock.calls[0][1] as RequestInit
-    expect((init.headers as Record<string, string>).Authorization).toBeUndefined()
+    expect(url).toBe('https://api.telegram.org/bottest-token/sendMessage')
+    expect(JSON.parse((options as RequestInit).body as string)).toEqual({
+      chat_id: '12345',
+      text: 'merhaba dünya',
+    })
   })
 
   it('4096 karakterden uzun mesajı kırpar', async () => {
     const service = makeService(FULL_ENV)
     await service.send('a'.repeat(5000))
-    const body = (mockFetch.mock.calls[0][1] as RequestInit).body as string
-    expect(body).toHaveLength(4096)
+    const body = JSON.parse((mockFetch.mock.calls[0][1] as RequestInit).body as string)
+    expect(body.text).toHaveLength(4096)
   })
 
   it('fetch hatası yutulur, fırlatılmaz', async () => {
@@ -97,31 +91,31 @@ describe('NtfyService', () => {
     nowSpy.mockReturnValue(start + 61 * 60 * 1000)
     await service.notifyError('yeni pencere hatası')
     expect(mockFetch).toHaveBeenCalledTimes(6)
-    const body = (mockFetch.mock.calls[5][1] as RequestInit).body as string
-    expect(body).toContain('yeni pencere hatası')
-    expect(body).toContain('2 hata daha bastırıldı')
+    const body = JSON.parse((mockFetch.mock.calls[5][1] as RequestInit).body as string)
+    expect(body.text).toContain('yeni pencere hatası')
+    expect(body.text).toContain('2 hata daha bastırıldı')
   })
 })
 
-describe('NtfyLogger', () => {
+describe('TelegramLogger', () => {
   beforeEach(() => {
     mockFetch.mockReset()
     mockFetch.mockResolvedValue({ ok: true } as Response)
   })
 
   it('error çağrısını context ile birlikte notifyError\'a iletir', () => {
-    const ntfy = { notifyError: jest.fn().mockResolvedValue(undefined) } as unknown as NtfyService
-    const logger = new NtfyLogger(ntfy)
+    const telegram = { notifyError: jest.fn().mockResolvedValue(undefined) } as unknown as TelegramService
+    const logger = new TelegramLogger(telegram)
     jest.spyOn(console, 'error').mockImplementation(() => {})
     logger.error('bir şeyler patladı', 'ChatService')
-    expect(ntfy.notifyError).toHaveBeenCalledWith('❌ [ChatService] bir şeyler patladı')
+    expect(telegram.notifyError).toHaveBeenCalledWith('❌ [ChatService] bir şeyler patladı')
   })
 
   it('çok satırlı son parametreyi (stack trace) context saymaz', () => {
-    const ntfy = { notifyError: jest.fn().mockResolvedValue(undefined) } as unknown as NtfyService
-    const logger = new NtfyLogger(ntfy)
+    const telegram = { notifyError: jest.fn().mockResolvedValue(undefined) } as unknown as TelegramService
+    const logger = new TelegramLogger(telegram)
     jest.spyOn(console, 'error').mockImplementation(() => {})
     logger.error('patladı', 'Error: x\n    at foo()')
-    expect(ntfy.notifyError).toHaveBeenCalledWith('❌ patladı')
+    expect(telegram.notifyError).toHaveBeenCalledWith('❌ patladı')
   })
 })

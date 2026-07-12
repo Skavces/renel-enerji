@@ -52,10 +52,8 @@ services:
       INSTAGRAM_USER_ID: ${INSTAGRAM_USER_ID}
       INSTAGRAM_APP_SECRET: ${INSTAGRAM_APP_SECRET}
       INSTAGRAM_WEBHOOK_VERIFY_TOKEN: ${INSTAGRAM_WEBHOOK_VERIFY_TOKEN}
-      # Docker ağı içinden doğrudan ntfy container'ına gider — nginx/Cloudflare'e bağımlı değil
-      NTFY_URL: http://ntfy:80
-      NTFY_TOPIC: ${NTFY_TOPIC:-}
-      NTFY_TOKEN: ${NTFY_TOKEN:-}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
     volumes:
       - uploads:/app/uploads
     depends_on:
@@ -101,31 +99,6 @@ services:
       - backend
       - prerender
 
-  ntfy:
-    image: binwiederhier/ntfy
-    restart: unless-stopped
-    command: serve
-    # Host nginx, ntfy.renelenerji.com'u buraya proxy'ler (telefon uygulaması
-    # path'li sunucu URL'si kabul etmiyor, subdomain şart)
-    ports:
-      - "127.0.0.1:8090:80"
-    environment:
-      # DİKKAT: base-url path içeremez ("sub-path is not supported" diye çöker)
-      NTFY_BASE_URL: https://ntfy.renelenerji.com
-      NTFY_BEHIND_PROXY: "true"
-      NTFY_AUTH_FILE: /var/lib/ntfy/auth.db
-      NTFY_AUTH_DEFAULT_ACCESS: deny-all
-      NTFY_ENABLE_SIGNUP: "false"
-      NTFY_CACHE_FILE: /var/cache/ntfy/cache.db
-    volumes:
-      - ntfy_auth:/var/lib/ntfy
-      - ntfy_cache:/var/cache/ntfy
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:80/v1/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   umami-db:
     image: postgres:16-alpine
     restart: unless-stopped
@@ -159,5 +132,3 @@ volumes:
   uploads:
   umami_pgdata:
   redisdata:
-  ntfy_auth:
-  ntfy_cache:

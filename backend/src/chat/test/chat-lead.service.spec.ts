@@ -1,7 +1,7 @@
 import { Repository } from 'typeorm'
 import { ChatLeadService } from '../chat-lead.service'
 import { ChatLead } from '../entities/chat-lead.entity'
-import { NtfyService } from '../../notifications/ntfy.service'
+import { TelegramService } from '../../notifications/telegram.service'
 
 const SESSION = '3f2b8c1a-9d4e-4f6a-8b2c-1d3e5f7a9b0c'
 
@@ -14,8 +14,8 @@ function makeService() {
     update: jest.fn().mockResolvedValue({}),
     count: jest.fn().mockResolvedValue(0),
   } as unknown as jest.Mocked<Repository<ChatLead>>
-  const ntfy = { send: jest.fn().mockResolvedValue(undefined) } as unknown as jest.Mocked<NtfyService>
-  return { service: new ChatLeadService(repo, ntfy), repo, ntfy }
+  const telegram = { send: jest.fn().mockResolvedValue(undefined) } as unknown as jest.Mocked<TelegramService>
+  return { service: new ChatLeadService(repo, telegram), repo, telegram }
 }
 
 describe('ChatLeadService', () => {
@@ -94,8 +94,8 @@ describe('ChatLeadService', () => {
   })
 
   describe('notifyMissedLeads', () => {
-    it('kaçan lead için ntfy mesajı atar ve notifiedAt doldurur', async () => {
-      const { service, repo, ntfy } = makeService()
+    it('kaçan lead için Telegram mesajı atar ve notifiedAt doldurur', async () => {
+      const { service, repo, telegram } = makeService()
       const lead = {
         sessionId: SESSION,
         status: 'active',
@@ -112,8 +112,8 @@ describe('ChatLeadService', () => {
 
       await service.notifyMissedLeads()
 
-      expect(ntfy.send).toHaveBeenCalledTimes(1)
-      const text = (ntfy.send as jest.Mock).mock.calls[0][0]
+      expect(telegram.send).toHaveBeenCalledTimes(1)
+      const text = (telegram.send as jest.Mock).mock.calls[0][0]
       expect(text).toContain('potansiyel talep')
       expect(text).toContain('çatı ges istiyorum')
       expect(text).toContain('2500 TL')
@@ -131,12 +131,12 @@ describe('ChatLeadService', () => {
       expect(where.updatedAt).toBeDefined()
     })
 
-    it('ntfy hatası cron\'u patlatmaz', async () => {
-      const { service, repo, ntfy } = makeService()
+    it('telegram hatası cron\'u patlatmaz', async () => {
+      const { service, repo, telegram } = makeService()
       ;(repo.find as jest.Mock).mockResolvedValue([
         { conversation: [], messageCount: 2, createdAt: new Date(), notifiedAt: null } as unknown as ChatLead,
       ])
-      ;(ntfy.send as jest.Mock).mockRejectedValue(new Error('ntfy down'))
+      ;(telegram.send as jest.Mock).mockRejectedValue(new Error('telegram down'))
       await expect(service.notifyMissedLeads()).resolves.toBeUndefined()
     })
   })
