@@ -5,6 +5,7 @@ import { Cron } from '@nestjs/schedule'
 import { ConfigService } from '@nestjs/config'
 import { AppSetting } from './app-setting.entity'
 import { fetchWithTimeout } from '../common/fetch-with-timeout'
+import { EncryptionService } from '../common/encryption.service'
 
 const TOKEN_KEY = 'instagram_access_token'
 const REFRESHED_AT_KEY = 'instagram_token_refreshed_at'
@@ -17,6 +18,7 @@ export class InstagramTokenService implements OnModuleInit {
   constructor(
     @InjectRepository(AppSetting) private readonly settingRepo: Repository<AppSetting>,
     private readonly config: ConfigService,
+    private readonly encryption: EncryptionService,
   ) {}
 
   async onModuleInit() {
@@ -25,7 +27,15 @@ export class InstagramTokenService implements OnModuleInit {
 
   async getAccessToken(): Promise<string> {
     const setting = await this.settingRepo.findOne({ where: { key: TOKEN_KEY } })
-    return setting?.value || this.config.get<string>('INSTAGRAM_ACCESS_TOKEN') || ''
+    if (setting?.value) {
+      if (this.encryption.isEncrypted(setting.value)) {
+        return this.encryption.decrypt(setting.value)
+      }
+      // Legacy düz metin kayıt — ilk okumada şifreleyip kalıcı hale getir (TOTP ile aynı desen)
+      await this.settingRepo.update(TOKEN_KEY, { value: this.encryption.encrypt(setting.value) })
+      return setting.value
+    }
+    return this.config.get<string>('INSTAGRAM_ACCESS_TOKEN') || ''
   }
 
   // Her ayın 1'i saat 03:00'da çalışır
@@ -56,7 +66,7 @@ export class InstagramTokenService implements OnModuleInit {
 
       await this.settingRepo.upsert(
         [
-          { key: TOKEN_KEY, value: data.access_token },
+          { key: TOKEN_KEY, value: this.encryption.encrypt(data.access_token) },
           { key: REFRESHED_AT_KEY, value: new Date().toISOString() },
         ],
         ['key'],
