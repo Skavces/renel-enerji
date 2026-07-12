@@ -1,7 +1,6 @@
 import { Repository } from 'typeorm'
 import { ChatLeadService } from '../chat-lead.service'
 import { ChatLead } from '../entities/chat-lead.entity'
-import { TelegramService } from '../../notifications/telegram.service'
 
 const SESSION = '3f2b8c1a-9d4e-4f6a-8b2c-1d3e5f7a9b0c'
 
@@ -14,8 +13,7 @@ function makeService() {
     update: jest.fn().mockResolvedValue({}),
     count: jest.fn().mockResolvedValue(0),
   } as unknown as jest.Mocked<Repository<ChatLead>>
-  const telegram = { send: jest.fn().mockResolvedValue(undefined) } as unknown as jest.Mocked<TelegramService>
-  return { service: new ChatLeadService(repo, telegram), repo, telegram }
+  return { service: new ChatLeadService(repo), repo }
 }
 
 describe('ChatLeadService', () => {
@@ -90,54 +88,6 @@ describe('ChatLeadService', () => {
       const { service, repo } = makeService()
       await service.attachRating(SESSION, 3)
       expect(repo.update).toHaveBeenCalledWith({ sessionId: SESSION }, { rating: 3 })
-    })
-  })
-
-  describe('notifyMissedLeads', () => {
-    it('kaçan lead için Telegram mesajı atar ve notifiedAt doldurur', async () => {
-      const { service, repo, telegram } = makeService()
-      const lead = {
-        sessionId: SESSION,
-        status: 'active',
-        messageCount: 3,
-        conversation: [
-          { role: 'user', content: 'çatı ges istiyorum' },
-          { role: 'assistant', content: 'fatura?' },
-          { role: 'user', content: '2500 TL' },
-        ],
-        notifiedAt: null,
-        createdAt: new Date('2026-07-05T10:00:00Z'),
-      } as unknown as ChatLead
-      ;(repo.find as jest.Mock).mockResolvedValue([lead])
-
-      await service.notifyMissedLeads()
-
-      expect(telegram.send).toHaveBeenCalledTimes(1)
-      const text = (telegram.send as jest.Mock).mock.calls[0][0]
-      expect(text).toContain('potansiyel talep')
-      expect(text).toContain('çatı ges istiyorum')
-      expect(text).toContain('2500 TL')
-      expect(text).not.toContain('fatura?')
-      expect(lead.notifiedAt).toBeInstanceOf(Date)
-      expect(repo.save).toHaveBeenCalledWith(lead)
-    })
-
-    it('cron sorguda yalnızca bildirilmemiş aktif leadleri arar', async () => {
-      const { service, repo } = makeService()
-      await service.notifyMissedLeads()
-      const where = (repo.find as jest.Mock).mock.calls[0][0].where
-      expect(where.status).toBe('active')
-      expect(where.notifiedAt).toBeDefined()
-      expect(where.updatedAt).toBeDefined()
-    })
-
-    it('telegram hatası cron\'u patlatmaz', async () => {
-      const { service, repo, telegram } = makeService()
-      ;(repo.find as jest.Mock).mockResolvedValue([
-        { conversation: [], messageCount: 2, createdAt: new Date(), notifiedAt: null } as unknown as ChatLead,
-      ])
-      ;(telegram.send as jest.Mock).mockRejectedValue(new Error('telegram down'))
-      await expect(service.notifyMissedLeads()).resolves.toBeUndefined()
     })
   })
 })

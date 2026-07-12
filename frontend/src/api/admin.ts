@@ -1,5 +1,5 @@
 import { API } from './config'
-import type { Project, ProjectMedia, Reference, BlogPost, Faq, SyncStatus, ChatRating, ChatRatingStats, ChatLead, ChatLeadStats, ChatFunnel } from '../types'
+import type { Project, ProjectMedia, Reference, BlogPost, Faq, SyncStatus, ChatRating, ChatRatingStats, ChatLead, ChatLeadStats, ChatFunnel, AppLog, LogStats } from '../types'
 
 function authOptions(extra: RequestInit = {}): RequestInit {
   return {
@@ -371,4 +371,12 @@ export async function reorderFaqs(orderedIds: string[]): Promise<void> {
     body: JSON.stringify({ orderedIds }),
   })
   if (!res.ok) throw new Error('Sıralama kaydedilemedi')
+}
+
+// Backend hata/uyarı logları (admin panel → Loglar)
+export async function fetchLogs(level?: 'error' | 'warn'): Promise<{ stats: LogStats; logs: AppLog[] }> {
+  const query = level ? `?level=${level}` : ''
+  const res = await fetch(`${API}/api/logs/admin/all${query}`, authOptions())
+  if (!res.ok) throw new Error('Loglar yüklenemedi')
+  return res.json()
 }

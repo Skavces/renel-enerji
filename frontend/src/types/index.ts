@@ -105,6 +105,20 @@ export interface ChatFunnel {
   rated: number
 }
 
+export interface AppLog {
+  id: string
+  level: 'error' | 'warn'
+  context: string | null
+  message: string
+  createdAt: string
+}
+
+export interface LogStats {
+  total: number
+  errors24h: number
+  warns24h: number
+}
+
 export interface SyncStatus {
   running: boolean
   lastRun: string | null

@@ -5,6 +5,7 @@ import {
   FolderOpen,
   Star,
   BarChart2,
+  ScrollText,
   Bot,
   Shield,
   ExternalLink,
@@ -26,6 +27,7 @@ const NAV = [
   { to: '/admin/sss', label: 'S.S.S.', icon: HelpCircle, match: (p) => p.startsWith('/admin/sss') },
   { to: '/admin/degerlendirmeler', label: 'Chatbot', icon: Bot, match: (p) => p.startsWith('/admin/degerlendirmeler') },
   { to: '/admin/analitik', label: 'Analitik', icon: BarChart2, match: (p) => p.startsWith('/admin/analitik') },
+  { to: '/admin/loglar', label: 'Loglar', icon: ScrollText, match: (p) => p.startsWith('/admin/loglar') },
   { to: '/admin/guvenlik', label: 'Güvenlik', icon: Shield, match: (p) => p.startsWith('/admin/guvenlik') },
 ]
 

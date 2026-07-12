@@ -21,7 +21,7 @@ import { WebhooksModule } from './webhooks/webhooks.module'
 import { InstagramTokenModule } from './instagram-token/instagram-token.module'
 import { GroqModule } from './groq/groq.module'
 import { WeatherModule } from './weather/weather.module'
-import { NotificationsModule } from './notifications/notifications.module'
+import { LogsModule } from './logs/logs.module'
 import { HealthController } from './health.controller'
 
 @Module({
@@ -41,9 +41,6 @@ import { HealthController } from './health.controller'
         INSTAGRAM_APP_SECRET: Joi.string().required(),
         INSTAGRAM_WEBHOOK_VERIFY_TOKEN: Joi.string().required(),
         UMAMI_PASS: Joi.string().required(),
-        // Compose ${VAR:-} boş string geçirir — boş değer "tanımsız" sayılır (bildirimler kapalı)
-        TELEGRAM_BOT_TOKEN: Joi.string().allow('').optional(),
-        TELEGRAM_CHAT_ID: Joi.string().allow('').optional(),
       }),
       validationOptions: { allowUnknown: true },
     }),
@@ -83,7 +80,7 @@ import { HealthController } from './health.controller'
     InstagramTokenModule,
     GroqModule,
     WeatherModule,
-    NotificationsModule,
+    LogsModule,
   ],
   controllers: [HealthController],
   providers: [

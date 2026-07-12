@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Zap, FolderOpen, Star, Plus, SunMedium, Handshake, TrendingUp } from 'lucide-react'
-import { fetchAllProjects, fetchAllReferences } from '../../api/admin'
+import { fetchAllProjects, fetchAllReferences, fetchLogs } from '../../api/admin'
 import { useAdminAuth } from '../../contexts/AdminAuthContext'
 
 export default function AdminDashboard() {
@@ -9,11 +9,12 @@ export default function AdminDashboard() {
   const { logout } = useAdminAuth()
   const [projects, setProjects] = useState([])
   const [refs, setRefs] = useState([])
+  const [logStats, setLogStats] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    Promise.all([fetchAllProjects(), fetchAllReferences()])
-      .then(([p, r]) => { setProjects(p); setRefs(r) })
+    Promise.all([fetchAllProjects(), fetchAllReferences(), fetchLogs().catch(() => null)])
+      .then(([p, r, l]) => { setProjects(p); setRefs(r); setLogStats(l?.stats ?? null) })
       .catch((err) => {
         if (err.message.includes('401') || err.message.includes('Unauthorized')) {
           logout()
@@ -85,7 +86,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <div className="relative flex-1 px-6 sm:px-7 py-5 sm:py-6 overflow-hidden">
+        <div className="relative flex-1 px-6 sm:px-7 py-5 sm:py-6 overflow-hidden border-b sm:border-b-0 sm:border-r border-gray-100">
           <div className="relative z-10">
             <p className="text-5xl font-bold text-[#448834] font-['Rajdhani'] drop-shadow-sm">
               {totalKwStr} <span className="text-base font-semibold text-gray-400">kW</span>
@@ -93,6 +94,18 @@ export default function AdminDashboard() {
             <p className="text-base text-gray-400 mt-0.5 drop-shadow-sm">Kurulu Güç</p>
           </div>
         </div>
+
+        <Link to="/admin/loglar" className="relative flex-1 px-6 sm:px-7 py-5 sm:py-6 overflow-hidden hover:bg-gray-50 transition-colors">
+          <div className="relative z-10">
+            <p className={`text-5xl font-bold font-['Rajdhani'] drop-shadow-sm ${(logStats?.errors24h ?? 0) > 0 ? 'text-red-500' : 'text-[#448834]'}`}>
+              {logStats?.errors24h ?? 0}
+            </p>
+            <p className="text-base text-gray-400 mt-0.5 drop-shadow-sm">Son 24s Hata</p>
+            {(logStats?.warns24h ?? 0) > 0 && (
+              <p className="text-xs text-amber-400 mt-0.5">{logStats.warns24h} uyarı</p>
+            )}
+          </div>
+        </Link>
       </div>
       </div>
 

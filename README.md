@@ -10,7 +10,7 @@ Corporate website and admin panel for **RenEL Enerji**, a solar energy solutions
 | Backend | NestJS, TypeORM, PostgreSQL, Redis |
 | AI / Chatbot | Groq |
 | Analytics | Umami |
-| Notifications | Telegram (error alerts, missed-lead alerts) |
+| Logs | In-panel log viewer (backend errors/warnings, 30-day retention) |
 | Error Tracking | Sentry (optional) |
 | Deployment | Docker Compose, Nginx, prerender (SEO for SPA) |
 
@@ -44,7 +44,7 @@ renel-enerji/
 │       ├── upload/          # File upload
 │       ├── groq/            # Groq AI client (chatbot + Instagram parsing)
 │       ├── instagram-token/ # Instagram Graph API token refresh
-│       ├── notifications/   # Telegram error/lead alerts
+│       ├── logs/            # DB-backed error/warning logs (admin panel viewer)
 │       ├── webhooks/        # Instagram webhook receiver
 │       └── common/          # Shared DTOs, encryption, logging, fetch helpers
 └── docker-compose.yml # All services
@@ -102,7 +102,7 @@ UMAMI_PASS=            # Umami password
 UMAMI_APP_SECRET=      # Umami app secret
 ```
 
-Optional integrations (Groq chatbot, Telegram alerts, Instagram import, OpenWeather, Sentry) are documented with setup notes in `backend/.env.example` — leave them blank to disable.
+Optional integrations (Groq chatbot, Instagram import, OpenWeather, Sentry) are documented with setup notes in `backend/.env.example` — leave them blank to disable.
 
 ## Services
 
@@ -140,6 +140,7 @@ Accessible at `/admin`, protected by JWT authentication.
 - References management
 - Blog management
 - FAQ management
-- Chatbot lead management: transcripts, missed-lead alerts, conversion funnel (KVKK: 6-month retention purge)
+- Chatbot lead management: transcripts, conversion funnel (KVKK: 6-month retention purge)
+- Log viewer: backend errors/warnings with level filter (30-day retention)
 - Site analytics (Umami integration)
 - Account security: credential changes, two-factor authentication (2FA) setup

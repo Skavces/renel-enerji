@@ -22,10 +22,6 @@ export class ChatLead {
   @Column({ type: 'smallint', nullable: true })
   rating: number | null
 
-  // Kaçan-lead Telegram bildirimi gönderildiyse dolu; tekrar bildirimi engeller
-  @Column({ type: 'timestamp', nullable: true })
-  notifiedAt: Date | null
-
   @Index()
   @CreateDateColumn()
   createdAt: Date
