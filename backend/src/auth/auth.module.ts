@@ -29,5 +29,6 @@ import { EncryptionService } from '../common/encryption.service'
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy, AdminConfigService, EncryptionService],
+  exports: [AuthService],
 })
 export class AuthModule {}
