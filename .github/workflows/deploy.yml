@@ -18,6 +18,11 @@ jobs:
             backend/package-lock.json
             frontend/package-lock.json
 
+      # Lockfile'lar npm 11 ile üretiliyor (Dockerfile'lar da npm@11 kullanır);
+      # Node 22'nin paketli npm 10'u bu lockfile'ları "out of sync" sayar
+      - name: npm sürümünü sabitle
+        run: npm install -g npm@11
+
       - name: Backend testleri
         working-directory: backend
         run: |
