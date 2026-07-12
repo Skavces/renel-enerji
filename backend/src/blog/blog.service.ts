@@ -4,6 +4,7 @@ import { Repository } from 'typeorm'
 import { BlogPost } from './entities/blog-post.entity'
 import { CreateBlogPostDto } from './dto/create-blog-post.dto'
 import { UpdateBlogPostDto } from './dto/update-blog-post.dto'
+import { deleteUploadedFile } from '../upload/uploaded-files'
 
 @Injectable()
 export class BlogService {
@@ -52,9 +53,15 @@ export class BlogService {
     if (dto.published && !post.published && !post.publishedAt) {
       post.publishedAt = new Date()
     }
+    const oldCover = post.coverImage
     Object.assign(post, dto)
     try {
-      return await this.repo.save(post)
+      const saved = await this.repo.save(post)
+      // Kapak değiştiyse eski dosyayı diskte bırakma
+      if (dto.coverImage !== undefined && oldCover && oldCover !== saved.coverImage) {
+        await deleteUploadedFile(oldCover)
+      }
+      return saved
     } catch (err: any) {
       if (err.code === '23505') throw new ConflictException('Bu slug zaten kullanımda')
       throw err
@@ -64,6 +71,7 @@ export class BlogService {
   async remove(id: string) {
     const post = await this.findById(id)
     await this.repo.remove(post)
+    await deleteUploadedFile(post.coverImage)
   }
 
   async reorder(orderedIds: string[]) {

@@ -12,12 +12,11 @@ import { MediaService } from './media.service'
 import { InstagramParseService } from './instagram-parse.service'
 import { InstagramTokenService } from '../instagram-token/instagram-token.service'
 import { fetchWithTimeout } from '../common/fetch-with-timeout'
+import { UPLOADS_DIR } from '../upload/uploaded-files'
 
 const INSTAGRAM_API_VERSION = 'v21.0'
 const INSTAGRAM_MEDIA_FIELDS =
   'id,caption,media_url,thumbnail_url,media_type,timestamp,children{id,media_url,media_type,thumbnail_url}'
-
-const UPLOADS_DIR = join(__dirname, '..', '..', 'uploads')
 
 @Injectable()
 export class InstagramImportService {

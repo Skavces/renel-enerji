@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { Project } from './entities/project.entity'
 import { MediaType, ProjectMedia } from './entities/project-media.entity'
+import { deleteUploadedFile } from '../upload/uploaded-files'
 
 @Injectable()
 export class MediaService {
@@ -31,7 +32,15 @@ export class MediaService {
       where: { id: mediaId, project: { id: projectId } },
     })
     if (!media) throw new NotFoundException('Medya bulunamadı')
+    const src = media.src
     await this.mediaRepo.remove(media)
+    await this.deleteFileIfUnreferenced(src)
+  }
+
+  // linkMedia ile aynı dosya birden fazla kayda bağlanabilir; son referans silinmeden dosyaya dokunma
+  async deleteFileIfUnreferenced(src: string): Promise<void> {
+    const stillReferenced = await this.mediaRepo.count({ where: { src } })
+    if (stillReferenced === 0) await deleteUploadedFile(src)
   }
 
   async reorderMedia(projectId: string, orderedIds: string[]) {

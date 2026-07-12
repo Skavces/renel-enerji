@@ -4,12 +4,14 @@ import { Repository } from 'typeorm'
 import { Project } from './entities/project.entity'
 import { CreateProjectDto } from './dto/create-project.dto'
 import { UpdateProjectDto } from './dto/update-project.dto'
+import { MediaService } from './media.service'
 
 @Injectable()
 export class ProjectsService {
   constructor(
     @InjectRepository(Project)
     private projectRepo: Repository<Project>,
+    private mediaService: MediaService,
   ) {}
 
   findAllPublic() {
@@ -61,8 +63,13 @@ export class ProjectsService {
   }
 
   async remove(id: string) {
-    const project = await this.findById(id)
-    await this.projectRepo.remove(project)
+    const project = await this.projectRepo.findOne({ where: { id }, relations: { media: true } })
+    if (!project) throw new NotFoundException('Proje bulunamadı')
+    const sources = project.media.map(m => m.src)
+    await this.projectRepo.remove(project) // media satırları DB cascade ile silinir
+    for (const src of sources) {
+      await this.mediaService.deleteFileIfUnreferenced(src)
+    }
   }
 
   async reorderProjects(orderedIds: string[]) {
