@@ -1,6 +1,11 @@
 import { ServiceUnavailableException } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
-import { ChatService, hasForeignWordLeak, nonLatinLetterRatio } from '../chat.service'
+import {
+  BUDGET_EXCEEDED_MESSAGE,
+  ChatService,
+  hasForeignWordLeak,
+  nonLatinLetterRatio,
+} from '../chat.service'
 import { GroqService } from '../../groq/groq.service'
 
 function makeService(...replies: string[]): { service: ChatService; call: jest.Mock } {
@@ -107,5 +112,52 @@ describe('ChatService — non-Turkish output guard', () => {
   it('throws 503 for non-Latin summary so frontend falls back to plain WhatsApp link', async () => {
     const { service } = makeService('Здравствуйте, я использовал систему консультаций')
     await expect(service.generateSummary(MESSAGES)).rejects.toThrow(ServiceUnavailableException)
+  })
+})
+
+describe('ChatService — Groq günlük bütçe devre kesici', () => {
+  function withRedis(
+    service: ChatService,
+    incrResult: number | Error,
+  ): { incr: jest.Mock; expire: jest.Mock } {
+    const incr =
+      incrResult instanceof Error
+        ? jest.fn().mockRejectedValue(incrResult)
+        : jest.fn().mockResolvedValue(incrResult)
+    const redis = { incr, expire: jest.fn().mockResolvedValue(1) }
+    ;(service as unknown as { redis: unknown }).redis = redis
+    return redis
+  }
+
+  it('returns the fixed message without calling Groq when the daily budget is exceeded', async () => {
+    const { service, call } = makeService('kullanılmayacak yanıt')
+    withRedis(service, 1001) // varsayılan limit 1000
+
+    await expect(service.chat(MESSAGES)).resolves.toBe(BUDGET_EXCEEDED_MESSAGE)
+    expect(call).not.toHaveBeenCalled()
+  })
+
+  it('allows the request and sets a TTL on the first increment of the day', async () => {
+    const { service } = makeService('Çatı GES için aylık faturanız nedir?')
+    const redis = withRedis(service, 1)
+
+    await expect(service.chat(MESSAGES)).resolves.toBe('Çatı GES için aylık faturanız nedir?')
+    expect(redis.incr).toHaveBeenCalledWith(expect.stringMatching(/^groq:daily:\d{4}-\d{2}-\d{2}$/))
+    expect(redis.expire).toHaveBeenCalledTimes(1)
+  })
+
+  it('fails open when Redis is unreachable', async () => {
+    const { service } = makeService('Çatı GES için aylık faturanız nedir?')
+    withRedis(service, new Error('connection refused'))
+
+    await expect(service.chat(MESSAGES)).resolves.toBe('Çatı GES için aylık faturanız nedir?')
+  })
+
+  it('throws 503 for summary when the budget is exceeded (frontend falls back to wa.me)', async () => {
+    const { service, call } = makeService('kullanılmayacak özet')
+    withRedis(service, 1001)
+
+    await expect(service.generateSummary(MESSAGES)).rejects.toThrow(ServiceUnavailableException)
+    expect(call).not.toHaveBeenCalled()
   })
 })
