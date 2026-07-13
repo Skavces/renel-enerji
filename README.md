@@ -117,7 +117,22 @@ Optional integrations (Groq chatbot, Instagram import, OpenWeather, Sentry) are 
 
 ## Database Backup & Restore
 
-The main PostgreSQL data lives in the `pgdata` Docker volume. To back it up or restore it:
+### Automated daily backups
+
+`scripts/backup-db.sh` dumps the main database (and Umami, when up) to `~/backups` as gzipped SQL, keeps 14 days locally and copies the dumps off the VPS when an `rclone` remote is configured. Install it on the VPS as the deploy user:
+
+```bash
+# 1. (strongly recommended) configure an off-VPS target once:
+rclone config   # create a remote named "renel-backup" (B2/S3/Drive/...)
+
+# 2. schedule the nightly run:
+crontab -e
+0 2 * * * /home/deploy/renel-enerji/scripts/backup-db.sh >> /home/deploy/backups/backup.log 2>&1
+```
+
+Without an rclone remote the script still runs but the only copy stays on the VPS disk — it warns about this on every run.
+
+### Manual backup / restore
 
 ```bash
 # Backup (creates a timestamped SQL dump on the host)
@@ -126,6 +141,7 @@ docker compose exec -T db pg_dump -U renel renel_enerji > backup_$(date +%Y%m%d_
 # Restore (overwrites existing data — stop the backend first to avoid writes mid-restore)
 docker compose stop backend
 cat backup_20260101_120000.sql | docker compose exec -T db psql -U renel renel_enerji
+# gzipped dumps from the script: zcat renel_2026-07-13_0200.sql.gz | docker compose exec -T db psql -U renel renel_enerji
 docker compose start backend
 ```
 
