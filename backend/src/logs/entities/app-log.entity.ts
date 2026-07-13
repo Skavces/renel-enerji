@@ -3,6 +3,7 @@ import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn } from 
 export type LogLevel = 'error' | 'warn'
 
 @Entity('app_logs')
+@Index('IDX_app_logs_level_createdAt', ['level', 'createdAt'])
 export class AppLog {
   @PrimaryGeneratedColumn('uuid')
   id: string
