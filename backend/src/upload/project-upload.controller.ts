@@ -12,6 +12,7 @@ import {
   ALLOWED_MEDIA_MIMES,
   videoExtMap,
   assertMagicBytes,
+  mimeFilter,
   toWebp,
   saveWithSeoName,
 } from './upload.utils'
@@ -28,9 +29,7 @@ export class ProjectUploadController {
   @UseInterceptors(
     FilesInterceptor('files', 20, {
       storage: imageStorage,
-      fileFilter: (_req, file, cb) => {
-        cb(null, ALLOWED_MEDIA_MIMES.includes(file.mimetype))
-      },
+      fileFilter: mimeFilter(ALLOWED_MEDIA_MIMES),
       limits: { fileSize: 100 * 1024 * 1024 },
     }),
   )

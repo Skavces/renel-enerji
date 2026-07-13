@@ -29,9 +29,20 @@ export const videoExtMap: Record<string, string> = {
   'video/webm': '.webm',
 }
 
-export const logoFilter = (_req: any, file: Express.Multer.File, cb: any) => {
-  cb(null, ALLOWED_LOGO_MIMES.includes(file.mimetype))
-}
+// Sessizce reddetme (cb(null,false)) dosyayı yutup 200 dönüyordu; kullanıcı
+// "yükledim ama görünmüyor" yaşıyordu. İzin dışı türde açık 400 dönülür.
+export const mimeFilter =
+  (allowedMimes: string[]) => (_req: any, file: Express.Multer.File, cb: any) => {
+    if (allowedMimes.includes(file.mimetype)) return cb(null, true)
+    cb(
+      new BadRequestException(
+        `Desteklenmeyen dosya türü: ${file.mimetype || 'bilinmiyor'} (${file.originalname})`,
+      ),
+      false,
+    )
+  }
+
+export const logoFilter = mimeFilter(ALLOWED_LOGO_MIMES)
 
 export async function toWebp(filePath: string): Promise<string> {
   const webpPath = filePath.replace(/\.[^.]+$/, '.webp')
