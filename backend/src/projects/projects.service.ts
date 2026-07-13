@@ -2,6 +2,7 @@ import { ConflictException, Injectable, NotFoundException } from '@nestjs/common
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { Project } from './entities/project.entity'
+import { MediaType, ProjectMedia } from './entities/project-media.entity'
 import { CreateProjectDto } from './dto/create-project.dto'
 import { UpdateProjectDto } from './dto/update-project.dto'
 import { MediaService } from './media.service'
@@ -14,12 +15,25 @@ export class ProjectsService {
     private mediaService: MediaService,
   ) {}
 
-  findAllPublic() {
-    return this.projectRepo.find({
+  // Liste sayfası kart başına tek kapak görseli kullanıyor; tüm medya dizisi
+  // yerine yalnızca kapak gönderilir (detay sayfası findBySlug ile tam listeyi alır).
+  // Kapak seçimi frontend'deki mantıkla birebir: thumbnail > en düşük sortOrder'lı görsel.
+  private static coverOnly(media: ProjectMedia[]): ProjectMedia[] {
+    const thumb = media.find(m => m.type === MediaType.THUMBNAIL)
+    if (thumb) return [thumb]
+    const firstImage = [...media]
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+      .find(m => m.type === MediaType.IMAGE)
+    return firstImage ? [firstImage] : []
+  }
+
+  async findAllPublic() {
+    const projects = await this.projectRepo.find({
       where: { published: true },
       relations: { media: true },
       order: { sortOrder: 'ASC', createdAt: 'DESC' },
     })
+    return projects.map(p => ({ ...p, media: ProjectsService.coverOnly(p.media ?? []) }))
   }
 
   findAll() {
