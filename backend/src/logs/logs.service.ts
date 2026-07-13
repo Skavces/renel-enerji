@@ -11,6 +11,11 @@ const MESSAGE_LIMIT = 4000
 const LIST_LIMIT = 200
 const DAY_MS = 24 * 60 * 60 * 1000
 
+// Hata fırtınası koruması: aynı mesaj+context bu pencere içinde tekrar yazılmaz
+// (Redis/Groq kesintisinde saniyede onlarca özdeş satır DB'ye akıyordu)
+const DEDUPE_WINDOW_MS = 10_000
+const DEDUPE_MAX_KEYS = 500
+
 export interface LogStats {
   total: number
   errors24h: number
@@ -26,14 +31,35 @@ export class LogsService {
     private repo: Repository<AppLog>,
   ) {}
 
+  // Tek instance çalıştığı için in-memory yeterli; anahtar sayısı sınırlanıp
+  // süresi geçen girdiler budanır ki kesinti anındaki sel Map'i şişirmesin
+  private readonly recentLogs = new Map<string, number>()
+
+  private isDuplicate(key: string): boolean {
+    const now = Date.now()
+    const last = this.recentLogs.get(key)
+    if (last !== undefined && now - last < DEDUPE_WINDOW_MS) return true
+
+    if (this.recentLogs.size >= DEDUPE_MAX_KEYS) {
+      for (const [k, t] of this.recentLogs) {
+        if (now - t >= DEDUPE_WINDOW_MS) this.recentLogs.delete(k)
+      }
+    }
+    this.recentLogs.set(key, now)
+    return false
+  }
+
   // DİKKAT: DbLogger'ın error/warn kancasından çağrılıyor. Burada Nest Logger
   // KULLANILMAZ — sonsuz döngü oluşur. Kendi hataları console'a yazılır.
   async record(level: LogLevel, message: string, context?: string): Promise<void> {
+    const trimmed = message.slice(0, MESSAGE_LIMIT)
+    if (this.isDuplicate(`${level}|${context ?? ''}|${trimmed}`)) return
+
     try {
       await this.repo.insert({
         level,
         context: context ?? null,
-        message: message.slice(0, MESSAGE_LIMIT),
+        message: trimmed,
       })
     } catch (err) {
       console.error('Log kaydı yazılamadı:', err instanceof Error ? err.message : err)

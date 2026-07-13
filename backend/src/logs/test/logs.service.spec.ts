@@ -48,6 +48,36 @@ describe('LogsService', () => {
       ;(repo.insert as jest.Mock).mockRejectedValue(new Error('db down'))
       await expect(service.record('error', 'x')).resolves.toBeUndefined()
     })
+
+    it('aynı mesaj+context 10 sn içinde ikinci kez yazılmaz (hata fırtınası)', async () => {
+      const { service, repo } = makeService()
+      await service.record('error', 'Redis bağlantı hatası', 'AuthService')
+      await service.record('error', 'Redis bağlantı hatası', 'AuthService')
+      await service.record('error', 'Redis bağlantı hatası', 'AuthService')
+      expect(repo.insert).toHaveBeenCalledTimes(1)
+    })
+
+    it('farklı mesaj, context ya da level dedupe\'a takılmaz', async () => {
+      const { service, repo } = makeService()
+      await service.record('error', 'Redis bağlantı hatası', 'AuthService')
+      await service.record('error', 'Redis bağlantı hatası', 'ChatService')
+      await service.record('warn', 'Redis bağlantı hatası', 'AuthService')
+      await service.record('error', 'Groq isteği başarısız', 'AuthService')
+      expect(repo.insert).toHaveBeenCalledTimes(4)
+    })
+
+    it('pencere dolunca aynı mesaj yeniden yazılır', async () => {
+      jest.useFakeTimers()
+      try {
+        const { service, repo } = makeService()
+        await service.record('error', 'tekrar eden hata')
+        jest.advanceTimersByTime(11_000)
+        await service.record('error', 'tekrar eden hata')
+        expect(repo.insert).toHaveBeenCalledTimes(2)
+      } finally {
+        jest.useRealTimers()
+      }
+    })
   })
 
   describe('findAllWithStats', () => {
