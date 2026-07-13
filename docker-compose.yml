@@ -94,6 +94,8 @@ services:
         VITE_UMAMI_WEBSITE_ID: ${UMAMI_WEBSITE_ID}
         VITE_SENTRY_DSN: ${VITE_SENTRY_DSN}
     restart: unless-stopped
+    environment:
+      PRERENDER_ORIGIN: ${PRERENDER_ORIGIN:-https://renelenerji.com}
     ports:
       - "127.0.0.1:8080:8080"
     depends_on:

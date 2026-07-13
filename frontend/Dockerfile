@@ -15,7 +15,8 @@ ENV VITE_SENTRY_DSN=$VITE_SENTRY_DSN
 RUN npm run build
 
 FROM nginxinc/nginx-unprivileged:alpine
+ENV PRERENDER_ORIGIN=https://renelenerji.com
 COPY --from=builder /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx.conf.template /etc/nginx/templates/default.conf.template
 EXPOSE 8080
 CMD ["nginx", "-g", "daemon off;"]

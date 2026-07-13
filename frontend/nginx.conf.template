@@ -156,7 +156,7 @@ server {
         limit_req zone=prerender burst=20 nodelay;
         limit_req_status 429;
         if ($is_bot = 1) {
-            proxy_pass http://prerender:3000/https://renelenerji.com$request_uri;
+            proxy_pass http://prerender:3000/${PRERENDER_ORIGIN}$request_uri;
             break;
         }
         try_files $uri $uri/ /index.html;
