@@ -8,7 +8,7 @@ import { AppLog, LogLevel } from './entities/app-log.entity'
 export const LOG_RETENTION_INTERVAL = '30 days'
 
 const MESSAGE_LIMIT = 4000
-const LIST_LIMIT = 200
+const PAGE_SIZE = 50
 const DAY_MS = 24 * 60 * 60 * 1000
 
 // Hata fırtınası koruması: aynı mesaj+context bu pencere içinde tekrar yazılmaz
@@ -66,19 +66,32 @@ export class LogsService {
     }
   }
 
-  async findAllWithStats(level?: LogLevel): Promise<{ stats: LogStats; logs: AppLog[] }> {
+  async findAllWithStats(
+    level?: LogLevel,
+    page = 1,
+  ): Promise<{ stats: LogStats; logs: AppLog[]; page: number; pageCount: number }> {
     const cutoff = new Date(Date.now() - DAY_MS)
-    const [logs, total, errors24h, warns24h] = await Promise.all([
+    const where = level ? { level } : {}
+    const [logs, filteredTotal, total, errors24h, warns24h] = await Promise.all([
       this.repo.find({
-        where: level ? { level } : {},
+        where,
         order: { createdAt: 'DESC' },
-        take: LIST_LIMIT,
+        take: PAGE_SIZE,
+        skip: (page - 1) * PAGE_SIZE,
       }),
+      // Sayfa sayısı aktif level filtresine göre hesaplanır; stats.total ise
+      // her zaman tüm kayıtları gösterir
+      this.repo.count({ where }),
       this.repo.count(),
       this.repo.count({ where: { level: 'error', createdAt: MoreThan(cutoff) } }),
       this.repo.count({ where: { level: 'warn', createdAt: MoreThan(cutoff) } }),
     ])
-    return { stats: { total, errors24h, warns24h }, logs }
+    return {
+      stats: { total, errors24h, warns24h },
+      logs,
+      page,
+      pageCount: Math.max(1, Math.ceil(filteredTotal / PAGE_SIZE)),
+    }
   }
 
   @Cron('30 4 * * *')

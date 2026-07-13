@@ -335,15 +335,19 @@ export async function deleteFaq(id: string): Promise<void> {
 }
 
 // Chat değerlendirmeleri
-export async function fetchChatRatings(): Promise<{ stats: ChatRatingStats; ratings: ChatRating[] }> {
-  const res = await fetch(`${API}/api/chat/rating/admin/all`, authOptions())
+export async function fetchChatRatings(
+  page = 1,
+): Promise<{ stats: ChatRatingStats; ratings: ChatRating[]; page: number; pageCount: number }> {
+  const res = await fetch(`${API}/api/chat/rating/admin/all?page=${page}`, authOptions())
   if (!res.ok) throw new Error('Değerlendirmeler yüklenemedi')
   return res.json()
 }
 
 // Chat potansiyel talepleri (lead)
-export async function fetchChatLeads(): Promise<{ stats: ChatLeadStats; leads: ChatLead[] }> {
-  const res = await fetch(`${API}/api/chat/lead/admin/all`, authOptions())
+export async function fetchChatLeads(
+  page = 1,
+): Promise<{ stats: ChatLeadStats; leads: ChatLead[]; page: number; pageCount: number }> {
+  const res = await fetch(`${API}/api/chat/lead/admin/all?page=${page}`, authOptions())
   if (!res.ok) throw new Error('Talepler yüklenemedi')
   return res.json()
 }
@@ -374,9 +378,13 @@ export async function reorderFaqs(orderedIds: string[]): Promise<void> {
 }
 
 // Backend hata/uyarı logları (admin panel → Loglar)
-export async function fetchLogs(level?: 'error' | 'warn'): Promise<{ stats: LogStats; logs: AppLog[] }> {
-  const query = level ? `?level=${level}` : ''
-  const res = await fetch(`${API}/api/logs/admin/all${query}`, authOptions())
+export async function fetchLogs(
+  level?: 'error' | 'warn',
+  page = 1,
+): Promise<{ stats: LogStats; logs: AppLog[]; page: number; pageCount: number }> {
+  const params = new URLSearchParams({ page: String(page) })
+  if (level) params.set('level', level)
+  const res = await fetch(`${API}/api/logs/admin/all?${params}`, authOptions())
   if (!res.ok) throw new Error('Loglar yüklenemedi')
   return res.json()
 }

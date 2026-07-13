@@ -14,6 +14,8 @@ export interface LeadStats {
 // (chatbot'taki WhatsApp butonu eşiğiyle aynı)
 const LEAD_USER_MESSAGE_THRESHOLD = 2
 
+const PAGE_SIZE = 50
+
 @Injectable()
 export class ChatLeadService {
   constructor(
@@ -53,12 +55,19 @@ export class ChatLeadService {
     await this.repo.remove(lead)
   }
 
-  async findAllWithStats(): Promise<{ stats: LeadStats; leads: ChatLead[] }> {
+  async findAllWithStats(
+    page = 1,
+  ): Promise<{ stats: LeadStats; leads: ChatLead[]; page: number; pageCount: number }> {
     const [leads, total, whatsapp] = await Promise.all([
-      this.repo.find({ order: { updatedAt: 'DESC' }, take: 200 }),
+      this.repo.find({ order: { updatedAt: 'DESC' }, take: PAGE_SIZE, skip: (page - 1) * PAGE_SIZE }),
       this.repo.count(),
       this.repo.count({ where: { status: 'whatsapp' } }),
     ])
-    return { stats: { total, whatsapp, active: total - whatsapp }, leads }
+    return {
+      stats: { total, whatsapp, active: total - whatsapp },
+      leads,
+      page,
+      pageCount: Math.max(1, Math.ceil(total / PAGE_SIZE)),
+    }
   }
 }

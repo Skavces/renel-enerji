@@ -81,25 +81,41 @@ describe('LogsService', () => {
   })
 
   describe('findAllWithStats', () => {
-    it('son 200 kaydı tarihe göre ve istatistiklerle döner', async () => {
+    it('ilk 50 kaydı tarihe göre ve istatistiklerle döner', async () => {
       const { service, repo } = makeService()
       ;(repo.count as jest.Mock)
-        .mockResolvedValueOnce(42)
+        .mockResolvedValueOnce(120) // filtreli toplam (sayfa hesabı)
+        .mockResolvedValueOnce(120) // stats.total
         .mockResolvedValueOnce(3)
         .mockResolvedValueOnce(7)
       const result = await service.findAllWithStats()
       expect(repo.find).toHaveBeenCalledWith({
         where: {},
         order: { createdAt: 'DESC' },
-        take: 200,
+        take: 50,
+        skip: 0,
       })
-      expect(result.stats).toEqual({ total: 42, errors24h: 3, warns24h: 7 })
+      expect(result.stats).toEqual({ total: 120, errors24h: 3, warns24h: 7 })
+      expect(result.page).toBe(1)
+      expect(result.pageCount).toBe(3)
     })
 
     it('level verilirse where filtresi uygular', async () => {
       const { service, repo } = makeService()
       await service.findAllWithStats('error')
       expect((repo.find as jest.Mock).mock.calls[0][0].where).toEqual({ level: 'error' })
+    })
+
+    it('page parametresi skip değerine çevrilir', async () => {
+      const { service, repo } = makeService()
+      await service.findAllWithStats(undefined, 3)
+      expect((repo.find as jest.Mock).mock.calls[0][0].skip).toBe(100)
+    })
+
+    it('kayıt yokken pageCount en az 1 olur', async () => {
+      const { service } = makeService()
+      const result = await service.findAllWithStats()
+      expect(result.pageCount).toBe(1)
     })
   })
 

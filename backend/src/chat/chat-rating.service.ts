@@ -10,6 +10,8 @@ export interface RatingStats {
   counts: Record<1 | 2 | 3 | 4 | 5, number>
 }
 
+const PAGE_SIZE = 50
+
 @Injectable()
 export class ChatRatingService {
   constructor(
@@ -42,9 +44,11 @@ export class ChatRatingService {
     await this.repo.remove(rating)
   }
 
-  async findAllWithStats(): Promise<{ stats: RatingStats; ratings: ChatRating[] }> {
+  async findAllWithStats(
+    page = 1,
+  ): Promise<{ stats: RatingStats; ratings: ChatRating[]; page: number; pageCount: number }> {
     const [ratings, grouped] = await Promise.all([
-      this.repo.find({ order: { createdAt: 'DESC' }, take: 200 }),
+      this.repo.find({ order: { createdAt: 'DESC' }, take: PAGE_SIZE, skip: (page - 1) * PAGE_SIZE }),
       this.repo
         .createQueryBuilder('r')
         .select('r.rating', 'rating')
@@ -66,6 +70,8 @@ export class ChatRatingService {
     return {
       stats: { total, average: total ? Number((sum / total).toFixed(2)) : 0, counts },
       ratings,
+      page,
+      pageCount: Math.max(1, Math.ceil(total / PAGE_SIZE)),
     }
   }
 }

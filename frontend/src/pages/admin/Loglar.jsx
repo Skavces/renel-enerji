@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { ScrollText, AlertCircle, AlertTriangle, ChevronDown } from 'lucide-react'
 import { fetchLogs } from '../../api/admin'
 import { useAdminAuth } from '../../contexts/AdminAuthContext'
+import AdminPager from '../../components/AdminPager'
 
 function formatDate(value) {
   return new Date(value).toLocaleString('tr-TR', {
@@ -69,10 +70,11 @@ export default function Loglar() {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [level, setLevel] = useState('all') // 'all' | 'error' | 'warn'
+  const [page, setPage] = useState(1)
 
   useEffect(() => {
     setLoading(true)
-    fetchLogs(level === 'all' ? undefined : level)
+    fetchLogs(level === 'all' ? undefined : level, page)
       .then(setData)
       .catch((err) => {
         if (err.message.includes('401') || err.message.includes('Unauthorized')) {
@@ -81,7 +83,12 @@ export default function Loglar() {
         }
       })
       .finally(() => setLoading(false))
-  }, [level]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [level, page]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  function changeLevel(next) {
+    setLevel(next)
+    setPage(1) // filtre değişince ilk sayfaya dön
+  }
 
   const stats = data?.stats ?? { total: 0, errors24h: 0, warns24h: 0 }
   const logs = data?.logs ?? []
@@ -100,7 +107,7 @@ export default function Loglar() {
         <div>
           <h1 className="text-xl font-bold text-gray-900">Loglar</h1>
           <p className="text-sm text-gray-400 mt-0.5">
-            Backend hata ve uyarıları · son 200 kayıt · 30 gün saklanır
+            Backend hata ve uyarıları · sayfa başına 50 kayıt · 30 gün saklanır
           </p>
         </div>
         <div className="flex bg-gray-100 rounded-xl p-1 gap-0.5">
@@ -111,7 +118,7 @@ export default function Loglar() {
           ].map(t => (
             <button
               key={t.id}
-              onClick={() => setLevel(t.id)}
+              onClick={() => changeLevel(t.id)}
               className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${
                 level === t.id ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
               }`}
@@ -135,11 +142,19 @@ export default function Loglar() {
           <p className="text-xs mt-1">Backend'de hata veya uyarı oluşunca burada görünür.</p>
         </div>
       ) : (
-        <div className="space-y-3">
-          {logs.map(l => (
-            <LogRow key={l.id} log={l} />
-          ))}
-        </div>
+        <>
+          <div className="space-y-3">
+            {logs.map(l => (
+              <LogRow key={l.id} log={l} />
+            ))}
+          </div>
+          <AdminPager
+            page={data?.page ?? 1}
+            pageCount={data?.pageCount ?? 1}
+            onChange={setPage}
+            disabled={loading}
+          />
+        </>
       )}
     </main>
   )

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Star, ChevronDown, ChevronRight, MessageCircle, Bot, Users, Send, Clock, TrendingUp, Trash2 } from 'lucide-react'
 import { fetchChatRatings, fetchChatLeads, fetchChatFunnel, deleteChatLead, deleteChatRating } from '../../api/admin'
 import { useAdminAuth } from '../../contexts/AdminAuthContext'
+import AdminPager from '../../components/AdminPager'
 
 function Stars({ value, size = 15 }) {
   return (
@@ -212,7 +213,7 @@ function FunnelSection() {
   )
 }
 
-function LeadsTab({ leadData, onDeleteLead, deletingId }) {
+function LeadsTab({ leadData, onDeleteLead, deletingId, onPageChange }) {
   const stats = leadData?.stats ?? { total: 0, active: 0, whatsapp: 0 }
   const leads = leadData?.leads ?? []
 
@@ -238,11 +239,12 @@ function LeadsTab({ leadData, onDeleteLead, deletingId }) {
           <LeadRow key={l.id} lead={l} onDelete={onDeleteLead} deleting={deletingId === l.id} />
         ))}
       </div>
+      <AdminPager page={leadData?.page ?? 1} pageCount={leadData?.pageCount ?? 1} onChange={onPageChange} />
     </>
   )
 }
 
-function RatingsTab({ ratingData, onDeleteRating, deletingId }) {
+function RatingsTab({ ratingData, onDeleteRating, deletingId, onPageChange }) {
   const stats = ratingData?.stats ?? { total: 0, average: 0, counts: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 } }
   const ratings = ratingData?.ratings ?? []
   const maxCount = Math.max(1, ...Object.values(stats.counts))
@@ -285,6 +287,7 @@ function RatingsTab({ ratingData, onDeleteRating, deletingId }) {
           <RatingRow key={r.id} rating={r} onDelete={onDeleteRating} deleting={deletingId === r.id} />
         ))}
       </div>
+      <AdminPager page={ratingData?.page ?? 1} pageCount={ratingData?.pageCount ?? 1} onChange={onPageChange} />
     </>
   )
 }
@@ -297,28 +300,33 @@ export default function ChatDegerlendirme() {
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState('leads') // 'leads' | 'ratings'
   const [deletingId, setDeletingId] = useState(null)
+  const [leadPage, setLeadPage] = useState(1)
+  const [ratingPage, setRatingPage] = useState(1)
+
+  function handleFetchError(err) {
+    if (err.message.includes('401') || err.message.includes('Unauthorized')) {
+      logout()
+      navigate('/admin/login')
+    }
+  }
 
   useEffect(() => {
-    Promise.all([fetchChatLeads(), fetchChatRatings()])
-      .then(([leads, ratings]) => {
-        setLeadData(leads)
-        setRatingData(ratings)
-      })
-      .catch((err) => {
-        if (err.message.includes('401') || err.message.includes('Unauthorized')) {
-          logout()
-          navigate('/admin/login')
-        }
-      })
+    fetchChatLeads(leadPage)
+      .then(setLeadData)
+      .catch(handleFetchError)
       .finally(() => setLoading(false))
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [leadPage]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    fetchChatRatings(ratingPage).then(setRatingData).catch(handleFetchError)
+  }, [ratingPage]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleDeleteLead(id) {
     if (!confirm('Bu talebi silmek istediğinize emin misiniz?')) return
     setDeletingId(id)
     try {
       await deleteChatLead(id)
-      setLeadData(await fetchChatLeads())
+      setLeadData(await fetchChatLeads(leadPage))
     } catch (err) {
       alert('Silinemedi: ' + err.message)
     } finally {
@@ -331,7 +339,7 @@ export default function ChatDegerlendirme() {
     setDeletingId(id)
     try {
       await deleteChatRating(id)
-      setRatingData(await fetchChatRatings())
+      setRatingData(await fetchChatRatings(ratingPage))
     } catch (err) {
       alert('Silinemedi: ' + err.message)
     } finally {
@@ -377,9 +385,19 @@ export default function ChatDegerlendirme() {
       <FunnelSection />
 
       {tab === 'leads' ? (
-        <LeadsTab leadData={leadData} onDeleteLead={handleDeleteLead} deletingId={deletingId} />
+        <LeadsTab
+          leadData={leadData}
+          onDeleteLead={handleDeleteLead}
+          deletingId={deletingId}
+          onPageChange={setLeadPage}
+        />
       ) : (
-        <RatingsTab ratingData={ratingData} onDeleteRating={handleDeleteRating} deletingId={deletingId} />
+        <RatingsTab
+          ratingData={ratingData}
+          onDeleteRating={handleDeleteRating}
+          deletingId={deletingId}
+          onPageChange={setRatingPage}
+        />
       )}
     </main>
   )

@@ -8,6 +8,7 @@ import { ChatStatsService } from './chat-stats.service'
 import { ChatBodyDto, SummaryBodyDto } from './dto/chat-body.dto'
 import { RatingBodyDto } from './dto/rating-body.dto'
 import { EventBodyDto } from './dto/event-body.dto'
+import { parsePage } from '../common/pagination'
 
 @Controller('chat')
 export class ChatController {
@@ -75,8 +76,8 @@ export class ChatController {
 
   @UseGuards(JwtAuthGuard)
   @Get('rating/admin/all')
-  adminRatings() {
-    return this.ratingService.findAllWithStats()
+  adminRatings(@Query('page') page?: string) {
+    return this.ratingService.findAllWithStats(parsePage(page))
   }
 
   @UseGuards(JwtAuthGuard)
@@ -95,8 +96,8 @@ export class ChatController {
 
   @UseGuards(JwtAuthGuard)
   @Get('lead/admin/all')
-  adminLeads() {
-    return this.leadService.findAllWithStats()
+  adminLeads(@Query('page') page?: string) {
+    return this.leadService.findAllWithStats(parsePage(page))
   }
 
   @UseGuards(JwtAuthGuard)
