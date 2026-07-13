@@ -23,9 +23,13 @@ export class WebhooksService {
     }
   }
 
-  async handleInstagramEvent(body: any): Promise<void> {
-    if (body.object !== 'instagram') return
+  // İmza controller'da doğrulanır; buradan sonrası (Graph API + medya indirme +
+  // sharp) isteği bekletmeden arka planda koşar. Meta 200'ü hemen alır, böylece
+  // timeout kaynaklı yeniden gönderimler ve çift indirme logları biter.
+  handleInstagramEvent(body: any): void {
+    if (body?.object !== 'instagram') return
 
+    const mediaIds: string[] = []
     for (const entry of body.entry ?? []) {
       for (const change of entry.changes ?? []) {
         if (change.field !== 'feed') continue
@@ -33,14 +37,20 @@ export class WebhooksService {
         if (value?.verb !== 'add') continue
 
         const mediaId = value?.media?.id
-        if (!mediaId) continue
+        if (mediaId) mediaIds.push(mediaId)
+      }
+    }
 
-        this.logger.log(`Yeni Instagram gönderisi algılandı: ${mediaId}`)
-        try {
-          await this.importService.syncInstagramByMediaId(mediaId)
-        } catch (err: any) {
-          this.logger.error(`syncInstagramByMediaId hatası (${mediaId}): ${err.message}`)
-        }
+    if (mediaIds.length) void this.processMediaIds(mediaIds)
+  }
+
+  private async processMediaIds(mediaIds: string[]): Promise<void> {
+    for (const mediaId of mediaIds) {
+      this.logger.log(`Yeni Instagram gönderisi algılandı: ${mediaId}`)
+      try {
+        await this.importService.syncInstagramByMediaId(mediaId)
+      } catch (err: any) {
+        this.logger.error(`syncInstagramByMediaId hatası (${mediaId}): ${err.message}`)
       }
     }
   }

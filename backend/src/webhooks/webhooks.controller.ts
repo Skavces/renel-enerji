@@ -48,7 +48,7 @@ export class WebhooksController {
 
   @Post('instagram')
   @HttpCode(200)
-  async handleEvent(
+  handleEvent(
     @Headers('x-hub-signature-256') signature: string,
     @Req() req: RawBodyRequest<Request>,
     @Body() body: any,
@@ -58,7 +58,8 @@ export class WebhooksController {
       throw new ForbiddenException('Geçersiz imza')
     }
 
-    await this.webhooksService.handleInstagramEvent(body)
+    // Ağır iş arka planda; Meta'ya hemen 200 dönülür
+    this.webhooksService.handleInstagramEvent(body)
     return { ok: true }
   }
 }
