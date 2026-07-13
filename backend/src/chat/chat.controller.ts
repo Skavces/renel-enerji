@@ -68,7 +68,7 @@ export class ChatController {
       role: m.role,
       content: sanitizeContent(m.content),
     }))
-    await this.ratingService.create(dto.rating, conversation)
+    await this.ratingService.create(dto.rating, conversation, dto.sessionId)
     this.trackLead(this.leadService.attachRating(dto.sessionId, dto.rating))
     return { ok: true }
   }

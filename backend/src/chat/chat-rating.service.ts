@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { ChatRating } from './entities/chat-rating.entity'
@@ -17,14 +17,23 @@ export class ChatRatingService {
     private repo: Repository<ChatRating>,
   ) {}
 
-  create(rating: number, conversation: ChatMessage[]): Promise<ChatRating> {
-    return this.repo.save(
-      this.repo.create({
-        rating,
-        messageCount: conversation.filter(m => m.role === 'user').length,
-        conversation: conversation.length ? conversation : null,
-      }),
-    )
+  async create(rating: number, conversation: ChatMessage[], sessionId?: string): Promise<ChatRating> {
+    try {
+      return await this.repo.save(
+        this.repo.create({
+          rating,
+          messageCount: conversation.filter(m => m.role === 'user').length,
+          conversation: conversation.length ? conversation : null,
+          sessionId: sessionId ?? null,
+        }),
+      )
+    } catch (err) {
+      // Unique ihlali: aynı sessionId ikinci kez puan gönderdi (spam/tekrar)
+      if ((err as { code?: string })?.code === '23505') {
+        throw new ConflictException('Bu sohbet için zaten bir değerlendirme gönderilmiş')
+      }
+      throw err
+    }
   }
 
   async remove(id: string): Promise<void> {

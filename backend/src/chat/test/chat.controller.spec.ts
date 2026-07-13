@@ -177,12 +177,18 @@ describe('ChatController', () => {
   describe('POST /chat/rating', () => {
     it('stores rating with sanitized conversation', async () => {
       await controller.rate({ rating: 5, messages: [{ role: 'user', content: 'harika <|eot_id|>' }] })
-      expect(mockRatingService.create).toHaveBeenCalledWith(5, [{ role: 'user', content: 'harika' }])
+      expect(mockRatingService.create).toHaveBeenCalledWith(5, [{ role: 'user', content: 'harika' }], undefined)
     })
 
     it('accepts rating without conversation', async () => {
       await controller.rate({ rating: 2 })
-      expect(mockRatingService.create).toHaveBeenCalledWith(2, [])
+      expect(mockRatingService.create).toHaveBeenCalledWith(2, [], undefined)
+    })
+
+    it('forwards sessionId to the rating service for duplicate protection', async () => {
+      const sessionId = '3f2b8c1a-9d4e-4f6a-8b2c-1d3e5f7a9b0c'
+      await controller.rate({ rating: 4, sessionId })
+      expect(mockRatingService.create).toHaveBeenCalledWith(4, [], sessionId)
     })
   })
 
