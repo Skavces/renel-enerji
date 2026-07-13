@@ -1,5 +1,5 @@
 import { Controller, Get, Header, Res } from '@nestjs/common'
-import { Response } from 'express'
+import type { Response } from 'express'
 import { SitemapService } from './sitemap.service'
 
 @Controller('sitemap.xml')

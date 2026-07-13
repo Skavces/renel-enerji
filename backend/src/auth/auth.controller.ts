@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, Patch, Post, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common'
-import { Response } from 'express'
+import type { Response } from 'express'
 import { Throttle } from '@nestjs/throttler'
 import { ConfigService } from '@nestjs/config'
 import { AuthService } from './auth.service'
@@ -46,7 +46,7 @@ export class AuthController {
     if (data.requires2fa) {
       return res.json(data)
     }
-    res.cookie('admin_token', data.access_token, this.cookieOptions(data.rememberMe))
+    res.cookie('admin_token', data.access_token, this.cookieOptions(data.rememberMe ?? false))
     return res.json({ success: true })
   }
 

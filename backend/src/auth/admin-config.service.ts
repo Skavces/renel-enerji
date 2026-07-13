@@ -23,7 +23,9 @@ export class AdminConfigService {
       .orIgnore()
       .execute()
     const config = await this.repo.findOne({ where: { id: ADMIN_CONFIG_ID } })
-    if (config?.totpSecret) {
+    // Üstteki insert-or-ignore sonrası satır her zaman var olmalı
+    if (!config) throw new Error('admin_config satırı okunamadı')
+    if (config.totpSecret) {
       if (this.encryption.isEncrypted(config.totpSecret)) {
         config.totpSecret = this.encryption.decrypt(config.totpSecret)
       } else {

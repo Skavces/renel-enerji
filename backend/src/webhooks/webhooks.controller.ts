@@ -5,17 +5,17 @@ import {
   Query,
   Body,
   Headers,
-  RawBodyRequest,
   Req,
   Res,
   ForbiddenException,
   HttpCode,
   Logger,
 } from '@nestjs/common'
+import type { RawBodyRequest } from '@nestjs/common'
 import { SkipThrottle } from '@nestjs/throttler'
 import { ConfigService } from '@nestjs/config'
 import { timingSafeEqual } from 'crypto'
-import { Request, Response } from 'express'
+import type { Request, Response } from 'express'
 import { WebhooksService } from './webhooks.service'
 
 @Controller('webhooks')
@@ -53,7 +53,7 @@ export class WebhooksController {
     @Req() req: RawBodyRequest<Request>,
     @Body() body: any,
   ) {
-    if (!this.webhooksService.verifySignature(req.rawBody, signature)) {
+    if (!req.rawBody || !this.webhooksService.verifySignature(req.rawBody, signature)) {
       this.logger.warn('Geçersiz webhook imzası — istek reddedildi')
       throw new ForbiddenException('Geçersiz imza')
     }

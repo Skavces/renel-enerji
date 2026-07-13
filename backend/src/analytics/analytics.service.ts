@@ -48,9 +48,10 @@ export class AnalyticsService {
 
     if (!res.ok) throw new Error('Umami auth failed')
     const data = await res.json()
-    this.token = data.token
+    const token: string = data.token
+    this.token = token
     this.tokenExpiry = Date.now() + 23 * 60 * 60 * 1000
-    return this.token
+    return token
   }
 
   private async fetch<T>(path: string, retried = false): Promise<T> {

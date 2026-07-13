@@ -5,7 +5,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 import { LinkMediaDto } from './dto/link-media.dto'
 import { ProjectsService } from '../projects/projects.service'
 import { MediaService } from '../projects/media.service'
-import { MediaType } from '../projects/entities/project-media.entity'
+import { MediaType, ProjectMedia } from '../projects/entities/project-media.entity'
 import {
   imageStorage,
   VIDEO_MIMES,
@@ -38,7 +38,7 @@ export class ProjectUploadController {
     @UploadedFiles() files: Express.Multer.File[],
   ) {
     const project = await this.projectsService.findById(projectId)
-    const results = []
+    const results: ProjectMedia[] = []
     for (const file of files) {
       const detectedMime = await assertMagicBytes(file.path, ALLOWED_MEDIA_MIMES)
       const isVideo = VIDEO_MIMES.includes(detectedMime)
