@@ -53,11 +53,18 @@ export class AnalyticsService {
     return this.token
   }
 
-  private async fetch<T>(path: string): Promise<T> {
+  private async fetch<T>(path: string, retried = false): Promise<T> {
     const token = await this.getToken()
     const res = await fetchWithTimeout(`${this.umamiUrl}${path}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
+    // Umami restart'ında cache'lenen token 23 saate kadar geçersiz kalabiliyordu;
+    // 401'de cache'i düşürüp yeni token'la bir kez daha dene
+    if (res.status === 401 && !retried) {
+      this.token = null
+      this.tokenExpiry = 0
+      return this.fetch<T>(path, true)
+    }
     if (!res.ok) throw new Error(`Umami API error: ${res.status}`)
     return res.json()
   }
