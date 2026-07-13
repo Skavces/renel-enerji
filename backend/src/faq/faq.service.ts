@@ -1,54 +1,20 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Repository } from 'typeorm'
+import { FindManyOptions, Repository } from 'typeorm'
 import { Faq } from './entities/faq.entity'
-import { CreateFaqDto } from './dto/create-faq.dto'
-import { UpdateFaqDto } from './dto/update-faq.dto'
+import { BaseContentService } from '../common/base-content.service'
 
 @Injectable()
-export class FaqService {
-  constructor(
-    @InjectRepository(Faq)
-    private repo: Repository<Faq>,
-  ) {}
+export class FaqService extends BaseContentService<Faq> {
+  protected readonly entityClass = Faq
+  protected readonly notFoundMessage = 'SSS bulunamadı'
 
-  findAllPublic() {
-    return this.repo.find({
-      where: { published: true },
-      order: { sortOrder: 'ASC', createdAt: 'ASC' },
-    })
+  constructor(@InjectRepository(Faq) repo: Repository<Faq>) {
+    super(repo)
   }
 
-  findAll() {
-    return this.repo.find({ order: { sortOrder: 'ASC', createdAt: 'ASC' } })
-  }
-
-  async findById(id: string) {
-    const faq = await this.repo.findOne({ where: { id } })
-    if (!faq) throw new NotFoundException('SSS bulunamadı')
-    return faq
-  }
-
-  create(dto: CreateFaqDto) {
-    return this.repo.save(this.repo.create(dto))
-  }
-
-  async update(id: string, dto: UpdateFaqDto) {
-    const faq = await this.findById(id)
-    Object.assign(faq, dto)
-    return this.repo.save(faq)
-  }
-
-  async remove(id: string) {
-    const faq = await this.findById(id)
-    await this.repo.remove(faq)
-  }
-
-  async reorder(orderedIds: string[]) {
-    await this.repo.manager.transaction(async (manager) => {
-      await Promise.all(
-        orderedIds.map((id, index) => manager.update(Faq, id, { sortOrder: index })),
-      )
-    })
+  // SSS eklenme sırasıyla okunur (en eski üstte)
+  protected defaultOrder(): FindManyOptions<Faq>['order'] {
+    return { sortOrder: 'ASC', createdAt: 'ASC' }
   }
 }

@@ -1,84 +1,41 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common'
+import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Repository } from 'typeorm'
+import { DeepPartial, FindManyOptions, Repository } from 'typeorm'
 import { BlogPost } from './entities/blog-post.entity'
-import { CreateBlogPostDto } from './dto/create-blog-post.dto'
-import { UpdateBlogPostDto } from './dto/update-blog-post.dto'
-import { deleteUploadedFile } from '../upload/uploaded-files'
+import { BaseContentService } from '../common/base-content.service'
 
 @Injectable()
-export class BlogService {
-  constructor(
-    @InjectRepository(BlogPost)
-    private repo: Repository<BlogPost>,
-  ) {}
+export class BlogService extends BaseContentService<BlogPost> {
+  protected readonly entityClass = BlogPost
+  protected readonly notFoundMessage = 'Yazı bulunamadı'
+  protected readonly fileField = 'coverImage'
+  protected readonly uniqueConflictMessage = 'Bu slug zaten kullanımda'
 
-  findAllPublic() {
-    return this.repo.find({
+  constructor(@InjectRepository(BlogPost) repo: Repository<BlogPost>) {
+    super(repo)
+  }
+
+  // Public liste hafif alanlarla ve yayın tarihine göre döner
+  protected publicFindOptions(): FindManyOptions<BlogPost> {
+    return {
       where: { published: true },
       order: { sortOrder: 'ASC', publishedAt: 'DESC', createdAt: 'DESC' },
       select: ['id', 'title', 'slug', 'excerpt', 'coverImage', 'publishedAt', 'createdAt'],
-    })
+    }
   }
 
-  findAll() {
-    return this.repo.find({ order: { sortOrder: 'ASC', createdAt: 'DESC' } })
+  // İlk kez yayınlanırken publishedAt damgalanır
+  protected onCreate(post: BlogPost, dto: DeepPartial<BlogPost>): void {
+    if (dto.published && !post.publishedAt) post.publishedAt = new Date()
+  }
+
+  protected onUpdate(post: BlogPost, dto: DeepPartial<BlogPost>): void {
+    if (dto.published && !post.published && !post.publishedAt) post.publishedAt = new Date()
   }
 
   async findBySlug(slug: string) {
     const post = await this.repo.findOne({ where: { slug, published: true } })
     if (!post) throw new NotFoundException('Yazı bulunamadı')
     return post
-  }
-
-  async findById(id: string) {
-    const post = await this.repo.findOne({ where: { id } })
-    if (!post) throw new NotFoundException('Yazı bulunamadı')
-    return post
-  }
-
-  async create(dto: CreateBlogPostDto) {
-    const post = this.repo.create(dto)
-    if (dto.published && !post.publishedAt) post.publishedAt = new Date()
-    try {
-      return await this.repo.save(post)
-    } catch (err: any) {
-      if (err.code === '23505') throw new ConflictException('Bu slug zaten kullanımda')
-      throw err
-    }
-  }
-
-  async update(id: string, dto: UpdateBlogPostDto) {
-    const post = await this.findById(id)
-    if (dto.published && !post.published && !post.publishedAt) {
-      post.publishedAt = new Date()
-    }
-    const oldCover = post.coverImage
-    Object.assign(post, dto)
-    try {
-      const saved = await this.repo.save(post)
-      // Kapak değiştiyse eski dosyayı diskte bırakma
-      if (dto.coverImage !== undefined && oldCover && oldCover !== saved.coverImage) {
-        await deleteUploadedFile(oldCover)
-      }
-      return saved
-    } catch (err: any) {
-      if (err.code === '23505') throw new ConflictException('Bu slug zaten kullanımda')
-      throw err
-    }
-  }
-
-  async remove(id: string) {
-    const post = await this.findById(id)
-    await this.repo.remove(post)
-    await deleteUploadedFile(post.coverImage)
-  }
-
-  async reorder(orderedIds: string[]) {
-    await this.repo.manager.transaction(async (manager) => {
-      await Promise.all(
-        orderedIds.map((id, index) => manager.update(BlogPost, id, { sortOrder: index })),
-      )
-    })
   }
 }
