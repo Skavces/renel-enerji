@@ -254,8 +254,13 @@ describe('ChatController', () => {
       expect(mockStatsService.funnel).toHaveBeenCalledWith(30)
       controller.adminFunnel('7')
       expect(mockStatsService.funnel).toHaveBeenCalledWith(7)
-      controller.adminFunnel('999')
+      controller.adminFunnel('30')
       expect(mockStatsService.funnel).toHaveBeenLastCalledWith(30)
+    })
+
+    it('funnel endpoint rejects invalid days with 400', () => {
+      expect(() => controller.adminFunnel('999')).toThrow(BadRequestException)
+      expect(mockStatsService.funnel).not.toHaveBeenCalled()
     })
   })
 

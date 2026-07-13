@@ -110,6 +110,10 @@ export class ChatController {
   @UseGuards(JwtAuthGuard)
   @Get('lead/admin/funnel')
   adminFunnel(@Query('days') days?: string) {
+    // Sessizce 30'a düşmek yerine geçersiz değeri açıkça reddet
+    if (days !== undefined && days !== '7' && days !== '30') {
+      throw new BadRequestException('days yalnızca 7 veya 30 olabilir')
+    }
     return this.statsService.funnel(days === '7' ? 7 : 30)
   }
 }
