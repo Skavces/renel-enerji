@@ -17,7 +17,7 @@ export async function login(
   username: string,
   password: string,
   rememberMe = false,
-): Promise<{ preAuthToken?: string; requiresTwoFactor?: boolean }> {
+): Promise<{ preAuthToken?: string; requires2fa?: boolean; success?: boolean }> {
   const res = await fetch(`${API}/api/auth/login`, {
     method: 'POST',
     credentials: 'include',
@@ -72,7 +72,7 @@ export async function get2FAStatus(): Promise<{ enabled: boolean }> {
   return res.json()
 }
 
-export async function generate2FASetup(): Promise<{ secret: string; qrCode: string }> {
+export async function generate2FASetup(): Promise<{ secret: string; qrCodeUrl: string }> {
   const res = await fetch(`${API}/api/auth/2fa/setup`, authOptions())
   if (!res.ok) throw new Error('QR kodu üretilemedi')
   return res.json()
