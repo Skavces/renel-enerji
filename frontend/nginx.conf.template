@@ -10,6 +10,8 @@ map $http_user_agent $is_bot {
     "~*linkedinbot"               1;
     "~*slackbot"                  1;
     "~*whatsapp"                  1;
+    "~*telegrambot"               1;
+    "~*discordbot"                1;
     "~*Prerender"                 0;
 }
 
