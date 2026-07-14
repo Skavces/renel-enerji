@@ -29,9 +29,9 @@ export default function Projelerimiz() {
   const jsonLd = projects.length > 0 ? {
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
-    name: 'Projelerimiz | RenEL Enerji Mühendislik',
+    name: 'Projelerimiz | RenEl Enerji Mühendislik',
     url: 'https://renelenerji.com/projelerimiz',
-    description: 'RenEL Enerji\'nin tamamladığı güneş enerjisi projeleri. Tarımsal sulama GES, off-grid çözümler, çatı tipi GES ve hibrit sistemler.',
+    description: 'RenEl Enerji\'nin tamamladığı güneş enerjisi projeleri. Tarımsal sulama GES, off-grid çözümler, çatı tipi GES ve hibrit sistemler.',
     mainEntity: {
       '@type': 'ItemList',
       numberOfItems: projects.length,
@@ -48,7 +48,7 @@ export default function Projelerimiz() {
     <>
       <SEO
         title="Projelerimiz"
-        description="RenEL Enerji'nin tamamladığı güneş enerjisi projeleri. Tarımsal sulama GES, off-grid çözümler, çatı tipi GES ve hibrit sistemler — Soma, Manisa ve çevre illerde."
+        description="RenEl Enerji'nin tamamladığı güneş enerjisi projeleri. Tarımsal sulama GES, off-grid çözümler, çatı tipi GES ve hibrit sistemler — Soma, Manisa ve çevre illerde."
         jsonLd={jsonLd}
       />
       <PageHeader title="Projelerimiz" />

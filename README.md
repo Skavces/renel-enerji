@@ -1,6 +1,6 @@
-# RenEL Enerji
+# RenEl Enerji
 
-Corporate website and admin panel for **RenEL Enerji**, a solar energy solutions company based in Turkey.
+Corporate website and admin panel for **RenEl Enerji**, a solar energy solutions company based in Turkey.
 
 ## Tech Stack
 

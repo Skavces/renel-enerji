@@ -75,8 +75,8 @@ export default function ProjeDetay() {
     description: projectDesc.slice(0, 160),
     image: coverImg,
     url: `https://renelenerji.com/projelerimiz/${slug}`,
-    author: { '@type': 'Organization', name: 'RenEL Enerji Mühendislik', url: 'https://renelenerji.com' },
-    publisher: { '@type': 'Organization', name: 'RenEL Enerji Mühendislik', url: 'https://renelenerji.com' },
+    author: { '@type': 'Organization', name: 'RenEl Enerji Mühendislik', url: 'https://renelenerji.com' },
+    publisher: { '@type': 'Organization', name: 'RenEl Enerji Mühendislik', url: 'https://renelenerji.com' },
   }
 
   return (

@@ -21,10 +21,10 @@ export default function Blog() {
   const jsonLd = posts.length > 0 ? {
     '@context': 'https://schema.org',
     '@type': 'Blog',
-    name: 'RenEL Enerji Blog',
+    name: 'RenEl Enerji Blog',
     url: 'https://renelenerji.com/blog',
     description: 'Güneş enerjisi, GES kurulumu, tarımsal sulama sistemleri ve yenilenebilir enerji hakkında bilgi, haber ve makaleler.',
-    publisher: { '@type': 'Organization', name: 'RenEL Enerji Mühendislik', url: 'https://renelenerji.com' },
+    publisher: { '@type': 'Organization', name: 'RenEl Enerji Mühendislik', url: 'https://renelenerji.com' },
     blogPost: posts.map((p) => ({
       '@type': 'BlogPosting',
       headline: p.title,
@@ -39,7 +39,7 @@ export default function Blog() {
     <>
       <SEO
         title="Blog"
-        description="Güneş enerjisi, GES kurulumu, tarımsal sulama sistemleri ve yenilenebilir enerji hakkında bilgi, haber ve makaleler. RenEL Enerji Mühendislik blogu."
+        description="Güneş enerjisi, GES kurulumu, tarımsal sulama sistemleri ve yenilenebilir enerji hakkında bilgi, haber ve makaleler. RenEl Enerji Mühendislik blogu."
         jsonLd={jsonLd}
       />
       <PageHeader title="Blog" />

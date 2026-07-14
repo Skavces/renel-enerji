@@ -57,7 +57,7 @@ export default function SSS() {
     <>
       <SEO
         title="Sık Sorulan Sorular"
-        description="Güneş enerjisi, GES kurulumu, maliyet, süreç ve teşvik hakkında sık sorulan sorular. RenEL Enerji Mühendislik uzmanlarından doğrudan cevaplar."
+        description="Güneş enerjisi, GES kurulumu, maliyet, süreç ve teşvik hakkında sık sorulan sorular. RenEl Enerji Mühendislik uzmanlarından doğrudan cevaplar."
         jsonLd={faqSchema}
       />
       <PageHeader title="Sık Sorulan Sorular" />

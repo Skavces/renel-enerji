@@ -13,7 +13,7 @@ const homeSchema = {
     {
       '@type': 'WebSite',
       '@id': 'https://renelenerji.com/#website',
-      name: 'RenEL Enerji Mühendislik',
+      name: 'RenEl Enerji Mühendislik',
       url: 'https://renelenerji.com',
       inLanguage: 'tr-TR',
       publisher: { '@id': 'https://renelenerji.com/#organization' },
@@ -21,7 +21,7 @@ const homeSchema = {
     {
       '@type': 'Organization',
       '@id': 'https://renelenerji.com/#organization',
-      name: 'RenEL Enerji Mühendislik',
+      name: 'RenEl Enerji Mühendislik',
       url: 'https://renelenerji.com',
       logo: {
         '@type': 'ImageObject',
@@ -40,7 +40,7 @@ const homeSchema = {
     {
       '@type': 'LocalBusiness',
       '@id': 'https://renelenerji.com/#localbusiness',
-      name: 'RenEL Enerji Mühendislik',
+      name: 'RenEl Enerji Mühendislik',
       description:
         "Soma/Manisa'da güneş enerjisi mühendislik hizmetleri. Tarımsal sulama GES, çatı ve arazi tipi GES, depolamalı GES, EV şarj istasyonu kurulum ve danışmanlık.",
       url: 'https://renelenerji.com',

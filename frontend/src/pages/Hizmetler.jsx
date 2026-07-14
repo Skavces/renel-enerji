@@ -169,7 +169,7 @@ const allServices = categories.flatMap((c) => c.services)
 const hizmetlerJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebPage',
-  name: 'Hizmetler | RenEL Enerji Mühendislik',
+  name: 'Hizmetler | RenEl Enerji Mühendislik',
   url: 'https://renelenerji.com/hizmetler',
   description:
     'Güneş enerjisi hizmetlerimiz: tarımsal sulama GES, çatı ve arazi tipi GES, bağ evi depolamalı GES, elektrikli araç şarj istasyonu, GES bakım onarım, elektrik altyapı bakımı, proje danışmanlığı ve enerji danışmanlığı.',
@@ -184,7 +184,7 @@ const hizmetlerJsonLd = {
         description: s.description,
         image: `https://renelenerji.com${s.photo}`,
         url: `https://renelenerji.com/hizmetler/${s.slug}`,
-        provider: { '@type': 'Organization', name: 'RenEL Enerji Mühendislik', url: 'https://renelenerji.com' },
+        provider: { '@type': 'Organization', name: 'RenEl Enerji Mühendislik', url: 'https://renelenerji.com' },
         areaServed: { '@type': 'Place', name: 'Soma, Manisa, Türkiye' },
       },
     })),

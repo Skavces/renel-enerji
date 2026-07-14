@@ -46,12 +46,12 @@ export default function BlogDetay() {
     dateModified: post.updatedAt || post.publishedAt || post.createdAt,
     author: {
       '@type': 'Organization',
-      name: 'RenEL Enerji Mühendislik',
+      name: 'RenEl Enerji Mühendislik',
       url: 'https://renelenerji.com',
     },
     publisher: {
       '@type': 'Organization',
-      name: 'RenEL Enerji Mühendislik',
+      name: 'RenEl Enerji Mühendislik',
       logo: { '@type': 'ImageObject', url: 'https://renelenerji.com/renel-logo.svg' },
     },
   }

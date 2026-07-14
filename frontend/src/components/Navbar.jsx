@@ -82,7 +82,7 @@ export default function Navbar() {
       <nav className={`sticky top-0 z-50 transition-all duration-500 ${transparent ? 'bg-transparent' : 'bg-white shadow-lg'}`}>
         <div className="max-w-7xl mx-auto px-6 flex justify-between items-center h-24 lg:grid lg:grid-cols-[1fr_auto_1fr]">
           {/* Logo */}
-          <Link to="/" className="flex items-center select-none" aria-label="RenEL Enerji Ana Sayfa">
+          <Link to="/" className="flex items-center select-none" aria-label="RenEl Enerji Ana Sayfa">
             <Logo textWhite={transparent} className="h-20 w-auto" />
           </Link>
 

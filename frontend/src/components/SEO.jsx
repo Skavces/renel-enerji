@@ -1,7 +1,7 @@
 import { Helmet } from 'react-helmet-async'
 import { useLocation } from 'react-router-dom'
 
-const SITE_NAME = 'RenEL Enerji Mühendislik'
+const SITE_NAME = 'RenEl Enerji Mühendislik'
 const SITE_URL = 'https://renelenerji.com'
 const DEFAULT_IMAGE = 'https://renelenerji.com/og-image.webp'
 const DEFAULT_DESC =

@@ -6,7 +6,7 @@ import { WA_NUMBER } from '../lib/whatsapp'
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'LocalBusiness',
-  name: 'RenEL Enerji Mühendislik',
+  name: 'RenEl Enerji Mühendislik',
   url: 'https://renelenerji.com',
   telephone: '+90-554-379-60-04',
   email: 'mertcan.yilmaz@renelenerji.com',
@@ -36,7 +36,7 @@ export default function Iletisim() {
     <>
       <SEO
         title="Soma GES Teklif Al"
-        description="Soma ve Manisa'da güneş enerjisi sistemi teklifi alın. Tarımsal sulama GES, çatı tipi GES ve EV şarj istasyonu kurulumu için RenEL Enerji Mühendislik ile iletişime geçin."
+        description="Soma ve Manisa'da güneş enerjisi sistemi teklifi alın. Tarımsal sulama GES, çatı tipi GES ve EV şarj istasyonu kurulumu için RenEl Enerji Mühendislik ile iletişime geçin."
         jsonLd={jsonLd}
       />
       <PageHeader title="İletişim" />

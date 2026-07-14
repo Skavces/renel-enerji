@@ -1,6 +1,6 @@
-# RenEL Enerji Mühendislik
+# RenEl Enerji Mühendislik
 
-RenEL Enerji Mühendislik, Soma/Manisa merkezli bir güneş enerjisi mühendislik firmasıdır. GES kurulum, bakım onarım, elektrik altyapı bakımı ve proje danışmanlığı hizmetleri sunmaktadır.
+RenEl Enerji Mühendislik, Soma/Manisa merkezli bir güneş enerjisi mühendislik firmasıdır. GES kurulum, bakım onarım, elektrik altyapı bakımı ve proje danışmanlığı hizmetleri sunmaktadır.
 
 ## Sayfalar
 

@@ -56,11 +56,11 @@ export default function Kurumsal() {
     '@context': 'https://schema.org',
     '@type': 'AboutPage',
     url: 'https://renelenerji.com/kurumsal',
-    name: 'Kurumsal | RenEL Enerji Mühendislik',
-    description: 'RenEL Enerji Mühendislik hakkında. Elektrik-Elektronik Mühendisi liderliğinde, Soma/Manisa\'da anahtar teslim güneş enerjisi çözümleri sunan mühendislik firması.',
+    name: 'Kurumsal | RenEl Enerji Mühendislik',
+    description: 'RenEl Enerji Mühendislik hakkında. Elektrik-Elektronik Mühendisi liderliğinde, Soma/Manisa\'da anahtar teslim güneş enerjisi çözümleri sunan mühendislik firması.',
     mainEntity: {
       '@type': 'Organization',
-      name: 'RenEL Enerji Mühendislik',
+      name: 'RenEl Enerji Mühendislik',
       url: 'https://renelenerji.com',
       logo: 'https://renelenerji.com/renel-logo.svg',
       telephone: '+90-554-379-60-04',
@@ -86,7 +86,7 @@ export default function Kurumsal() {
     <>
       <SEO
         title="Kurumsal"
-        description="RenEL Enerji Mühendislik hakkında. Elektrik-Elektronik Mühendisi liderliğinde, Soma/Manisa'da anahtar teslim güneş enerjisi çözümleri sunan mühendislik firması."
+        description="RenEl Enerji Mühendislik hakkında. Elektrik-Elektronik Mühendisi liderliğinde, Soma/Manisa'da anahtar teslim güneş enerjisi çözümleri sunan mühendislik firması."
         jsonLd={jsonLd}
       />
       <PageHeader title="Kurumsal" />

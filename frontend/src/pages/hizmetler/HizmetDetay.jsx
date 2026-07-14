@@ -197,7 +197,7 @@ export default function HizmetDetay() {
     description: service.description,
     image: `https://renelenerji.com${service.photo}`,
     url: `https://renelenerji.com/hizmetler/${service.slug}`,
-    provider: { '@type': 'Organization', name: 'RenEL Enerji Mühendislik', url: 'https://renelenerji.com' },
+    provider: { '@type': 'Organization', name: 'RenEl Enerji Mühendislik', url: 'https://renelenerji.com' },
     areaServed: { '@type': 'Place', name: 'Soma, Manisa, Türkiye' },
   }
 

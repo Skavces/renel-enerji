@@ -150,10 +150,10 @@ export default function NedenBizDetay() {
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
-    name: `${page.title} | RenEL Enerji Mühendislik`,
+    name: `${page.title} | RenEl Enerji Mühendislik`,
     description: page.description,
     url: `https://renelenerji.com/neden-biz/${page.slug}`,
-    publisher: { '@type': 'Organization', name: 'RenEL Enerji Mühendislik', url: 'https://renelenerji.com' },
+    publisher: { '@type': 'Organization', name: 'RenEl Enerji Mühendislik', url: 'https://renelenerji.com' },
   }
 
   return (
