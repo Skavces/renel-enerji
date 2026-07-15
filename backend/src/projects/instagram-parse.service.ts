@@ -1,5 +1,4 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common'
-import { ConfigService } from '@nestjs/config'
 import { GroqService, GROQ_MODEL } from '../groq/groq.service'
 import type { ParsedProject } from './instagram-types'
 
@@ -29,17 +28,13 @@ Kurallar:
 
 @Injectable()
 export class InstagramParseService {
-  constructor(
-    private config: ConfigService,
-    private groq: GroqService,
-  ) {}
+  constructor(private groq: GroqService) {}
 
   async parseInstagram(text: string): Promise<ParsedProject> {
-    const key1 = this.config.get<string>('GROQ_API_KEY')
-    const key2 = this.config.get<string>('GROQ_API_KEY_2')
-    if (!key1) throw new InternalServerErrorException('GROQ_API_KEY tanımlı değil')
+    const keys = this.groq.getKeys('parse')
+    if (!keys.length) throw new InternalServerErrorException('GROQ_PARSE_KEYS / GROQ_API_KEY tanımlı değil')
 
-    const { res, data } = await this.groq.call(key1, key2, {
+    const { res, data } = await this.groq.call(keys, {
       model: GROQ_MODEL,
       messages: [
         { role: 'system', content: PARSE_PROMPT },

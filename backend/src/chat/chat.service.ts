@@ -226,10 +226,9 @@ export class ChatService {
   }
 
   private async callGroq(systemPrompt: string, messages: ChatMessage[], maxTokens = 400): Promise<string> {
-    const key1 = this.config.get<string>('GROQ_API_KEY_3') ?? this.config.get<string>('GROQ_API_KEY')
-    const key2 = this.config.get<string>('GROQ_API_KEY_2')
-    if (!key1) {
-      this.logger.error('GROQ_API_KEY tanımlı değil')
+    const keys = this.groq.getKeys('chat')
+    if (!keys.length) {
+      this.logger.error('GROQ_CHAT_KEYS / GROQ_API_KEY tanımlı değil')
       throw new ServiceUnavailableException('Chatbot şu anda kullanılamıyor')
     }
 
@@ -237,7 +236,7 @@ export class ChatService {
       throw new GroqBudgetExceededError()
     }
 
-    const { res, data } = await this.groq.call(key1, key2, {
+    const { res, data } = await this.groq.call(keys, {
       model: GROQ_MODEL,
       messages: [{ role: 'system', content: systemPrompt }, ...messages.slice(-12)],
       max_tokens: maxTokens,

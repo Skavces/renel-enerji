@@ -9,7 +9,7 @@ import {
 import { GroqService } from '../../groq/groq.service'
 
 function makeService(...replies: string[]): { service: ChatService; call: jest.Mock } {
-  const config = { get: (key: string) => (key === 'GROQ_API_KEY' ? 'key1' : undefined) }
+  const config = { get: () => undefined }
   const call = jest.fn()
   for (const reply of replies) {
     call.mockResolvedValueOnce({
@@ -17,7 +17,7 @@ function makeService(...replies: string[]): { service: ChatService; call: jest.M
       data: { choices: [{ message: { content: reply } }] },
     })
   }
-  const groq = { call }
+  const groq = { call, getKeys: jest.fn().mockReturnValue(['key1']) }
   return {
     service: new ChatService(
       config as unknown as ConfigService,

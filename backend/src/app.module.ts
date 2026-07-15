@@ -41,7 +41,6 @@ import { HealthController } from './health.controller'
         REDIS_URL: Joi.string().required(),
         FRONTEND_URL: Joi.string().uri().required(),
         ADMIN_PASSWORD_HASH: Joi.string().required(),
-        GROQ_API_KEY: Joi.string().required(),
         INSTAGRAM_APP_SECRET: Joi.string().required(),
         INSTAGRAM_WEBHOOK_VERIFY_TOKEN: Joi.string().required(),
         UMAMI_PASS: Joi.string().required(),
@@ -64,9 +63,23 @@ import { HealthController } from './health.controller'
         OPENWEATHER_API_KEY: Joi.string().allow('').optional(),
         INSTAGRAM_ACCESS_TOKEN: Joi.string().allow('').optional(),
         INSTAGRAM_USER_ID: Joi.string().allow('').optional(),
+        GROQ_API_KEY: Joi.string().allow('').optional(),
         GROQ_API_KEY_2: Joi.string().allow('').optional(),
         GROQ_API_KEY_3: Joi.string().allow('').optional(),
+        GROQ_CHAT_KEYS: Joi.string().allow('').optional(),
+        GROQ_PARSE_KEYS: Joi.string().allow('').optional(),
         SENTRY_DSN: Joi.string().allow('').optional(),
+      }).custom((env: Record<string, string | undefined>, helpers) => {
+        // Chatbot canlı sitenin parçası: yeni liste ya da eski key'lerden en az
+        // biri boot anında mevcut olmalı (GroqService.getKeys ile aynı öncelik)
+        const has = (v?: string) => typeof v === 'string' && v.trim() !== ''
+        if (!has(env.GROQ_CHAT_KEYS) && !has(env.GROQ_API_KEY_3) && !has(env.GROQ_API_KEY)) {
+          return helpers.message({ custom: 'GROQ_CHAT_KEYS veya GROQ_API_KEY(_3) tanımlı olmalı' })
+        }
+        if (!has(env.GROQ_PARSE_KEYS) && !has(env.GROQ_API_KEY)) {
+          return helpers.message({ custom: 'GROQ_PARSE_KEYS veya GROQ_API_KEY tanımlı olmalı' })
+        }
+        return env
       }),
       validationOptions: { allowUnknown: true },
     }),
