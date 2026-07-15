@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { DeepPartial, FindManyOptions, Repository } from 'typeorm'
 import { BlogPost } from './entities/blog-post.entity'
 import { BaseContentService } from '../common/base-content.service'
+import { sanitizeRichHtml, stripHtml } from '../common/html-sanitize'
 
 @Injectable()
 export class BlogService extends BaseContentService<BlogPost> {
@@ -24,13 +25,19 @@ export class BlogService extends BaseContentService<BlogPost> {
     }
   }
 
-  // İlk kez yayınlanırken publishedAt damgalanır
+  // İlk kez yayınlanırken publishedAt damgalanır; HTML içerik yazma anında
+  // sunucuda da temizlenir (render'daki DOMPurify tek savunma olmasın)
   protected onCreate(post: BlogPost, dto: DeepPartial<BlogPost>): void {
     if (dto.published && !post.publishedAt) post.publishedAt = new Date()
+    if (typeof post.content === 'string') post.content = sanitizeRichHtml(post.content)
+    if (typeof post.excerpt === 'string') post.excerpt = stripHtml(post.excerpt)
   }
 
+  // update() dto'yu hook'tan SONRA entity'ye kopyalar — burada dto temizlenir
   protected onUpdate(post: BlogPost, dto: DeepPartial<BlogPost>): void {
     if (dto.published && !post.published && !post.publishedAt) post.publishedAt = new Date()
+    if (typeof dto.content === 'string') dto.content = sanitizeRichHtml(dto.content)
+    if (typeof dto.excerpt === 'string') dto.excerpt = stripHtml(dto.excerpt)
   }
 
   async findBySlug(slug: string) {
