@@ -1,4 +1,4 @@
-import { Injectable, Logger, UnauthorizedException, OnModuleInit, OnModuleDestroy } from '@nestjs/common'
+import { BadRequestException, Injectable, Logger, UnauthorizedException, OnModuleInit, OnModuleDestroy } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { ConfigService } from '@nestjs/config'
 import * as bcrypt from 'bcrypt'
@@ -129,8 +129,10 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
       await this.redis.set(otpKey, '1', 'EX', 60)
     }
 
+    // Kimlik doğrulama değil girdi hatası — 401 frontend'de "oturum düştü"
+    // gibi yorumlanabilir, 400 doğru semantik
     if (newUsername && newUsername === effectiveUsername) {
-      throw new UnauthorizedException('Yeni kullanıcı adı mevcut ile aynı olamaz')
+      throw new BadRequestException('Yeni kullanıcı adı mevcut ile aynı olamaz')
     }
 
     if (newUsername) {
