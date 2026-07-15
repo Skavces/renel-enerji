@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import { API } from '../api/config.js'
+import { logout as apiLogout } from '../api/admin'
 const AdminAuthContext = createContext(null)
 
 export function AdminAuthProvider({ children }) {
@@ -15,8 +16,12 @@ export function AdminAuthProvider({ children }) {
 
   const saveToken = () => setIsAuth(true)
 
+  // API çağrısı burada: token'ın jti'si sunucuda blacklist'lenmeden çıkış olmasın.
+  // Oturum zaten düşmüşse (401 yolları) çağrı sessizce başarısız olur, sorun değil.
   const logout = () => {
+    const done = apiLogout().catch(() => {})
     setIsAuth(false)
+    return done
   }
 
   if (checking) return null

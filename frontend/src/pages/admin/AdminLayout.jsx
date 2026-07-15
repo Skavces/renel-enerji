@@ -16,7 +16,6 @@ import {
   X,
 } from 'lucide-react'
 import { useAdminAuth } from '../../contexts/AdminAuthContext'
-import { logout as apiLogout } from '../../api/admin'
 import Logo from '../../components/Logo'
 
 const NAV = [
@@ -41,8 +40,7 @@ export default function AdminLayout() {
   useEffect(() => { setMobileOpen(false) }, [pathname])
 
   const handleLogout = async () => {
-    await apiLogout().catch(() => {})
-    logout()
+    await logout()
     navigate('/admin/login')
   }
 
