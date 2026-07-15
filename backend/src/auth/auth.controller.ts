@@ -1,5 +1,6 @@
 import { Body, Controller, Delete, Get, Patch, Post, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common'
 import type { Response } from 'express'
+import type { AuthenticatedRequest } from './jwt-payload'
 import { Throttle } from '@nestjs/throttler'
 import { ConfigService } from '@nestjs/config'
 import { AuthService } from './auth.service'
@@ -60,8 +61,8 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Post('logout')
-  async logout(@Req() req: any, @Res() res: Response) {
-    const { jti, exp } = req.user ?? {}
+  async logout(@Req() req: AuthenticatedRequest, @Res() res: Response) {
+    const { jti, exp } = req.user
     if (!jti || !exp) throw new UnauthorizedException('Token kimliği bulunamadı')
     await this.authService.blacklistToken(jti, exp)
     res.clearCookie('admin_token', this.clearCookieOptions())
@@ -70,14 +71,14 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  me(@Req() req: any) {
-    return { ok: true, username: req.user?.username }
+  me(@Req() req: AuthenticatedRequest) {
+    return { ok: true, username: req.user.username }
   }
 
   @Throttle({ default: { ttl: 60000, limit: 3 } })
   @UseGuards(JwtAuthGuard)
   @Patch('credentials')
-  async changeCredentials(@Body() dto: ChangeCredentialsDto, @Req() req: any, @Res() res: Response) {
+  async changeCredentials(@Body() dto: ChangeCredentialsDto, @Req() req: AuthenticatedRequest, @Res() res: Response) {
     await this.authService.changeCredentials(
       dto.currentPassword,
       dto.totpCode,
@@ -85,7 +86,7 @@ export class AuthController {
       dto.newUsername,
       dto.newPassword,
     )
-    const { jti, exp } = req.user ?? {}
+    const { jti, exp } = req.user
     if (jti && exp) await this.authService.blacklistToken(jti, exp)
     res.clearCookie('admin_token', this.clearCookieOptions())
     return res.json({ ok: true })

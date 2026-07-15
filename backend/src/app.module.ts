@@ -73,7 +73,8 @@ import { HealthController } from './health.controller'
     ThrottlerModule.forRootAsync({
       useFactory: () => ({
         throttlers: [{ ttl: 60000, limit: 60 }],
-        getTracker: (req: any) => req.ip ?? req.connection?.remoteAddress ?? 'unknown',
+        getTracker: (req: { ip?: string; connection?: { remoteAddress?: string } }) =>
+          req.ip ?? req.connection?.remoteAddress ?? 'unknown',
       }),
     }),
     TypeOrmModule.forRootAsync({

@@ -16,6 +16,7 @@ import { InstagramParseService } from './instagram-parse.service'
 import { InstagramTokenService } from '../instagram-token/instagram-token.service'
 import { fetchWithTimeout } from '../common/fetch-with-timeout'
 import { UPLOADS_DIR } from '../upload/uploaded-files'
+import type { InstagramMediaListResponse, InstagramPost, ParsedProject } from './instagram-types'
 
 const INSTAGRAM_API_VERSION = 'v21.0'
 const INSTAGRAM_MEDIA_FIELDS =
@@ -81,9 +82,9 @@ export class InstagramImportService {
     if (!res.ok) throw new InternalServerErrorException(`Instagram API hatası: ${await res.text()}`)
 
     const hashtag = this.config.get<string>('INSTAGRAM_HASHTAG', '#proje').toLowerCase()
-    const data = await res.json()
-    const posts: any[] = (data.data ?? []).filter(
-      (p: any) => p.caption?.toLowerCase().includes(hashtag),
+    const data: InstagramMediaListResponse = await res.json()
+    const posts = (data.data ?? []).filter(
+      p => p.caption?.toLowerCase().includes(hashtag),
     )
 
     // Batch query — tek sorguda tüm mevcut postları bul (N+1 yerine 1 sorgu)
@@ -100,9 +101,9 @@ export class InstagramImportService {
     let parseErrors = 0
 
     for (const post of newPosts) {
-      let parsed: any
+      let parsed: ParsedProject
       try {
-        parsed = await this.parseService.parseInstagram(post.caption)
+        parsed = await this.parseService.parseInstagram(post.caption ?? '')
       } catch (err: any) {
         this.logger.warn(`Parse hatası (post ${post.id}): ${err.message}`)
         parseErrors++
@@ -135,16 +136,16 @@ export class InstagramImportService {
     const res = await fetchWithTimeout(url, { headers: { Authorization: `Bearer ${token}` } })
     if (!res.ok) throw new InternalServerErrorException(`Instagram API hatası: ${await res.text()}`)
 
-    const post = await res.json()
+    const post: InstagramPost = await res.json()
     const hashtag = this.config.get<string>('INSTAGRAM_HASHTAG', '#proje').toLowerCase()
     if (!post.caption?.toLowerCase().includes(hashtag)) {
       this.logger.log(`Instagram post ${mediaId} ${hashtag} etiketi yok, atlanıyor`)
       return
     }
 
-    let parsed: any
+    let parsed: ParsedProject
     try {
-      parsed = await this.parseService.parseInstagram(post.caption)
+      parsed = await this.parseService.parseInstagram(post.caption ?? '')
     } catch (err: any) {
       throw new InternalServerErrorException(`Parse hatası: ${err.message}`)
     }
@@ -153,8 +154,8 @@ export class InstagramImportService {
     this.logger.log(`Webhook ile proje oluşturuldu: ${saved.slug}`)
   }
 
-  private async createProjectFromInstagram(parsed: any, post: any, published: boolean): Promise<Project> {
-    const slug = await this.projectsService.uniqueSlug(this.projectsService.toSlug(parsed.name))
+  private async createProjectFromInstagram(parsed: ParsedProject, post: InstagramPost, published: boolean): Promise<Project> {
+    const slug = await this.projectsService.uniqueSlug(this.projectsService.toSlug(parsed.name ?? ''))
     const projectData = {
       slug,
       name: parsed.name || 'Instagram Proje',
@@ -166,7 +167,7 @@ export class InstagramImportService {
       specs: parsed.specs || [],
       highlights: parsed.highlights || [],
       statBoxes: parsed.statBoxes || [],
-      category: parsed.category || null,
+      category: parsed.category || undefined,
       published,
       instagramMediaId: post.id,
     }
@@ -190,7 +191,7 @@ export class InstagramImportService {
     return saved
   }
 
-  private async importInstagramImages(project: Project, post: any): Promise<void> {
+  private async importInstagramImages(project: Project, post: InstagramPost): Promise<void> {
     const items: { url: string; type: MediaType }[] = []
 
     if (post.media_type === 'IMAGE' && post.media_url) {

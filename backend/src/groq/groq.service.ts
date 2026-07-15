@@ -1,6 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { fetchWithTimeout } from '../common/fetch-with-timeout'
 
+// OpenAI-uyumlu chat completions cevabından kullanılan alanlar
+export interface GroqResponse {
+  choices?: { message?: { content?: string } }[]
+}
+
 export const GROQ_MODEL = 'llama-3.3-70b-versatile'
 export const GROQ_FALLBACK_MODEL = 'llama-3.1-8b-instant'
 export const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions'
@@ -32,7 +37,7 @@ export class GroqService {
     primaryKey: string,
     fallbackKey: string | undefined,
     payload: { model: string } & Record<string, unknown>,
-  ): Promise<{ res: Response | null; data: any }> {
+  ): Promise<{ res: Response | null; data: GroqResponse | null }> {
     // Sırasıyla: birincil anahtar → yedek anahtar (429/5xx için) → yedek model
     const attempts = [
       { key: primaryKey, model: payload.model, delayMs: 0 },

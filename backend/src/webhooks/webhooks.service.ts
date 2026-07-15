@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { createHmac, timingSafeEqual } from 'crypto'
 import { InstagramImportService } from '../projects/instagram-import.service'
+import type { InstagramWebhookBody } from '../projects/instagram-types'
 
 @Injectable()
 export class WebhooksService {
@@ -26,7 +27,7 @@ export class WebhooksService {
   // İmza controller'da doğrulanır; buradan sonrası (Graph API + medya indirme +
   // sharp) isteği bekletmeden arka planda koşar. Meta 200'ü hemen alır, böylece
   // timeout kaynaklı yeniden gönderimler ve çift indirme logları biter.
-  handleInstagramEvent(body: any): void {
+  handleInstagramEvent(body: InstagramWebhookBody): void {
     if (body?.object !== 'instagram') return
 
     const mediaIds: string[] = []

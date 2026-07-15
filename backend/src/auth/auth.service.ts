@@ -6,6 +6,7 @@ import { authenticator } from 'otplib'
 import * as qrcode from 'qrcode'
 import { AdminConfigService } from './admin-config.service'
 import { AdminConfig } from './admin-config.entity'
+import type { JwtPayload } from './jwt-payload'
 import Redis from 'ioredis'
 
 @Injectable()
@@ -149,7 +150,7 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
   }
 
   async verify2FA(preAuthToken: string, code: string) {
-    let payload: any
+    let payload: JwtPayload
     try {
       payload = this.jwtService.verify(preAuthToken)
     } catch {

@@ -1,5 +1,7 @@
 import { BadRequestException } from '@nestjs/common'
 import { diskStorage } from 'multer'
+import type { FileFilterCallback } from 'multer'
+import type { Request } from 'express'
 import { extname } from 'path'
 import { unlink, rename } from 'fs/promises'
 import { fileTypeFromFile } from 'file-type'
@@ -32,13 +34,12 @@ export const videoExtMap: Record<string, string> = {
 // Sessizce reddetme (cb(null,false)) dosyayı yutup 200 dönüyordu; kullanıcı
 // "yükledim ama görünmüyor" yaşıyordu. İzin dışı türde açık 400 dönülür.
 export const mimeFilter =
-  (allowedMimes: string[]) => (_req: any, file: Express.Multer.File, cb: any) => {
+  (allowedMimes: string[]) => (_req: Request, file: Express.Multer.File, cb: FileFilterCallback) => {
     if (allowedMimes.includes(file.mimetype)) return cb(null, true)
     cb(
       new BadRequestException(
         `Desteklenmeyen dosya türü: ${file.mimetype || 'bilinmiyor'} (${file.originalname})`,
       ),
-      false,
     )
   }
 

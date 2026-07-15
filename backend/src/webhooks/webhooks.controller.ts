@@ -17,6 +17,7 @@ import { ConfigService } from '@nestjs/config'
 import { timingSafeEqual } from 'crypto'
 import type { Request, Response } from 'express'
 import { WebhooksService } from './webhooks.service'
+import type { InstagramWebhookBody } from '../projects/instagram-types'
 
 @Controller('webhooks')
 export class WebhooksController {
@@ -51,7 +52,7 @@ export class WebhooksController {
   handleEvent(
     @Headers('x-hub-signature-256') signature: string,
     @Req() req: RawBodyRequest<Request>,
-    @Body() body: any,
+    @Body() body: InstagramWebhookBody,
   ) {
     if (!req.rawBody || !this.webhooksService.verifySignature(req.rawBody, signature)) {
       this.logger.warn('Geçersiz webhook imzası — istek reddedildi')

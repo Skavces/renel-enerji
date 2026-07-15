@@ -1,6 +1,7 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { GroqService, GROQ_MODEL } from '../groq/groq.service'
+import type { ParsedProject } from './instagram-types'
 
 const PARSE_PROMPT = `Sen RenEl Enerji şirketinin web sitesi için Instagram gönderilerinden proje bilgisi çıkaran bir içerik asistanısın.
 
@@ -33,7 +34,7 @@ export class InstagramParseService {
     private groq: GroqService,
   ) {}
 
-  async parseInstagram(text: string): Promise<any> {
+  async parseInstagram(text: string): Promise<ParsedProject> {
     const key1 = this.config.get<string>('GROQ_API_KEY')
     const key2 = this.config.get<string>('GROQ_API_KEY_2')
     if (!key1) throw new InternalServerErrorException('GROQ_API_KEY tanımlı değil')
@@ -49,12 +50,12 @@ export class InstagramParseService {
 
     if (!res?.ok) throw new InternalServerErrorException(`Groq API hatası: ${res?.status ?? 'ağ hatası'}`)
 
-    const content = data.choices?.[0]?.message?.content ?? ''
+    const content = data?.choices?.[0]?.message?.content ?? ''
     const jsonMatch = content.match(/\{[\s\S]*\}/)
     if (!jsonMatch) throw new InternalServerErrorException('Groq geçersiz yanıt döndürdü')
 
     try {
-      return JSON.parse(jsonMatch[0])
+      return JSON.parse(jsonMatch[0]) as ParsedProject
     } catch (err) {
       throw new InternalServerErrorException(
         `JSON parse hatası: ${(err as Error).message}. Ham yanıt: ${jsonMatch[0].slice(0, 200)}`,

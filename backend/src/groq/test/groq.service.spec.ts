@@ -45,7 +45,7 @@ describe('GroqService', () => {
 
     const { res, data } = await service.call('key1', 'key2', payload)
     expect(res?.ok).toBe(true)
-    expect(data.choices[0].message.content).toBe('cevap')
+    expect(data?.choices?.[0]?.message?.content).toBe('cevap')
     expect(mockFetch).toHaveBeenCalledTimes(1)
     expect(sentPayload(0)).toEqual({ model: GROQ_MODEL, key: 'key1' })
   })
