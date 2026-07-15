@@ -120,7 +120,7 @@ export const INJECTION_PATTERNS = [
 // Model "yalnızca Türkçe" kuralını deldiğinde (Kiril/CJK/Arap alfabesi vb.) yanıtı
 // kullanıcıya göstermemek için harf bazında Latin dışı oran ölçülür
 export function nonLatinLetterRatio(text: string): number {
-  const letters = text.match(/\p{L}/gu) ?? []
+  const letters: string[] = text.match(/\p{L}/gu) ?? []
   if (letters.length === 0) return 0
   const nonLatin = letters.filter(ch => !/\p{Script=Latin}/u.test(ch)).length
   return nonLatin / letters.length
@@ -152,7 +152,8 @@ const LONG_ENGLISH_WORDS = [...COMMON_ENGLISH_WORDS].filter(w => w.length >= 5)
 // ("monthly", "tentang" vb.) göremez; bu kontrol o boşluğu kapatır.
 // q/w/x harfleri Türkçe alfabede yoktur — beyaz listede olmayan her q/w/x'li kelime sızıntıdır.
 export function hasForeignWordLeak(text: string): boolean {
-  const words = text.toLowerCase().match(/[a-zçğıöşüâîû]+/g) ?? []
+  // Açık tip şart: match() ?? [] birleşimi ES2017 lib'inde never[]'a daralıyor
+  const words: string[] = text.toLowerCase().match(/[a-zçğıöşüâîû]+/g) ?? []
   return words.some(w => {
     if (ALLOWED_FOREIGN_WORDS.has(w)) return false
     if (/[qwx]/.test(w) || COMMON_ENGLISH_WORDS.has(w)) return true
