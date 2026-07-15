@@ -3,7 +3,10 @@ import { ConfigService } from '@nestjs/config'
 import { InjectRepository } from '@nestjs/typeorm'
 import { In, Repository } from 'typeorm'
 import sharp from 'sharp'
-import { writeFile } from 'fs/promises'
+import { createWriteStream } from 'fs'
+import { rm } from 'fs/promises'
+import { Readable } from 'stream'
+import { pipeline } from 'stream/promises'
 import { join } from 'path'
 import { Project } from './entities/project.entity'
 import { MediaType } from './entities/project-media.entity'
@@ -206,17 +209,27 @@ export class InstagramImportService {
       }
     }
 
-    await Promise.all(items.map(async item => {
+    // Sıralı indirme: paralel indirme + video buffer'lama 512MB container'da
+    // carousel'li postlarda OOM'a yol açabiliyordu
+    for (const item of items) {
       try {
         const r = await fetchWithTimeout(item.url, undefined, 30000)
-        if (!r.ok) return
-        const buf = Buffer.from(await r.arrayBuffer())
+        if (!r.ok) continue
 
         if (item.type === MediaType.VIDEO) {
+          if (!r.body) continue
           const filename = `${project.slug}-ig-${Date.now()}-${Math.round(Math.random() * 1e4)}.mp4`
-          await writeFile(join(UPLOADS_DIR, filename), buf)
+          const filePath = join(UPLOADS_DIR, filename)
+          try {
+            // Videoyu RAM'e almadan doğrudan diske akıt
+            await pipeline(Readable.fromWeb(r.body as any), createWriteStream(filePath))
+          } catch (err) {
+            await rm(filePath, { force: true })
+            throw err
+          }
           await this.mediaService.addMedia(project.id, MediaType.VIDEO, `/uploads/${filename}`)
         } else {
+          const buf = Buffer.from(await r.arrayBuffer())
           const filename = `${project.slug}-ig-${Date.now()}-${Math.round(Math.random() * 1e4)}.webp`
           await sharp(buf).webp({ quality: 82 }).toFile(join(UPLOADS_DIR, filename))
           await this.mediaService.addMedia(project.id, MediaType.IMAGE, `/uploads/${filename}`)
@@ -224,6 +237,6 @@ export class InstagramImportService {
       } catch (err: any) {
         this.logger.warn(`Instagram medya indirilemedi (${item.url}): ${err.message}`)
       }
-    }))
+    }
   }
 }

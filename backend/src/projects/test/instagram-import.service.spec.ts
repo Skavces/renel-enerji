@@ -3,8 +3,15 @@ import { InstagramImportService } from '../instagram-import.service'
 
 // Mock external dependencies
 jest.mock('sharp', () => jest.fn().mockReturnValue({ webp: jest.fn().mockReturnThis(), toFile: jest.fn() }))
-jest.mock('fs/promises', () => ({ writeFile: jest.fn() }))
+jest.mock('fs/promises', () => ({ ...jest.requireActual('fs/promises'), rm: jest.fn() }))
+jest.mock('fs', () => ({ ...jest.requireActual('fs'), createWriteStream: jest.fn() }))
+jest.mock('stream/promises', () => ({ pipeline: jest.fn().mockResolvedValue(undefined) }))
 jest.mock('ioredis', () => jest.fn().mockImplementation(() => ({ on: jest.fn() })))
+
+import { createWriteStream } from 'fs'
+import { rm } from 'fs/promises'
+import { pipeline } from 'stream/promises'
+import { MediaType } from '../entities/project-media.entity'
 
 const mockPost = (id: string, caption: string) => ({
   id,
@@ -198,6 +205,74 @@ describe('InstagramImportService', () => {
       await expect(service.syncInstagramByMediaId('some-media-id')).rejects.toThrow(
         InternalServerErrorException,
       )
+    })
+  })
+
+  describe('importInstagramImages — video streaming (OOM guard)', () => {
+    const videoPost = {
+      id: 'video-id',
+      media_type: 'VIDEO',
+      media_url: 'https://example.com/video.mp4',
+      thumbnail_url: null,
+    }
+    const emptyWebStream = () => new ReadableStream({ start: c => c.close() })
+
+    it('streams videos to disk without buffering them in memory', async () => {
+      const { service, mediaService } = makeService()
+      const arrayBuffer = jest.fn()
+      mockFetch.mockResolvedValue({ ok: true, body: emptyWebStream(), arrayBuffer })
+
+      await (service as any).importInstagramImages({ id: 'p1', slug: 'test-proje' }, videoPost)
+
+      expect(pipeline).toHaveBeenCalledTimes(1)
+      expect(createWriteStream).toHaveBeenCalledWith(expect.stringContaining('.mp4'))
+      // Video RAM'e alınmamalı — OOM regresyon kilidi
+      expect(arrayBuffer).not.toHaveBeenCalled()
+      expect(mediaService.addMedia).toHaveBeenCalledWith(
+        'p1',
+        MediaType.VIDEO,
+        expect.stringMatching(/^\/uploads\/test-proje-ig-.*\.mp4$/),
+      )
+    })
+
+    it('removes the partial file and skips the media when streaming fails', async () => {
+      const { service, mediaService } = makeService()
+      ;(pipeline as jest.Mock).mockRejectedValueOnce(new Error('network reset'))
+      mockFetch.mockResolvedValue({ ok: true, body: emptyWebStream() })
+
+      await (service as any).importInstagramImages({ id: 'p1', slug: 'test-proje' }, videoPost)
+
+      expect(rm).toHaveBeenCalledWith(expect.stringContaining('.mp4'), { force: true })
+      expect(mediaService.addMedia).not.toHaveBeenCalled()
+    })
+
+    it('downloads carousel media sequentially, not in parallel', async () => {
+      const { service } = makeService()
+      let inFlight = 0
+      let maxInFlight = 0
+      mockFetch.mockImplementation(async () => {
+        inFlight++
+        maxInFlight = Math.max(maxInFlight, inFlight)
+        await new Promise(r => setTimeout(r, 5))
+        inFlight--
+        return { ok: true, arrayBuffer: () => Promise.resolve(Buffer.from('img')) }
+      })
+
+      const carousel = {
+        id: 'carousel-id',
+        media_type: 'CAROUSEL_ALBUM',
+        children: {
+          data: [
+            { media_type: 'IMAGE', media_url: 'https://example.com/1.jpg' },
+            { media_type: 'IMAGE', media_url: 'https://example.com/2.jpg' },
+            { media_type: 'IMAGE', media_url: 'https://example.com/3.jpg' },
+          ],
+        },
+      }
+      await (service as any).importInstagramImages({ id: 'p1', slug: 'test-proje' }, carousel)
+
+      expect(mockFetch).toHaveBeenCalledTimes(3)
+      expect(maxInFlight).toBe(1)
     })
   })
 })
