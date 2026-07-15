@@ -6,7 +6,6 @@ jest.mock('sharp', () => jest.fn().mockReturnValue({ webp: jest.fn().mockReturnT
 jest.mock('fs/promises', () => ({ ...jest.requireActual('fs/promises'), rm: jest.fn() }))
 jest.mock('fs', () => ({ ...jest.requireActual('fs'), createWriteStream: jest.fn() }))
 jest.mock('stream/promises', () => ({ pipeline: jest.fn().mockResolvedValue(undefined) }))
-jest.mock('ioredis', () => jest.fn().mockImplementation(() => ({ on: jest.fn() })))
 
 import { createWriteStream } from 'fs'
 import { rm } from 'fs/promises'

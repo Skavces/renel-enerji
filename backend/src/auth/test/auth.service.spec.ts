@@ -6,13 +6,11 @@ import * as bcrypt from 'bcrypt'
 import { AuthService } from '../auth.service'
 import { AdminConfigService } from '../admin-config.service'
 
-// Redis mock
+// Redis mock — RedisModule DI sayesinde düz obje yeterli
 const redisMock = {
   get: jest.fn(),
   set: jest.fn(),
-  on: jest.fn(),
 }
-jest.mock('ioredis', () => jest.fn().mockImplementation(() => redisMock))
 
 const mockAdminConfig = {
   id: 1,
@@ -53,9 +51,12 @@ function makeService(overrides: Partial<typeof mockAdminConfig> = {}) {
     incrementTokenVersion: jest.fn(),
   } as unknown as AdminConfigService
 
-  const service = new AuthService(jwtService, configService, adminConfigService)
-  // Inject mocked redis directly
-  ;(service as any).redis = redisMock
+  const service = new AuthService(
+    jwtService,
+    configService,
+    adminConfigService,
+    redisMock as unknown as import('ioredis').Redis,
+  )
 
   return { service, jwtService, adminConfigService }
 }

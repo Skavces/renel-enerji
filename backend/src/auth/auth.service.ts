@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, Logger, UnauthorizedException, OnModuleInit, OnModuleDestroy } from '@nestjs/common'
+import { BadRequestException, Inject, Injectable, UnauthorizedException } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { ConfigService } from '@nestjs/config'
 import * as bcrypt from 'bcrypt'
@@ -8,26 +8,16 @@ import { AdminConfigService } from './admin-config.service'
 import { AdminConfig } from './admin-config.entity'
 import type { JwtPayload } from './jwt-payload'
 import Redis from 'ioredis'
+import { REDIS_CLIENT } from '../redis/redis.module'
 
 @Injectable()
-export class AuthService implements OnModuleInit, OnModuleDestroy {
-  private readonly logger = new Logger(AuthService.name)
-  private redis: Redis
-
+export class AuthService {
   constructor(
     private jwtService: JwtService,
     private cfg: ConfigService,
     private adminConfigService: AdminConfigService,
+    @Inject(REDIS_CLIENT) private redis: Redis,
   ) {}
-
-  onModuleInit() {
-    this.redis = new Redis(this.cfg.get<string>('REDIS_URL') ?? 'redis://localhost:6379')
-    this.redis.on('error', (err) => this.logger.error('Redis bağlantı hatası', err))
-  }
-
-  async onModuleDestroy() {
-    await this.redis.quit().catch(() => {})
-  }
 
   // Health check için: Redis erişilemezse throw eder
   async pingRedis(): Promise<void> {

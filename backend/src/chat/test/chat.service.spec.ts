@@ -19,7 +19,12 @@ function makeService(...replies: string[]): { service: ChatService; call: jest.M
   }
   const groq = { call }
   return {
-    service: new ChatService(config as unknown as ConfigService, groq as unknown as GroqService),
+    service: new ChatService(
+      config as unknown as ConfigService,
+      groq as unknown as GroqService,
+      // Varsayılan: bütçe sayacı hep izin verir; bütçe testleri withRedis ile ezer
+      { incr: jest.fn().mockResolvedValue(1), expire: jest.fn() } as unknown as import('ioredis').Redis,
+    ),
     call,
   }
 }

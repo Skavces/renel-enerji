@@ -1,13 +1,13 @@
 import {
+  Inject,
   Injectable,
   Logger,
-  OnModuleDestroy,
-  OnModuleInit,
   ServiceUnavailableException,
 } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import Redis from 'ioredis'
 import { GroqService, GROQ_MODEL } from '../groq/groq.service'
+import { REDIS_CLIENT } from '../redis/redis.module'
 
 export interface ChatMessage {
   role: 'user' | 'assistant'
@@ -192,28 +192,18 @@ export function sanitizeContent(text: string): string {
 }
 
 @Injectable()
-export class ChatService implements OnModuleInit, OnModuleDestroy {
+export class ChatService {
   private readonly logger = new Logger(ChatService.name)
-  private redis: Redis | null = null
 
   constructor(
     private config: ConfigService,
     private groq: GroqService,
+    @Inject(REDIS_CLIENT) private redis: Redis,
   ) {}
-
-  onModuleInit() {
-    this.redis = new Redis(this.config.get<string>('REDIS_URL') ?? 'redis://localhost:6379')
-    this.redis.on('error', (err) => this.logger.error('Redis bağlantı hatası', err))
-  }
-
-  async onModuleDestroy() {
-    await this.redis?.quit().catch(() => {})
-  }
 
   // true → istek bütçeye sığdı; false → günlük limit doldu.
   // Redis erişilemezse fail-open: chatbot bütçe yüzünden hiç susmasın.
   private async consumeDailyBudget(): Promise<boolean> {
-    if (!this.redis) return true
     const limit = Number(this.config.get<string>('GROQ_DAILY_LIMIT') ?? DEFAULT_DAILY_LIMIT)
     if (!Number.isFinite(limit) || limit <= 0) return true
 
