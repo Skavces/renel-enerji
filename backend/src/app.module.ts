@@ -29,18 +29,43 @@ import { HealthController } from './health.controller'
     SentryModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
+      // Şema aynı zamanda env envanteri: uygulamanın okuduğu her değişken burada
+      // listelenir. Boş string ".env'de boş bırakıldı = özellik kapalı" demektir,
+      // bu yüzden opsiyonel string'lerde allow('') zorunlu.
       validationSchema: Joi.object({
+        // ── Zorunlu ──
         JWT_SECRET: Joi.string().required(),
         APP_ENCRYPTION_KEY: Joi.string().pattern(/^[0-9a-f]{64}$/i).required(),
         DB_PASS: Joi.string().required(),
         REDIS_URL: Joi.string().required(),
         FRONTEND_URL: Joi.string().uri().required(),
-        NODE_ENV: Joi.string().valid('development', 'production').default('development'),
         ADMIN_PASSWORD_HASH: Joi.string().required(),
         GROQ_API_KEY: Joi.string().required(),
         INSTAGRAM_APP_SECRET: Joi.string().required(),
         INSTAGRAM_WEBHOOK_VERIFY_TOKEN: Joi.string().required(),
         UMAMI_PASS: Joi.string().required(),
+        // ── Default'lu (kodda kullanılan default'larla birebir aynı; empty('') =
+        //    boş bırakılan değişken yazılmamış sayılır, default devreye girer) ──
+        NODE_ENV: Joi.string().valid('development', 'production').empty('').default('development'),
+        PORT: Joi.number().empty('').default(3001),
+        DB_HOST: Joi.string().empty('').default('localhost'),
+        DB_PORT: Joi.number().empty('').default(5432),
+        DB_USER: Joi.string().empty('').default('postgres'),
+        DB_NAME: Joi.string().empty('').default('renel_enerji'),
+        JWT_EXPIRES_IN: Joi.string().empty('').default('8h'),
+        ADMIN_USERNAME: Joi.string().empty('').default('admin'),
+        UMAMI_USER: Joi.string().empty('').default('admin'),
+        INSTAGRAM_HASHTAG: Joi.string().empty('').default('#proje'),
+        GROQ_DAILY_LIMIT: Joi.number().integer().min(1).empty('').default(1000),
+        // ── Opsiyonel (boşsa ilgili özellik devre dışı) ──
+        UMAMI_URL: Joi.string().uri().allow('').optional(),
+        UMAMI_WEBSITE_ID: Joi.string().allow('').optional(),
+        OPENWEATHER_API_KEY: Joi.string().allow('').optional(),
+        INSTAGRAM_ACCESS_TOKEN: Joi.string().allow('').optional(),
+        INSTAGRAM_USER_ID: Joi.string().allow('').optional(),
+        GROQ_API_KEY_2: Joi.string().allow('').optional(),
+        GROQ_API_KEY_3: Joi.string().allow('').optional(),
+        SENTRY_DSN: Joi.string().allow('').optional(),
       }),
       validationOptions: { allowUnknown: true },
     }),
