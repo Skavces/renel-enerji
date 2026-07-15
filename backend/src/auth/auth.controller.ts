@@ -103,12 +103,15 @@ export class AuthController {
     return this.authService.generateSetupSecret()
   }
 
+  // TOTP kodu brute-force edilebilir; verify2fa ile aynı sıkılıkta sınırla
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   @UseGuards(JwtAuthGuard)
   @Post('2fa/setup/confirm')
   confirmSetup(@Body() dto: ConfirmSetupDto) {
     return this.authService.confirmSetup(dto.secret, dto.code, dto.currentCode)
   }
 
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   @UseGuards(JwtAuthGuard)
   @Delete('2fa/setup')
   remove2fa(@Body() dto: Remove2faDto) {
