@@ -21,5 +21,8 @@
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false
-  }
+  },
+  // test/ (e2e) rootDir=src dışında kaldığından build'e giremez; tip kontrolü
+  // ts-jest üzerinden test:e2e sırasında yapılır
+  "exclude": ["node_modules", "dist", "test"]
 }

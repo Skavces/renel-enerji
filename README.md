@@ -104,6 +104,21 @@ UMAMI_APP_SECRET=      # Umami app secret
 
 Optional integrations (Groq chatbot, Instagram import, OpenWeather, Sentry) are documented with setup notes in `backend/.env.example` — leave them blank to disable.
 
+## Testing
+
+```bash
+# Unit tests
+cd backend && npm test
+cd frontend && npm test
+
+# Backend e2e tests (needs throwaway Postgres + Redis on ports 5433/6380)
+docker compose -f docker-compose.test.yml up -d
+cd backend && npm run test:e2e
+docker compose -f docker-compose.test.yml down
+```
+
+E2e tests are fully isolated from your local `backend/.env` — all configuration is pinned in `backend/test/setup-e2e.ts`. CI runs the same suite against GitHub Actions service containers.
+
 ## Services
 
 | Service | Port | Description |

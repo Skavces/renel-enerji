@@ -7,6 +7,30 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    # e2e testleri docker-compose.test.yml ile aynı portlarda throwaway DB/Redis bekler
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: renel_enerji_test
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6380:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v4
 
@@ -28,6 +52,10 @@ jobs:
         run: |
           npm ci
           npm test
+
+      - name: Backend e2e testleri
+        working-directory: backend
+        run: npm run test:e2e
 
       - name: Backend build
         working-directory: backend

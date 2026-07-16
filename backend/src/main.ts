@@ -1,13 +1,12 @@
 import './instrument'
 
 import { NestFactory } from '@nestjs/core'
-import { Logger, ValidationPipe, RequestMethod } from '@nestjs/common'
+import { Logger } from '@nestjs/common'
 import { NestExpressApplication } from '@nestjs/platform-express'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { join } from 'path'
-import helmet from 'helmet'
-import cookieParser from 'cookie-parser'
 import { AppModule } from './app.module'
+import { configureApp } from './configure-app'
 import { DbLogger } from './logs/db-logger.service'
 
 async function bootstrap() {
@@ -16,13 +15,7 @@ async function bootstrap() {
   // Tüm Logger.error/warn çağrıları veritabanına da yazılır (admin panel → Loglar)
   app.useLogger(app.get(DbLogger))
 
-  // Trust the first proxy hop (Nginx) so req.ip reflects the real client IP
-  app.set('trust proxy', 1)
-
-  app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }))
-  app.use(cookieParser())
-
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true, forbidNonWhitelisted: true }))
+  configureApp(app)
 
   const allowedOrigin = process.env.FRONTEND_URL
   if (!allowedOrigin) {
@@ -42,9 +35,6 @@ async function bootstrap() {
   })
 
   app.useStaticAssets(join(__dirname, '..', 'uploads'), { prefix: '/uploads' })
-  app.setGlobalPrefix('api', {
-    exclude: [{ path: 'sitemap.xml', method: RequestMethod.GET }],
-  })
 
   if (process.env.NODE_ENV !== 'production') {
     const config = new DocumentBuilder()
