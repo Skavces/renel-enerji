@@ -1,5 +1,13 @@
 import { InternalServerErrorException } from '@nestjs/common'
+import type { Repository } from 'typeorm'
+import type { ConfigService } from '@nestjs/config'
 import { InstagramImportService } from '../instagram-import.service'
+import type { Project } from '../entities/project.entity'
+import type { ProjectsService } from '../projects.service'
+import type { MediaService } from '../media.service'
+import type { InstagramParseService } from '../instagram-parse.service'
+import type { InstagramTokenService } from '../../instagram-token/instagram-token.service'
+import type { InstagramPost, ParsedProject } from '../instagram-types'
 
 // Mock external dependencies
 jest.mock('sharp', () => jest.fn().mockReturnValue({ webp: jest.fn().mockReturnThis(), toFile: jest.fn() }))
@@ -12,47 +20,59 @@ import { rm } from 'fs/promises'
 import { pipeline } from 'stream/promises'
 import { MediaType } from '../entities/project-media.entity'
 
-const mockPost = (id: string, caption: string) => ({
+const mockPost = (id: string, caption: string): InstagramPost => ({
   id,
   caption,
   media_type: 'IMAGE',
   media_url: 'https://example.com/image.jpg',
   thumbnail_url: null,
-  children: null,
 })
+
+// Private metodlara tip güvenli erişim: gerçek imzaların yapısal kopyası
+type ServicePrivates = {
+  createProjectFromInstagram(parsed: ParsedProject, post: InstagramPost, published: boolean): Promise<Project>
+  importInstagramImages(project: Pick<Project, 'id' | 'slug'>, post: InstagramPost): Promise<void>
+}
+const privates = (s: InstagramImportService) => s as unknown as ServicePrivates
+
+type FindArgs = { where?: { instagramMediaId?: string | { _value?: string[] } } }
 
 function makeService(overrides: {
   existingIds?: string[]
   tokenValue?: string | null
-  parseResult?: any
+  parseResult?: ParsedProject
   saveShouldFail?: boolean
 } = {}) {
   const existingIds = new Set(overrides.existingIds ?? [])
 
   const projectRepo = {
-    findOne: jest.fn().mockImplementation(({ where }: any) => {
-      const id = where?.instagramMediaId
-      return Promise.resolve(existingIds.has(id) ? { id: 'existing', instagramMediaId: id } : null)
+    findOne: jest.fn().mockImplementation(({ where }: FindArgs) => {
+      const id = where?.instagramMediaId as string | undefined
+      return Promise.resolve(id && existingIds.has(id) ? { id: 'existing', instagramMediaId: id } : null)
     }),
-    find: jest.fn().mockImplementation(({ where }: any) => {
-      const ids: string[] = where?.instagramMediaId?.['_value'] ?? []
+    find: jest.fn().mockImplementation(({ where }: FindArgs) => {
+      // In() operatörünün FindOperator'ı; testte yalnızca _value okunur
+      const operator = where?.instagramMediaId as { _value?: string[] } | undefined
+      const ids = operator?._value ?? []
       return Promise.resolve(
         ids.filter(id => existingIds.has(id)).map(id => ({ instagramMediaId: id })),
       )
     }),
-    create: jest.fn().mockImplementation((data: any) => ({ ...data })),
+    create: jest.fn().mockImplementation((data: Record<string, unknown>) => ({ ...data })),
     save: jest.fn(),
     manager: {
-      transaction: jest.fn().mockImplementation(async (cb: any) => {
-        const manager = {
-          create: jest.fn().mockImplementation((_, data: any) => ({ ...data })),
-          save: jest.fn().mockImplementation((entity: any) => {
-            if (overrides.saveShouldFail) throw Object.assign(new Error('DB error'), { code: '99999' })
-            return Promise.resolve({ ...entity, id: 'new-project-id' })
-          }),
-        }
-        return cb(manager)
-      }),
+      transaction: jest.fn().mockImplementation(
+        async (cb: (manager: { create: jest.Mock; save: jest.Mock }) => Promise<unknown>) => {
+          const manager = {
+            create: jest.fn().mockImplementation((_: unknown, data: Record<string, unknown>) => ({ ...data })),
+            save: jest.fn().mockImplementation((entity: Record<string, unknown>) => {
+              if (overrides.saveShouldFail) throw Object.assign(new Error('DB error'), { code: '99999' })
+              return Promise.resolve({ ...entity, id: 'new-project-id' })
+            }),
+          }
+          return cb(manager)
+        },
+      ),
     },
   }
 
@@ -85,7 +105,7 @@ function makeService(overrides: {
   }
 
   const config = {
-    get: jest.fn().mockImplementation((key: string, def?: any) => {
+    get: jest.fn().mockImplementation((key: string, def?: string) => {
       const vals: Record<string, string> = {
         INSTAGRAM_USER_ID: 'test-user-id',
         INSTAGRAM_HASHTAG: '#proje',
@@ -95,12 +115,12 @@ function makeService(overrides: {
   }
 
   const service = new InstagramImportService(
-    projectRepo as any,
-    projectsService as any,
-    mediaService as any,
-    parseService as any,
-    tokenService as any,
-    config as any,
+    projectRepo as unknown as Repository<Project>,
+    projectsService as unknown as ProjectsService,
+    mediaService as unknown as MediaService,
+    parseService as unknown as InstagramParseService,
+    tokenService as unknown as InstagramTokenService,
+    config as unknown as ConfigService,
   )
 
   return { service, projectRepo, mediaService, parseService, tokenService }
@@ -170,7 +190,7 @@ describe('InstagramImportService', () => {
         arrayBuffer: () => Promise.resolve(Buffer.from('fake')),
       })
 
-      await (service as any).createProjectFromInstagram(
+      await privates(service).createProjectFromInstagram(
         { name: 'Test', location: 'İzmir', kw: 5, date: '2024', description: 'desc', specs: [], highlights: [], statBoxes: [] },
         post,
         true,
@@ -187,7 +207,7 @@ describe('InstagramImportService', () => {
       projectRepo.manager.transaction = jest.fn().mockRejectedValue(err)
       projectRepo.findOne = jest.fn().mockResolvedValue({ id: 'existing-race', instagramMediaId: 'race-id' })
 
-      const result = await (service as any).createProjectFromInstagram(
+      const result = await privates(service).createProjectFromInstagram(
         { name: 'Race', location: 'X', kw: 1, date: '2024', description: 'd', specs: [], highlights: [], statBoxes: [] },
         post,
         true,
@@ -208,7 +228,7 @@ describe('InstagramImportService', () => {
   })
 
   describe('importInstagramImages — video streaming (OOM guard)', () => {
-    const videoPost = {
+    const videoPost: InstagramPost = {
       id: 'video-id',
       media_type: 'VIDEO',
       media_url: 'https://example.com/video.mp4',
@@ -221,7 +241,7 @@ describe('InstagramImportService', () => {
       const arrayBuffer = jest.fn()
       mockFetch.mockResolvedValue({ ok: true, body: emptyWebStream(), arrayBuffer })
 
-      await (service as any).importInstagramImages({ id: 'p1', slug: 'test-proje' }, videoPost)
+      await privates(service).importInstagramImages({ id: 'p1', slug: 'test-proje' }, videoPost)
 
       expect(pipeline).toHaveBeenCalledTimes(1)
       expect(createWriteStream).toHaveBeenCalledWith(expect.stringContaining('.mp4'))
@@ -239,7 +259,7 @@ describe('InstagramImportService', () => {
       ;(pipeline as jest.Mock).mockRejectedValueOnce(new Error('network reset'))
       mockFetch.mockResolvedValue({ ok: true, body: emptyWebStream() })
 
-      await (service as any).importInstagramImages({ id: 'p1', slug: 'test-proje' }, videoPost)
+      await privates(service).importInstagramImages({ id: 'p1', slug: 'test-proje' }, videoPost)
 
       expect(rm).toHaveBeenCalledWith(expect.stringContaining('.mp4'), { force: true })
       expect(mediaService.addMedia).not.toHaveBeenCalled()
@@ -257,18 +277,18 @@ describe('InstagramImportService', () => {
         return { ok: true, arrayBuffer: () => Promise.resolve(Buffer.from('img')) }
       })
 
-      const carousel = {
+      const carousel: InstagramPost = {
         id: 'carousel-id',
         media_type: 'CAROUSEL_ALBUM',
         children: {
           data: [
-            { media_type: 'IMAGE', media_url: 'https://example.com/1.jpg' },
-            { media_type: 'IMAGE', media_url: 'https://example.com/2.jpg' },
-            { media_type: 'IMAGE', media_url: 'https://example.com/3.jpg' },
+            { id: 'c1', media_type: 'IMAGE', media_url: 'https://example.com/1.jpg' },
+            { id: 'c2', media_type: 'IMAGE', media_url: 'https://example.com/2.jpg' },
+            { id: 'c3', media_type: 'IMAGE', media_url: 'https://example.com/3.jpg' },
           ],
         },
       }
-      await (service as any).importInstagramImages({ id: 'p1', slug: 'test-proje' }, carousel)
+      await privates(service).importInstagramImages({ id: 'p1', slug: 'test-proje' }, carousel)
 
       expect(mockFetch).toHaveBeenCalledTimes(3)
       expect(maxInFlight).toBe(1)

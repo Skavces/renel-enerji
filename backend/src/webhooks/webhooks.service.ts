@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { createHmac, timingSafeEqual } from 'crypto'
 import { InstagramImportService } from '../projects/instagram-import.service'
+import { errorMessage } from '../common/errors'
 import type { InstagramWebhookBody } from '../projects/instagram-types'
 
 @Injectable()
@@ -50,8 +51,8 @@ export class WebhooksService {
       this.logger.log(`Yeni Instagram gönderisi algılandı: ${mediaId}`)
       try {
         await this.importService.syncInstagramByMediaId(mediaId)
-      } catch (err: any) {
-        this.logger.error(`syncInstagramByMediaId hatası (${mediaId}): ${err.message}`)
+      } catch (err) {
+        this.logger.error(`syncInstagramByMediaId hatası (${mediaId}): ${errorMessage(err)}`)
       }
     }
   }

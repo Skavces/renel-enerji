@@ -13,7 +13,7 @@ function makeEncryption(): EncryptionService {
 
 function makeService(storedValue: string | null, envToken = '') {
   const repo = {
-    findOne: jest.fn().mockImplementation(({ where }: any) =>
+    findOne: jest.fn().mockImplementation(({ where }: { where: { key: string } }) =>
       Promise.resolve(
         where.key === 'instagram_access_token' && storedValue !== null
           ? { key: where.key, value: storedValue }

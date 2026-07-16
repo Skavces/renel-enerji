@@ -24,13 +24,13 @@ function makeService(overrides: Partial<typeof mockAdminConfig> = {}) {
   const config = { ...mockAdminConfig, ...overrides }
 
   const jwtService = {
-    sign: jest.fn((payload: any) => JSON.stringify(payload)),
+    sign: jest.fn((payload: object) => JSON.stringify(payload)),
     verify: jest.fn((token: string) => JSON.parse(token)),
     decode: jest.fn((token: string) => JSON.parse(token)),
   } as unknown as JwtService
 
   const configService = {
-    get: jest.fn((key: string, def?: any) => {
+    get: jest.fn((key: string, def?: string) => {
       const vals: Record<string, string> = {
         REDIS_URL: 'redis://localhost:6379',
         NODE_ENV: 'development',
@@ -82,7 +82,7 @@ describe('AuthService', () => {
       const hash = await bcrypt.hash('secret', 10)
       const { service } = makeService({ passwordHash: hash, totpSecret: 'TOTP_SECRET' })
 
-      const result = await service.login('admin', 'secret') as any
+      const result = (await service.login('admin', 'secret')) as { requires2fa: boolean; preAuthToken: string }
 
       expect(result.requires2fa).toBe(true)
       expect(result.preAuthToken).toBeDefined()
@@ -102,7 +102,7 @@ describe('AuthService', () => {
       const hash = await bcrypt.hash('secret', 10)
       const { service } = makeService({ passwordHash: hash, totpSecret: null, tokenVersion: 3 })
 
-      const result = await service.login('admin', 'secret') as any
+      const result = (await service.login('admin', 'secret')) as { access_token: string }
 
       const payload = JSON.parse(result.access_token)
       expect(payload.ver).toBe(3)
@@ -161,7 +161,7 @@ describe('AuthService', () => {
 
       await service.verify2FA(preAuthToken, code)
 
-      const blacklistCall = redisMock.set.mock.calls.find((c: any) => c[0] === 'blacklist:fresh-jti')
+      const blacklistCall = redisMock.set.mock.calls.find((c: unknown[]) => c[0] === 'blacklist:fresh-jti')
       expect(blacklistCall).toBeDefined()
     })
 

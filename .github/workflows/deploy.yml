@@ -51,6 +51,7 @@ jobs:
         working-directory: backend
         run: |
           npm ci
+          npm run lint
           npm test
 
       - name: Backend e2e testleri

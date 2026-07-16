@@ -8,6 +8,7 @@ import { UpdateProjectDto } from './dto/update-project.dto'
 import { MediaService } from './media.service'
 import { RESERVED_SLUGS } from '../common/reserved-slugs'
 import { reorderByCase } from '../common/reorder'
+import { isUniqueViolation } from '../common/errors'
 
 @Injectable()
 export class ProjectsService {
@@ -61,8 +62,8 @@ export class ProjectsService {
     const project = this.projectRepo.create(dto)
     try {
       return await this.projectRepo.save(project)
-    } catch (err: any) {
-      if (err.code === '23505') throw new ConflictException('Bu slug zaten kullanımda')
+    } catch (err) {
+      if (isUniqueViolation(err)) throw new ConflictException('Bu slug zaten kullanımda')
       throw err
     }
   }
@@ -72,8 +73,8 @@ export class ProjectsService {
     Object.assign(project, dto)
     try {
       return await this.projectRepo.save(project)
-    } catch (err: any) {
-      if (err.code === '23505') throw new ConflictException('Bu slug zaten kullanımda')
+    } catch (err) {
+      if (isUniqueViolation(err)) throw new ConflictException('Bu slug zaten kullanımda')
       throw err
     }
   }

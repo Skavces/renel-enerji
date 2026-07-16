@@ -18,6 +18,7 @@
     "isolatedModules": true,
     "strictNullChecks": true,
     "noImplicitAny": true,
+    "useUnknownInCatchVariables": true,
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false

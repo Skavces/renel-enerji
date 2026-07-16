@@ -15,6 +15,7 @@ import { MediaService } from './media.service'
 import { InstagramParseService } from './instagram-parse.service'
 import { InstagramTokenService } from '../instagram-token/instagram-token.service'
 import { fetchWithTimeout } from '../common/fetch-with-timeout'
+import { errorMessage, isUniqueViolation } from '../common/errors'
 import { UPLOADS_DIR } from '../upload/uploaded-files'
 import type { InstagramMediaListResponse, InstagramPost, ParsedProject } from './instagram-types'
 
@@ -59,9 +60,9 @@ export class InstagramImportService {
         this.syncStatus.lastRun = new Date()
         this.logger.log(`Sync tamamlandı: ${r.imported} eklendi, ${r.skipped} atlandı`)
       })
-      .catch((err: any) => {
-        this.syncStatus.lastError = err.message
-        this.logger.error(`Sync hatası: ${err.message}`)
+      .catch((err: unknown) => {
+        this.syncStatus.lastError = errorMessage(err)
+        this.logger.error(`Sync hatası: ${errorMessage(err)}`)
       })
       .finally(() => { this.syncStatus.running = false })
     return { status: 'started' }
@@ -104,8 +105,8 @@ export class InstagramImportService {
       let parsed: ParsedProject
       try {
         parsed = await this.parseService.parseInstagram(post.caption ?? '')
-      } catch (err: any) {
-        this.logger.warn(`Parse hatası (post ${post.id}): ${err.message}`)
+      } catch (err) {
+        this.logger.warn(`Parse hatası (post ${post.id}): ${errorMessage(err)}`)
         parseErrors++
         skipped++
         continue
@@ -146,8 +147,8 @@ export class InstagramImportService {
     let parsed: ParsedProject
     try {
       parsed = await this.parseService.parseInstagram(post.caption ?? '')
-    } catch (err: any) {
-      throw new InternalServerErrorException(`Parse hatası: ${err.message}`)
+    } catch (err) {
+      throw new InternalServerErrorException(`Parse hatası: ${errorMessage(err)}`)
     }
 
     const saved = await this.createProjectFromInstagram(parsed, post, true)
@@ -178,8 +179,8 @@ export class InstagramImportService {
         const project = manager.create(Project, projectData)
         return manager.save(project)
       })
-    } catch (err: any) {
-      if (err.code === '23505') {
+    } catch (err) {
+      if (isUniqueViolation(err)) {
         this.logger.warn(`Instagram post ${post.id} zaten kayıtlı (race condition), atlanıyor`)
         const existing = await this.projectRepo.findOne({ where: { instagramMediaId: post.id } })
         if (existing) return existing
@@ -223,7 +224,12 @@ export class InstagramImportService {
           const filePath = join(UPLOADS_DIR, filename)
           try {
             // Videoyu RAM'e almadan doğrudan diske akıt
-            await pipeline(Readable.fromWeb(r.body as any), createWriteStream(filePath))
+            // undici'nin body tipi lib.dom ReadableStream'i; Node'un stream/web
+            // tipiyle yapısal olarak aynı ama nominal olarak farklı — cast şart
+            await pipeline(
+              Readable.fromWeb(r.body as unknown as import('stream/web').ReadableStream<Uint8Array>),
+              createWriteStream(filePath),
+            )
           } catch (err) {
             await rm(filePath, { force: true })
             throw err
@@ -235,8 +241,8 @@ export class InstagramImportService {
           await sharp(buf).webp({ quality: 82 }).toFile(join(UPLOADS_DIR, filename))
           await this.mediaService.addMedia(project.id, MediaType.IMAGE, `/uploads/${filename}`)
         }
-      } catch (err: any) {
-        this.logger.warn(`Instagram medya indirilemedi (${item.url}): ${err.message}`)
+      } catch (err) {
+        this.logger.warn(`Instagram medya indirilemedi (${item.url}): ${errorMessage(err)}`)
       }
     }
   }

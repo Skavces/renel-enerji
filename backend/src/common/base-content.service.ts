@@ -9,6 +9,7 @@ import {
 } from 'typeorm'
 import { deleteUploadedFile } from '../upload/uploaded-files'
 import { reorderByCase } from './reorder'
+import { isUniqueViolation } from './errors'
 
 // blog/faq/references servislerinin ortak sözleşmesi
 export interface ContentEntity extends ObjectLiteral {
@@ -66,8 +67,8 @@ export abstract class BaseContentService<T extends ContentEntity> {
   protected async save(entity: T): Promise<T> {
     try {
       return await this.repo.save(entity)
-    } catch (err: any) {
-      if (err.code === '23505' && this.uniqueConflictMessage) {
+    } catch (err) {
+      if (isUniqueViolation(err) && this.uniqueConflictMessage) {
         throw new ConflictException(this.uniqueConflictMessage)
       }
       throw err
