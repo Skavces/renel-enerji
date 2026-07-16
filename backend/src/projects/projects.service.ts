@@ -6,6 +6,7 @@ import { MediaType, ProjectMedia } from './entities/project-media.entity'
 import { CreateProjectDto } from './dto/create-project.dto'
 import { UpdateProjectDto } from './dto/update-project.dto'
 import { MediaService } from './media.service'
+import { RESERVED_SLUGS } from '../common/reserved-slugs'
 
 @Injectable()
 export class ProjectsService {
@@ -116,7 +117,9 @@ export class ProjectsService {
       })
       .getMany()
 
-    const slugs = new Set(existing.map((p) => p.slug))
+    // Rezerve slug'lar (örn. Instagram importunun ürettiği "admin") doluymuş
+    // gibi davranır; base doğal olarak admin-1'e kayar
+    const slugs = new Set([...RESERVED_SLUGS, ...existing.map((p) => p.slug)])
     if (!slugs.has(base)) return base
     let n = 1
     while (slugs.has(`${base}-${n}`)) n++

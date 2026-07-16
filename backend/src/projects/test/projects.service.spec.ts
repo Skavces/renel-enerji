@@ -16,6 +16,33 @@ function makeService(projects: Partial<Project>[]) {
   return { service: new ProjectsService(repo, mediaService), repo }
 }
 
+function makeSlugService(existingSlugs: string[]) {
+  const qb = {
+    select: jest.fn().mockReturnThis(),
+    where: jest.fn().mockReturnThis(),
+    getMany: jest.fn().mockResolvedValue(existingSlugs.map(slug => ({ slug }))),
+  }
+  const repo = {
+    createQueryBuilder: jest.fn().mockReturnValue(qb),
+  } as unknown as jest.Mocked<Repository<Project>>
+  return new ProjectsService(repo, {} as MediaService)
+}
+
+describe('ProjectsService.uniqueSlug — rezerve sluglar', () => {
+  it('boş slug tablosunda base aynen döner', async () => {
+    expect(await makeSlugService([]).uniqueSlug('canakkale-ges')).toBe('canakkale-ges')
+  })
+
+  it('çakışan slug numaralanır', async () => {
+    expect(await makeSlugService(['canakkale-ges']).uniqueSlug('canakkale-ges')).toBe('canakkale-ges-1')
+  })
+
+  it("otomatik üretilen 'admin' slug'ı rezerve olduğundan admin-1'e kayar", async () => {
+    // Instagram importu DTO validasyonundan geçmez; koruma burada
+    expect(await makeSlugService([]).uniqueSlug('admin')).toBe('admin-1')
+  })
+})
+
 describe('ProjectsService.findAllPublic — kapak görseli', () => {
   it('thumbnail varsa yalnızca onu döner', async () => {
     const { service } = makeService([

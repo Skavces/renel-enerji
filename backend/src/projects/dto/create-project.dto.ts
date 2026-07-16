@@ -1,5 +1,6 @@
-import { IsArray, IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString, Matches, Max, MaxLength, Min, ValidateNested } from 'class-validator'
+import { IsArray, IsBoolean, IsNotEmpty, IsNotIn, IsNumber, IsOptional, IsString, Matches, Max, MaxLength, Min, ValidateNested } from 'class-validator'
 import { Transform, Type } from 'class-transformer'
+import { RESERVED_SLUGS } from '../../common/reserved-slugs'
 
 export class StatBoxDto {
   @IsString()
@@ -16,6 +17,7 @@ export class CreateProjectDto {
   @IsNotEmpty()
   @MaxLength(80)
   @Matches(/^[a-z0-9-]+$/, { message: 'Slug sadece küçük harf, rakam ve tire içerebilir' })
+  @IsNotIn(RESERVED_SLUGS, { message: 'Bu slug rezerve edilmiş, başka bir slug seçin' })
   slug: string
 
   @IsString()
