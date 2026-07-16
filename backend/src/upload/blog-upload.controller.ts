@@ -1,6 +1,8 @@
 import { BadRequestException, Controller, Param, Post, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { rename, unlink } from 'fs/promises'
+import { join } from 'path'
+import { UPLOADS_DIR } from './uploaded-files'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 import { BlogService } from '../blog/blog.service'
 import { imageStorage, ALLOWED_IMAGE_MIMES, logoFilter, assertMagicBytes, toWebp, SEO_SUFFIX } from './upload.utils'
@@ -23,8 +25,8 @@ export class BlogUploadController {
       await assertMagicBytes(currentPath, ALLOWED_IMAGE_MIMES)
       currentPath = await toWebp(currentPath)
       const seoName = `${post.slug}-${SEO_SUFFIX}-${Date.now()}.webp`
-      await rename(currentPath, `./uploads/${seoName}`)
-      currentPath = `./uploads/${seoName}`
+      await rename(currentPath, join(UPLOADS_DIR, seoName))
+      currentPath = join(UPLOADS_DIR, seoName)
       return await this.blogService.update(id, { coverImage: `/uploads/${seoName}` })
     } catch (err) {
       // assertMagicBytes kendi hatasında dosyayı zaten silmiş olabilir — sessiz geç

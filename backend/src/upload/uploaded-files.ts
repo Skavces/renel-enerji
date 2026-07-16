@@ -1,9 +1,10 @@
 import { join } from 'path'
 import { unlink } from 'fs/promises'
 
-// Multer'ın './uploads' hedefiyle aynı yere çözülür (Docker'da /app/uploads).
-// upload.utils.ts'ten ayrı tutulur: oradaki file-type importu ESM-only olduğundan
-// bu sabitleri kullanan servisleri o bağımlılığa zincirlememek gerekir.
+// Upload yollarının tek gerçeği: multer hedefi, SEO rename ve silme hep buradan
+// çözülür (Docker'da /app/uploads). upload.utils.ts'ten ayrı tutulur: oradaki
+// file-type importu ESM-only olduğundan bu sabiti kullanan servisleri o
+// bağımlılığa zincirlememek gerekir (bağımlılık yönü utils -> bu dosya).
 export const UPLOADS_DIR = join(process.cwd(), 'uploads')
 
 // DB'deki src değeri (/uploads/dosya.webp) üzerinden fiziksel dosyayı siler.

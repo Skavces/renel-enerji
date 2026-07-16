@@ -2,13 +2,14 @@ import { BadRequestException } from '@nestjs/common'
 import { diskStorage } from 'multer'
 import type { FileFilterCallback } from 'multer'
 import type { Request } from 'express'
-import { extname } from 'path'
+import { extname, join } from 'path'
 import { unlink, rename } from 'fs/promises'
 import { fileTypeFromFile } from 'file-type'
 import sharp from 'sharp'
+import { UPLOADS_DIR } from './uploaded-files'
 
 export const imageStorage = diskStorage({
-  destination: './uploads',
+  destination: UPLOADS_DIR,
   filename: (_req, file, cb) => {
     const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`
     cb(null, `${unique}${extname(file.originalname)}`)
@@ -68,6 +69,6 @@ export async function saveWithSeoName(
   ext: string,
 ): Promise<string> {
   const seoName = `${slug}-${SEO_SUFFIX}-${Date.now()}-${Math.round(Math.random() * 1e4)}${ext}`
-  await rename(convertedPath, `./uploads/${seoName}`)
+  await rename(convertedPath, join(UPLOADS_DIR, seoName))
   return `/uploads/${seoName}`
 }
