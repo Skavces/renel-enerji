@@ -125,7 +125,8 @@ describe('LogsService', () => {
       execute.mockResolvedValue({ affected: 12 })
       await service.purgeOldLogs()
       expect(qb.delete).toHaveBeenCalled()
-      expect((qb.where as jest.Mock).mock.calls[0][0]).toContain("30 days")
+      expect((qb.where as jest.Mock).mock.calls[0][0]).toContain(':retention::interval')
+      expect((qb.where as jest.Mock).mock.calls[0][1]).toEqual({ retention: '30 days' })
     })
 
     it('silme hatası cron\'u patlatmaz', async () => {

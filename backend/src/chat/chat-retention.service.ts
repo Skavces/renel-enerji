@@ -43,7 +43,7 @@ export class ChatRetentionService {
       .createQueryBuilder()
       .update()
       .set({ conversation: null })
-      .where(`"createdAt" < now() - interval '${RETENTION_INTERVAL}'`)
+      .where('"createdAt" < now() - :retention::interval', { retention: RETENTION_INTERVAL })
       .andWhere('conversation IS NOT NULL')
       .execute()
     return result.affected ?? 0

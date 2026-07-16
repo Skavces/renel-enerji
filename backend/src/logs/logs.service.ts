@@ -100,7 +100,7 @@ export class LogsService {
       const result = await this.repo
         .createQueryBuilder()
         .delete()
-        .where(`"createdAt" < now() - interval '${LOG_RETENTION_INTERVAL}'`)
+        .where('"createdAt" < now() - :retention::interval', { retention: LOG_RETENTION_INTERVAL })
         .execute()
       if ((result.affected ?? 0) > 0) {
         this.logger.log(`Log temizliği: ${result.affected} eski kayıt silindi`)

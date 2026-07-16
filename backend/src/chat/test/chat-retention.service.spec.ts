@@ -27,7 +27,10 @@ describe('ChatRetentionService', () => {
 
     for (const { qb } of [ratings, leads]) {
       expect(qb.set).toHaveBeenCalledWith({ conversation: null })
-      expect(qb.where).toHaveBeenCalledWith(expect.stringContaining("interval '6 months'"))
+      expect(qb.where).toHaveBeenCalledWith(
+        expect.stringContaining(':retention::interval'),
+        { retention: '6 months' },
+      )
       expect(qb.andWhere).toHaveBeenCalledWith('conversation IS NOT NULL')
       expect(qb.execute).toHaveBeenCalledTimes(1)
     }
