@@ -59,6 +59,35 @@ describe('AnalyticsService — Umami token yenileme', () => {
     expect((lastCall[1]?.headers as Record<string, string>).Authorization).toBe('Bearer yeni')
   })
 
+  it('single-flights concurrent calls into one login request', async () => {
+    let resolveLogin!: (r: Response) => void
+    mockFetch
+      .mockImplementationOnce(() => new Promise<Response>(res => { resolveLogin = res }))
+      .mockResolvedValue(jsonResponse(200, { pageviews: { value: 1, change: 0 } }))
+
+    const service = makeService()
+    // İki istek login henüz sonuçlanmadan başlar; tek login atılmalı
+    const both = Promise.all([service.getStats(0, 1), service.getStats(0, 1)])
+    await new Promise(r => setImmediate(r))
+    resolveLogin(jsonResponse(200, { token: 't1' }))
+    await both
+
+    expect(mockFetch.mock.calls.filter(isLogin)).toHaveLength(1)
+  })
+
+  it('does not keep a failed login stuck in the single-flight cache', async () => {
+    mockFetch
+      .mockRejectedValueOnce(new Error('umami down')) // ilk login patlar
+      .mockResolvedValueOnce(jsonResponse(200, { token: 't1' })) // ikinci login
+      .mockResolvedValue(jsonResponse(200, { pageviews: { value: 1, change: 0 } }))
+
+    const service = makeService()
+    await expect(service.getStats(0, 1)).resolves.toBeNull() // hata yutulur
+    await expect(service.getStats(0, 1)).resolves.not.toBeNull() // yeni login denenir
+
+    expect(mockFetch.mock.calls.filter(isLogin)).toHaveLength(2)
+  })
+
   it('gives up after one retry when the API keeps returning 401', async () => {
     mockFetch
       .mockResolvedValueOnce(jsonResponse(200, { token: 't1' }))

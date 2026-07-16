@@ -22,6 +22,9 @@ export class AnalyticsService {
   private readonly logger = new Logger(AnalyticsService.name)
   private token: string | null = null
   private tokenExpiry = 0
+  // Eşzamanlı dashboard istekleri ayrı ayrı Umami login'i tetiklemesin;
+  // devam eden login varsa herkes aynı Promise'i bekler (single-flight)
+  private tokenPromise: Promise<string> | null = null
 
   constructor(private config: ConfigService) {}
 
@@ -33,9 +36,18 @@ export class AnalyticsService {
     return this.config.get('UMAMI_WEBSITE_ID', '')
   }
 
-  private async getToken(): Promise<string> {
-    if (this.token && Date.now() < this.tokenExpiry) return this.token
+  private getToken(): Promise<string> {
+    if (this.token && Date.now() < this.tokenExpiry) return Promise.resolve(this.token)
 
+    // finally ile temizlenir: başarıda cache dolu olduğundan tekrar gelinmez,
+    // hatada bir sonraki istek yeni login denemesi yapabilir
+    this.tokenPromise ??= this.login().finally(() => {
+      this.tokenPromise = null
+    })
+    return this.tokenPromise
+  }
+
+  private async login(): Promise<string> {
     const username = this.config.get<string>('UMAMI_USER')
     const password = this.config.get<string>('UMAMI_PASS')
     if (!username || !password) throw new Error('UMAMI_USER ve UMAMI_PASS env var zorunlu')
