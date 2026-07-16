@@ -1,38 +1,18 @@
-import { Type } from 'class-transformer'
-import { IsArray, IsIn, IsOptional, IsString, IsUUID, MaxLength, ValidateNested, ArrayMaxSize, ArrayMinSize } from 'class-validator'
+import { IsString, IsUUID, MaxLength } from 'class-validator'
 
-export class ChatMessageDto {
-  @IsIn(['user', 'assistant'])
-  role: 'user' | 'assistant'
+// Geçmiş sunucuda (Redis) tutulur: istemci yalnızca yeni kullanıcı mesajını
+// yollar. sessionId konuşma başına frontend'de üretilen UUID'dir ve geçmişin
+// anahtarıdır — artık zorunlu.
+export class ChatBodyDto {
+  @IsUUID('4')
+  sessionId: string
 
   @IsString()
   @MaxLength(1000)
-  content: string
-}
-
-export class ChatBodyDto {
-  @IsArray()
-  @ArrayMinSize(1)
-  @ArrayMaxSize(20)
-  @ValidateNested({ each: true })
-  @Type(() => ChatMessageDto)
-  messages: ChatMessageDto[]
-
-  // Konuşma başına frontend'de üretilen UUID; lead takibi için
-  @IsOptional()
-  @IsUUID('4')
-  sessionId?: string
+  message: string
 }
 
 export class SummaryBodyDto {
-  @IsArray()
-  @ArrayMinSize(2)
-  @ArrayMaxSize(20)
-  @ValidateNested({ each: true })
-  @Type(() => ChatMessageDto)
-  messages: ChatMessageDto[]
-
-  @IsOptional()
   @IsUUID('4')
-  sessionId?: string
+  sessionId: string
 }

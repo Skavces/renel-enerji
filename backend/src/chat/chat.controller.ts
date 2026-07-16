@@ -2,6 +2,7 @@ import { BadRequestException, Body, Controller, Delete, Get, HttpCode, Ip, Logge
 import { Throttle } from '@nestjs/throttler'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 import { ChatMessage, ChatService, INJECTION_PATTERNS, sanitizeContent } from './chat.service'
+import { ChatHistoryService } from './chat-history.service'
 import { ChatRatingService } from './chat-rating.service'
 import { ChatLeadService } from './chat-lead.service'
 import { ChatStatsService } from './chat-stats.service'
@@ -16,6 +17,7 @@ export class ChatController {
 
   constructor(
     private readonly chatService: ChatService,
+    private readonly historyService: ChatHistoryService,
     private readonly ratingService: ChatRatingService,
     private readonly leadService: ChatLeadService,
     private readonly statsService: ChatStatsService,
@@ -28,36 +30,44 @@ export class ChatController {
     )
   }
 
-  private sanitizeAndGuard(messages: ChatBodyDto['messages'], ip: string): ChatMessage[] {
-    return messages.map(m => {
-      const content = sanitizeContent(m.content)
-      const matched = INJECTION_PATTERNS.find(p => p.test(content))
-      if (matched) {
-        this.logger.warn(
-          `Injection denemesi engellendi (ip: ${ip}, rol: ${m.role}, desen: ${matched}): "${content.slice(0, 120)}"`,
-        )
-        throw new BadRequestException('Geçersiz mesaj içeriği')
-      }
-      return { role: m.role, content }
-    })
+  // Injection denetimi yalnızca kullanıcı girdisine uygulanır; assistant
+  // mesajları artık istemciden gelmez (geçmiş sunucuda tutulur)
+  private sanitizeAndGuard(content: string, ip: string): ChatMessage {
+    const clean = sanitizeContent(content)
+    const matched = INJECTION_PATTERNS.find(p => p.test(clean))
+    if (matched) {
+      this.logger.warn(
+        `Injection denemesi engellendi (ip: ${ip}, desen: ${matched}): "${clean.slice(0, 120)}"`,
+      )
+      throw new BadRequestException('Geçersiz mesaj içeriği')
+    }
+    if (!clean) throw new BadRequestException('Mesaj boş olamaz')
+    return { role: 'user', content: clean }
   }
 
   @Post()
   @Throttle({ default: { limit: 20, ttl: 60000 } })
   async chat(@Body() dto: ChatBodyDto, @Ip() ip: string) {
-    if (dto.messages[0]?.role !== 'user')
-      throw new BadRequestException('İlk mesaj kullanıcıdan olmalı')
+    const userMessage = this.sanitizeAndGuard(dto.message, ip)
+    const history = await this.historyService.load(dto.sessionId)
+    const messages = [...history, userMessage]
 
-    const sanitized = this.sanitizeAndGuard(dto.messages, ip)
-    const reply = await this.chatService.chat(sanitized)
-    this.trackLead(this.leadService.upsertFromChat(dto.sessionId, sanitized, reply))
+    const reply = await this.chatService.chat(messages)
+
+    // Cevap callGroq'ta sanitize edildi; geçmişe temiz haliyle yazılır
+    await this.historyService.save(dto.sessionId, [...messages, { role: 'assistant', content: reply }])
+    this.trackLead(this.leadService.upsertFromChat(dto.sessionId, messages, reply))
     return { reply }
   }
 
   @Post('summary')
   @Throttle({ default: { limit: 10, ttl: 60000 } })
-  async summary(@Body() dto: SummaryBodyDto, @Ip() ip: string) {
-    const text = await this.chatService.generateSummary(this.sanitizeAndGuard(dto.messages, ip))
+  async summary(@Body() dto: SummaryBodyDto) {
+    const history = await this.historyService.load(dto.sessionId)
+    if (history.length < 2) {
+      throw new BadRequestException('Özet için yeterli görüşme geçmişi yok')
+    }
+    const text = await this.chatService.generateSummary(history)
     this.trackLead(this.leadService.markWhatsapp(dto.sessionId))
     return { text }
   }
@@ -65,10 +75,7 @@ export class ChatController {
   @Post('rating')
   @Throttle({ default: { limit: 5, ttl: 60000 } })
   async rate(@Body() dto: RatingBodyDto) {
-    const conversation = (dto.messages ?? []).map(m => ({
-      role: m.role,
-      content: sanitizeContent(m.content),
-    }))
+    const conversation = await this.historyService.load(dto.sessionId)
     await this.ratingService.create(dto.rating, conversation, dto.sessionId)
     this.trackLead(this.leadService.attachRating(dto.sessionId, dto.rating))
     return { ok: true }
