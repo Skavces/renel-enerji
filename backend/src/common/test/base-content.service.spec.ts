@@ -15,7 +15,7 @@ jest.mock('../../upload/uploaded-files', () => ({
 const mockDeleteFile = deleteUploadedFile as jest.MockedFunction<typeof deleteUploadedFile>
 
 function makeRepo<T extends object>(existing: Partial<T> | null = null) {
-  const managerUpdate = jest.fn().mockResolvedValue({})
+  const managerQuery = jest.fn().mockResolvedValue(undefined)
   return {
     repo: {
       create: jest.fn().mockImplementation((data: Partial<T>) => ({ ...data })),
@@ -23,14 +23,15 @@ function makeRepo<T extends object>(existing: Partial<T> | null = null) {
       findOne: jest.fn().mockResolvedValue(existing),
       remove: jest.fn().mockResolvedValue({}),
       find: jest.fn().mockResolvedValue([]),
-      manager: {
-        transaction: jest.fn(
-          async (fn: (m: { update: jest.Mock }) => Promise<void>) =>
-            fn({ update: managerUpdate }),
-        ),
+      manager: { query: managerQuery },
+      metadata: {
+        name: 'BlogPost',
+        tableName: 'blog_posts',
+        findColumnWithPropertyName: (prop: string) =>
+          prop === 'id' || prop === 'sortOrder' ? { databaseName: prop } : undefined,
       },
     } as unknown as jest.Mocked<Repository<T>>,
-    managerUpdate,
+    managerQuery,
   }
 }
 
@@ -100,13 +101,14 @@ describe('BaseContentService (BlogService üzerinden)', () => {
     await expect(service.findById('yok')).rejects.toThrow(NotFoundException)
   })
 
-  it('reorder her id\'ye sırasını yazar (tek transaction)', async () => {
-    const { repo, managerUpdate } = makeRepo<BlogPost>()
+  it('reorder tüm sıralamayı tek CASE sorgusuyla yazar', async () => {
+    const { repo, managerQuery } = makeRepo<BlogPost>()
     const service = new BlogService(repo)
     await service.reorder(['b', 'a', 'c'])
-    expect(managerUpdate).toHaveBeenCalledWith(BlogPost, 'b', { sortOrder: 0 })
-    expect(managerUpdate).toHaveBeenCalledWith(BlogPost, 'a', { sortOrder: 1 })
-    expect(managerUpdate).toHaveBeenCalledWith(BlogPost, 'c', { sortOrder: 2 })
+    expect(managerQuery).toHaveBeenCalledTimes(1)
+    const [sql, params] = managerQuery.mock.calls[0]
+    expect(sql).toContain('UPDATE "blog_posts" SET "sortOrder" = CASE')
+    expect(params).toEqual([['b', 'a', 'c'], 'b', 'a', 'c'])
   })
 })
 

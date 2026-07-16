@@ -7,6 +7,7 @@ import { CreateProjectDto } from './dto/create-project.dto'
 import { UpdateProjectDto } from './dto/update-project.dto'
 import { MediaService } from './media.service'
 import { RESERVED_SLUGS } from '../common/reserved-slugs'
+import { reorderByCase } from '../common/reorder'
 
 @Injectable()
 export class ProjectsService {
@@ -88,12 +89,9 @@ export class ProjectsService {
   }
 
   async reorderProjects(orderedIds: string[]) {
-    if (!orderedIds.length) return
-    const cases = orderedIds.map((_, i) => `WHEN $${i + 2} THEN ${i}`).join(' ')
-    await this.projectRepo.manager.query(
-      `UPDATE projects SET sort_order = CASE id ${cases} END WHERE id = ANY($1)`,
-      [orderedIds, ...orderedIds],
-    )
+    // Eski raw SQL yanlış `sort_order` kolon adıyla runtime'da patlıyordu;
+    // helper kolon adlarını metadata'dan aldığından tekrarlayamaz
+    await reorderByCase(this.projectRepo, orderedIds)
   }
 
   toSlug(name: string): string {

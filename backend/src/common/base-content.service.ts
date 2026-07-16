@@ -8,6 +8,7 @@ import {
   Repository,
 } from 'typeorm'
 import { deleteUploadedFile } from '../upload/uploaded-files'
+import { reorderByCase } from './reorder'
 
 // blog/faq/references servislerinin ortak sözleşmesi
 export interface ContentEntity extends ObjectLiteral {
@@ -104,12 +105,6 @@ export abstract class BaseContentService<T extends ContentEntity> {
   }
 
   async reorder(orderedIds: string[]): Promise<void> {
-    await this.repo.manager.transaction(async (manager) => {
-      await Promise.all(
-        orderedIds.map((id, index) =>
-          manager.update(this.entityClass, id, { sortOrder: index } as never),
-        ),
-      )
-    })
+    await reorderByCase(this.repo, orderedIds)
   }
 }
