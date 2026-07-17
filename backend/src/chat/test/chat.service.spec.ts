@@ -1,7 +1,7 @@
 import { ServiceUnavailableException } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { BUDGET_EXCEEDED_MESSAGE, ChatService } from '../chat.service'
-import { JUDGE_SYSTEM_PROMPT, RETRY_NUDGE } from '../chat-prompts'
+import { JUDGE_SYSTEM_PROMPT, judgeUserMessage, RETRY_NUDGE } from '../chat-prompts'
 import { GroqService } from '../../groq/groq.service'
 
 type GroqPayload = { messages: { role: string; content: string }[] } & Record<string, unknown>
@@ -137,6 +137,29 @@ describe('ChatService — LLM dil denetçisi (judge)', () => {
   it('fails open on an unexpected judge verdict', async () => {
     const { service, setJudgeVerdicts } = makeService('Çatı GES için aylık faturanız nedir?')
     setJudgeVerdicts('BELKİ')
+    await expect(service.chat(MESSAGES)).resolves.toBe('Çatı GES için aylık faturanız nedir?')
+  })
+
+  it('wraps the evaluated text in the METİN/KARAR template for the judge', async () => {
+    const { service, call } = makeService('Çatı GES için aylık faturanız nedir?')
+    await service.chat(MESSAGES)
+    const judgeCall = call.mock.calls.find(
+      args => (args[1] as GroqPayload).messages[0]?.content === JUDGE_SYSTEM_PROMPT,
+    )
+    expect((judgeCall?.[1] as GroqPayload).messages[1].content).toBe(
+      judgeUserMessage('Çatı GES için aylık faturanız nedir?'),
+    )
+  })
+
+  it('rejects when HAYIR is embedded in a decorated verdict ("Karar: HAYIR")', async () => {
+    const { service, setJudgeVerdicts } = makeService('İlk yanıt', 'Çatı GES için aylık faturanız nedir?')
+    setJudgeVerdicts('Karar: HAYIR', 'EVET')
+    await expect(service.chat(MESSAGES)).resolves.toBe('Çatı GES için aylık faturanız nedir?')
+  })
+
+  it('fails open when the judge echoes the text instead of answering (canlı 2026-07-17)', async () => {
+    const { service, setJudgeVerdicts } = makeService('Çatı GES için aylık faturanız nedir?')
+    setJudgeVerdicts('Çatı tipi')
     await expect(service.chat(MESSAGES)).resolves.toBe('Çatı GES için aylık faturanız nedir?')
   })
 

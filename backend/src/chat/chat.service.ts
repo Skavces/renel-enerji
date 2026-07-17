@@ -9,7 +9,7 @@ import Redis from 'ioredis'
 import { GroqService, GROQ_MODEL, GROQ_FALLBACK_MODEL } from '../groq/groq.service'
 import { REDIS_CLIENT } from '../redis/redis.module'
 import { hasNonLatinLeak, isContaminated, sanitizeContent } from './chat-guards'
-import { JUDGE_SYSTEM_PROMPT, RETRY_NUDGE, SUMMARY_PROMPT, SYSTEM_PROMPT } from './chat-prompts'
+import { JUDGE_SYSTEM_PROMPT, judgeUserMessage, RETRY_NUDGE, SUMMARY_PROMPT, SYSTEM_PROMPT } from './chat-prompts'
 
 export interface ChatMessage {
   role: 'user' | 'assistant'
@@ -105,9 +105,9 @@ export class ChatService {
       model: GROQ_FALLBACK_MODEL,
       messages: [
         { role: 'system', content: JUDGE_SYSTEM_PROMPT },
-        { role: 'user', content: text },
+        { role: 'user', content: judgeUserMessage(text) },
       ],
-      max_tokens: 4,
+      max_tokens: 8,
       temperature: 0,
     })
 
@@ -116,9 +116,12 @@ export class ChatService {
       this.logger.warn(`Dil denetçisine ulaşılamadı, yanıt kabul edildi (durum: ${res?.status ?? 'ağ hatası'})`)
       return true
     }
+    // Karar metnin herhangi bir yerinde aranır ("Karar: HAYIR" gibi süslemeler
+    // startsWith'i kaçırıyordu); HAYIR öncelikli — yanlış HAYIR en kötü bir fazladan
+    // yeniden üretim tetikler, yanlış EVET ise sızıntıyı denetimsiz geçirir
     const normalized = verdict.trim().toUpperCase()
-    if (normalized.startsWith('HAYIR')) return false
-    if (!normalized.startsWith('EVET')) {
+    if (normalized.includes('HAYIR')) return false
+    if (!normalized.includes('EVET')) {
       this.logger.warn(`Dil denetçisi beklenmedik yanıt verdi, kabul edildi: "${verdict.slice(0, 40)}"`)
     }
     return true

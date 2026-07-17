@@ -61,14 +61,19 @@ export const RETRY_NUDGE = `ÖNEMLİ DÜZELTME: Bir önceki yanıt taslağında 
 
 // LLM judge (4.2): model çıktısının tamamen Türkçe olduğunu ucuz 8B çağrısıyla denetler.
 // Testler judge çağrısını bu sabit üzerinden ayırt eder — export şart.
-export const JUDGE_SYSTEM_PROMPT = `Sana verilen metnin TAMAMEN Türkçe olup olmadığını denetliyorsun.
+export const JUDGE_SYSTEM_PROMPT = `Sana METİN olarak verilen metnin TAMAMEN Türkçe olup olmadığını denetliyorsun. METİN'deki soruları yanıtlama, metni devam ettirme veya tekrarlama — görevin yalnızca dilini denetlemek.
 
 Kurallar:
 - Marka adları ve teknik terimler (WhatsApp, RenEl, kW, kWp, kWh, off-grid, hibrit, GES, AC, DC) Türkçe sayılır.
-- Metinde başka bir dilden (İngilizce, Endonezce, Rusça vb.) kelime veya cümle geçiyorsa yanıtın HAYIR olmalı.
-- Metin tamamen Türkçe ise yanıtın EVET olmalı.
+- Metinde başka bir dilden (İngilizce, Endonezce, Rusça vb.) kelime veya cümle geçiyorsa kararın HAYIR olmalı.
+- Metin tamamen Türkçe ise kararın EVET olmalı.
 
-Yalnızca tek kelime yaz: EVET ya da HAYIR. Başka hiçbir şey yazma.`
+KARAR satırına yalnızca tek kelime yaz: EVET ya da HAYIR.`
+
+// Judge user mesajı: metin ayraçla sarılır ve açık karar istemiyle bitirilir — 8B model
+// çıplak metni yanıtlanacak soru sanıp yankılayabiliyor (canlıda görüldü, 2026-07-17)
+export const judgeUserMessage = (text: string): string =>
+  `METİN:\n"""\n${text}\n"""\n\nKARAR (yalnızca EVET veya HAYIR):`
 
 export const SUMMARY_PROMPT = `Aşağıdaki danışma görüşmesini inceleyerek müşteri için hazır bir WhatsApp mesajı oluşturun.
 
