@@ -9,7 +9,7 @@ import Redis from 'ioredis'
 import { GroqService, GROQ_MODEL, GROQ_FALLBACK_MODEL } from '../groq/groq.service'
 import { REDIS_CLIENT } from '../redis/redis.module'
 import { hasNonLatinLeak, isContaminated, sanitizeContent } from './chat-guards'
-import { JUDGE_SYSTEM_PROMPT, SUMMARY_PROMPT, SYSTEM_PROMPT } from './chat-prompts'
+import { JUDGE_SYSTEM_PROMPT, RETRY_NUDGE, SUMMARY_PROMPT, SYSTEM_PROMPT } from './chat-prompts'
 
 export interface ChatMessage {
   role: 'user' | 'assistant'
@@ -136,9 +136,10 @@ export class ChatService {
       // İç içe yapı bilinçli: temiz yanıt tek judge çağrısıyla geçsin (ardışık iki
       // if aynı temiz yanıtı iki kez judge'a götürürdü)
       if (await this.isLeaky(reply)) {
-        // Kullanıcıya göstermeden tek sefer yeniden üret; sampling farklı sonuç verir
+        // Kullanıcıya göstermeden tek sefer yeniden üret; kör tekrar aynı sızıntıyı
+        // yeniden üretebildiğinden retry'a düzeltici talimat eklenir
         this.logger.warn(`Yabancı dil sızıntısı, yanıt yeniden üretiliyor: "${reply.slice(0, 120)}"`)
-        reply = await this.callGroq(SYSTEM_PROMPT, messages, 400)
+        reply = await this.callGroq(`${SYSTEM_PROMPT}\n\n${RETRY_NUDGE}`, messages, 400)
         if (await this.isLeaky(reply)) {
           this.logger.warn(`Yeniden denemede de sızıntı, sabit mesaja düşürüldü: "${reply.slice(0, 120)}"`)
           return 'Üzgünüm, yanıt oluşturulurken bir sorun yaşandı. Sorunuzu tekrar yazar mısınız?'

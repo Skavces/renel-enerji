@@ -1,7 +1,7 @@
 import { ServiceUnavailableException } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { BUDGET_EXCEEDED_MESSAGE, ChatService } from '../chat.service'
-import { JUDGE_SYSTEM_PROMPT } from '../chat-prompts'
+import { JUDGE_SYSTEM_PROMPT, RETRY_NUDGE } from '../chat-prompts'
 import { GroqService } from '../../groq/groq.service'
 
 type GroqPayload = { messages: { role: string; content: string }[] } & Record<string, unknown>
@@ -73,6 +73,10 @@ describe('ChatService — non-Turkish output guard', () => {
     // kirli ilk yanıtta judge atlanır: üretim + üretim + judge
     expect(call).toHaveBeenCalledTimes(3)
     expect(judgeCallCount()).toBe(1)
+    // ilk üretim nudge'sız, retry düzeltici talimatla yapılır
+    const systemOf = (i: number) => (call.mock.calls[i][1] as GroqPayload).messages[0].content
+    expect(systemOf(0)).not.toContain(RETRY_NUDGE)
+    expect(systemOf(1)).toContain(RETRY_NUDGE)
   })
 
   it('falls back to fixed Turkish message when the retry also leaks', async () => {
