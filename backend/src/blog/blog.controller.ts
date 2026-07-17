@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, UseGuards } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Header, HttpCode, Param, Patch, Post, UseGuards } from '@nestjs/common'
 import { BlogService } from './blog.service'
 import { CreateBlogPostDto } from './dto/create-blog-post.dto'
 import { UpdateBlogPostDto } from './dto/update-blog-post.dto'
@@ -10,11 +10,13 @@ export class BlogController {
   constructor(private readonly service: BlogService) {}
 
   @Get()
+  @Header('Cache-Control', 'public, max-age=60')
   findAll() {
     return this.service.findAllPublic()
   }
 
   @Get(':slug')
+  @Header('Cache-Control', 'public, max-age=60')
   findOne(@Param('slug') slug: string) {
     return this.service.findBySlug(slug)
   }

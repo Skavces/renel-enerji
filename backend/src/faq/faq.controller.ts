@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, UseGuards } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Header, HttpCode, Param, Patch, Post, UseGuards } from '@nestjs/common'
 import { FaqService } from './faq.service'
 import { CreateFaqDto } from './dto/create-faq.dto'
 import { UpdateFaqDto } from './dto/update-faq.dto'
@@ -10,6 +10,7 @@ export class FaqController {
   constructor(private readonly service: FaqService) {}
 
   @Get()
+  @Header('Cache-Control', 'public, max-age=60')
   findAll() {
     return this.service.findAllPublic()
   }

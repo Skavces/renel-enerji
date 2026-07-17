@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, UseGuards } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Header, HttpCode, Param, Patch, Post, UseGuards } from '@nestjs/common'
 import { ReferencesService } from './references.service'
 import { CreateReferenceDto } from './dto/create-reference.dto'
 import { UpdateReferenceDto } from './dto/update-reference.dto'
@@ -10,6 +10,7 @@ export class ReferencesController {
   constructor(private readonly service: ReferencesService) {}
 
   @Get()
+  @Header('Cache-Control', 'public, max-age=60')
   findAll() {
     return this.service.findAllPublic()
   }

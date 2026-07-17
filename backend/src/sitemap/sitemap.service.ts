@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { BlogPost } from '../blog/entities/blog-post.entity'
 import { Project } from '../projects/entities/project.entity'
+import { PublicCacheService } from '../common/public-cache.service'
 
 const STATIC_URLS = [
   { loc: '/', priority: '1.0', changefreq: 'weekly' },
@@ -42,13 +43,19 @@ export class SitemapService {
     @InjectRepository(BlogPost) private blogRepo: Repository<BlogPost>,
     @InjectRepository(Project) private projectRepo: Repository<Project>,
     private config: ConfigService,
+    private cache: PublicCacheService,
   ) {}
 
   private get site(): string {
     return this.config.get<string>('FRONTEND_URL', 'https://renelenerji.com').replace(/\/$/, '')
   }
 
-  async generateXml(): Promise<string> {
+  // Bot trafiği her seferinde iki sorgu atmasın; bust yok, ≤60sn bayatlık kabul
+  generateXml(): Promise<string> {
+    return this.cache.wrap('sitemap:xml', () => this.buildXml())
+  }
+
+  private async buildXml(): Promise<string> {
     const [posts, projects] = await Promise.all([
       this.blogRepo.find({
         where: { published: true },

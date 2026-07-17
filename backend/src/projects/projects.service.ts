@@ -6,6 +6,7 @@ import { MediaType, ProjectMedia } from './entities/project-media.entity'
 import { CreateProjectDto } from './dto/create-project.dto'
 import { UpdateProjectDto } from './dto/update-project.dto'
 import { MediaService } from './media.service'
+import { PublicCacheService } from '../common/public-cache.service'
 import { RESERVED_SLUGS } from '../common/reserved-slugs'
 import { reorderByCase } from '../common/reorder'
 import { isUniqueViolation } from '../common/errors'
@@ -16,6 +17,7 @@ export class ProjectsService {
     @InjectRepository(Project)
     private projectRepo: Repository<Project>,
     private mediaService: MediaService,
+    private cache: PublicCacheService,
   ) {}
 
   // Liste sayfası kart başına tek kapak görseli kullanıyor; tüm medya dizisi
@@ -30,13 +32,15 @@ export class ProjectsService {
     return firstImage ? [firstImage] : []
   }
 
-  async findAllPublic() {
-    const projects = await this.projectRepo.find({
-      where: { published: true },
-      relations: { media: true },
-      order: { sortOrder: 'ASC', createdAt: 'DESC' },
+  findAllPublic() {
+    return this.cache.wrap('projects:list', async () => {
+      const projects = await this.projectRepo.find({
+        where: { published: true },
+        relations: { media: true },
+        order: { sortOrder: 'ASC', createdAt: 'DESC' },
+      })
+      return projects.map(p => ({ ...p, media: ProjectsService.coverOnly(p.media ?? []) }))
     })
-    return projects.map(p => ({ ...p, media: ProjectsService.coverOnly(p.media ?? []) }))
   }
 
   findAll() {
@@ -46,10 +50,12 @@ export class ProjectsService {
     })
   }
 
-  async findBySlug(slug: string) {
-    const project = await this.projectRepo.findOne({ where: { slug }, relations: { media: true } })
-    if (!project) throw new NotFoundException('Proje bulunamadı')
-    return project
+  findBySlug(slug: string) {
+    return this.cache.wrap(`projects:slug:${slug}`, async () => {
+      const project = await this.projectRepo.findOne({ where: { slug }, relations: { media: true } })
+      if (!project) throw new NotFoundException('Proje bulunamadı')
+      return project
+    })
   }
 
   async findById(id: string) {
@@ -61,7 +67,9 @@ export class ProjectsService {
   async create(dto: CreateProjectDto) {
     const project = this.projectRepo.create(dto)
     try {
-      return await this.projectRepo.save(project)
+      const saved = await this.projectRepo.save(project)
+      this.cache.bust('projects')
+      return saved
     } catch (err) {
       if (isUniqueViolation(err)) throw new ConflictException('Bu slug zaten kullanımda')
       throw err
@@ -72,7 +80,9 @@ export class ProjectsService {
     const project = await this.findById(id)
     Object.assign(project, dto)
     try {
-      return await this.projectRepo.save(project)
+      const saved = await this.projectRepo.save(project)
+      this.cache.bust('projects')
+      return saved
     } catch (err) {
       if (isUniqueViolation(err)) throw new ConflictException('Bu slug zaten kullanımda')
       throw err
@@ -87,12 +97,14 @@ export class ProjectsService {
     for (const src of sources) {
       await this.mediaService.deleteFileIfUnreferenced(src)
     }
+    this.cache.bust('projects')
   }
 
   async reorderProjects(orderedIds: string[]) {
     // Eski raw SQL yanlış `sort_order` kolon adıyla runtime'da patlıyordu;
     // helper kolon adlarını metadata'dan aldığından tekrarlayamaz
     await reorderByCase(this.projectRepo, orderedIds)
+    this.cache.bust('projects')
   }
 
   toSlug(name: string): string {

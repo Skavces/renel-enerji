@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Header,
   Logger,
   Param,
   Patch,
@@ -31,13 +32,15 @@ export class ProjectsController {
     private readonly importService: InstagramImportService,
   ) {}
 
-  // Public endpoints
+  // Public endpoints — sunucu 60sn cache'ler (4.4), tarayıcıya da aynı süre verilir
   @Get()
+  @Header('Cache-Control', 'public, max-age=60')
   findAll() {
     return this.service.findAllPublic()
   }
 
   @Get(':slug')
+  @Header('Cache-Control', 'public, max-age=60')
   findOne(@Param('slug') slug: string) {
     return this.service.findBySlug(slug)
   }

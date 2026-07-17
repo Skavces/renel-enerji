@@ -8,6 +8,7 @@ import {
   Repository,
 } from 'typeorm'
 import { deleteUploadedFile } from '../upload/uploaded-files'
+import { PublicCacheService } from './public-cache.service'
 import { reorderByCase } from './reorder'
 import { isUniqueViolation } from './errors'
 
@@ -32,7 +33,19 @@ export abstract class BaseContentService<T extends ContentEntity> {
   protected readonly fileField?: keyof T & string
   protected readonly uniqueConflictMessage?: string
 
-  constructor(protected readonly repo: Repository<T>) {}
+  constructor(
+    protected readonly repo: Repository<T>,
+    protected readonly cache: PublicCacheService,
+  ) {}
+
+  // Cache anahtarları tablo adıyla öneklenir; yazan her metod öneki bust'lar
+  protected cacheKey(suffix: string): string {
+    return `${this.repo.metadata.tableName}:${suffix}`
+  }
+
+  protected bustCache(): void {
+    this.cache.bust(this.repo.metadata.tableName)
+  }
 
   protected defaultOrder(): FindManyOptions<T>['order'] {
     return { sortOrder: 'ASC', createdAt: 'DESC' } as FindManyOptions<T>['order']
@@ -51,7 +64,7 @@ export abstract class BaseContentService<T extends ContentEntity> {
   protected onUpdate(_entity: T, _dto: DeepPartial<T>): void {}
 
   findAllPublic(): Promise<T[]> {
-    return this.repo.find(this.publicFindOptions())
+    return this.cache.wrap(this.cacheKey('list'), () => this.repo.find(this.publicFindOptions()))
   }
 
   findAll(): Promise<T[]> {
@@ -78,7 +91,9 @@ export abstract class BaseContentService<T extends ContentEntity> {
   async create(dto: DeepPartial<T>): Promise<T> {
     const entity = this.repo.create(dto)
     this.onCreate(entity, dto)
-    return this.save(entity)
+    const saved = await this.save(entity)
+    this.bustCache()
+    return saved
   }
 
   async update(id: string, dto: DeepPartial<T>): Promise<T> {
@@ -96,6 +111,7 @@ export abstract class BaseContentService<T extends ContentEntity> {
     ) {
       await deleteUploadedFile(oldFile)
     }
+    this.bustCache()
     return saved
   }
 
@@ -103,9 +119,11 @@ export abstract class BaseContentService<T extends ContentEntity> {
     const entity = await this.findById(id)
     await this.repo.remove(entity)
     if (this.fileField) await deleteUploadedFile(entity[this.fileField] as string | null)
+    this.bustCache()
   }
 
   async reorder(orderedIds: string[]): Promise<void> {
     await reorderByCase(this.repo, orderedIds)
+    this.bustCache()
   }
 }

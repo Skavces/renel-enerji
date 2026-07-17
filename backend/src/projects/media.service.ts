@@ -4,6 +4,7 @@ import { Repository } from 'typeorm'
 import { Project } from './entities/project.entity'
 import { MediaType, ProjectMedia } from './entities/project-media.entity'
 import { deleteUploadedFile } from '../upload/uploaded-files'
+import { PublicCacheService } from '../common/public-cache.service'
 
 @Injectable()
 export class MediaService {
@@ -12,6 +13,8 @@ export class MediaService {
     private projectRepo: Repository<Project>,
     @InjectRepository(ProjectMedia)
     private mediaRepo: Repository<ProjectMedia>,
+    // Medya, hem public listedeki kapağı hem detay yanıtını etkiler
+    private cache: PublicCacheService,
   ) {}
 
   private async findProjectById(id: string): Promise<Project> {
@@ -24,7 +27,9 @@ export class MediaService {
     const project = await this.findProjectById(projectId)
     const count = await this.mediaRepo.count({ where: { project: { id: projectId } } })
     const media = this.mediaRepo.create({ project, type, src, sortOrder: count })
-    return this.mediaRepo.save(media)
+    const saved = await this.mediaRepo.save(media)
+    this.cache.bust('projects')
+    return saved
   }
 
   async removeMedia(projectId: string, mediaId: string) {
@@ -35,6 +40,7 @@ export class MediaService {
     const src = media.src
     await this.mediaRepo.remove(media)
     await this.deleteFileIfUnreferenced(src)
+    this.cache.bust('projects')
   }
 
   // linkMedia ile aynı dosya birden fazla kayda bağlanabilir; son referans silinmeden dosyaya dokunma
@@ -51,5 +57,6 @@ export class MediaService {
         ),
       )
     })
+    this.cache.bust('projects')
   }
 }

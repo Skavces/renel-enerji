@@ -2,15 +2,17 @@ import { Repository } from 'typeorm'
 import { BlogService } from '../blog.service'
 import { BlogPost } from '../entities/blog-post.entity'
 import { sanitizeRichHtml, stripHtml } from '../../common/html-sanitize'
+import { PublicCacheService } from '../../common/public-cache.service'
 
 function makeService() {
   const repo = {
     create: jest.fn((dto: Partial<BlogPost>) => ({ ...dto })),
     save: jest.fn((entity: BlogPost) => Promise.resolve(entity)),
     findOne: jest.fn(),
+    metadata: { tableName: 'blog_posts' },
   } as unknown as Repository<BlogPost>
 
-  return { service: new BlogService(repo), repo }
+  return { service: new BlogService(repo, new PublicCacheService()), repo }
 }
 
 describe('sanitizeRichHtml', () => {
@@ -90,5 +92,23 @@ describe('BlogService — yazma anında sanitize', () => {
 
     expect(saved.content).toBe('<p style="text-align:right">yeni</p>')
     expect(saved.excerpt).toBe('eski özet')
+  })
+})
+
+describe('BlogService — findBySlug cache (4.4)', () => {
+  it('bulunan yazı 60sn cache\'lenir', async () => {
+    const { service, repo } = makeService()
+    ;(repo.findOne as jest.Mock).mockResolvedValue({ id: '1', slug: 'ges', published: true })
+    await service.findBySlug('ges')
+    await service.findBySlug('ges')
+    expect(repo.findOne).toHaveBeenCalledTimes(1)
+  })
+
+  it('NotFound cache\'lenmez (rastgele slug\'la cache şişirilemez)', async () => {
+    const { service, repo } = makeService()
+    ;(repo.findOne as jest.Mock).mockResolvedValueOnce(null).mockResolvedValue({ id: '1', slug: 'yeni', published: true })
+    await expect(service.findBySlug('yeni')).rejects.toThrow('Yazı bulunamadı')
+    await expect(service.findBySlug('yeni')).resolves.toMatchObject({ slug: 'yeni' })
+    expect(repo.findOne).toHaveBeenCalledTimes(2)
   })
 })

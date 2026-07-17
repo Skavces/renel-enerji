@@ -9,6 +9,7 @@ import { APP_GUARD, APP_FILTER } from '@nestjs/core'
 import { SentryModule, SentryGlobalFilter } from '@sentry/nestjs/setup'
 import { LoggingMiddleware } from './common/logging.middleware'
 import { RedisModule } from './redis/redis.module'
+import { PublicCacheModule } from './common/public-cache.module'
 import { AuthModule } from './auth/auth.module'
 import { ProjectsModule } from './projects/projects.module'
 import { UploadModule } from './upload/upload.module'
@@ -109,6 +110,7 @@ import { HealthController } from './health.controller'
     }),
     TerminusModule,
     RedisModule,
+    PublicCacheModule,
     AuthModule,
     ProjectsModule,
     UploadModule,

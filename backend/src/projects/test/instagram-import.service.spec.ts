@@ -7,6 +7,7 @@ import type { ProjectsService } from '../projects.service'
 import type { MediaService } from '../media.service'
 import type { InstagramParseService } from '../instagram-parse.service'
 import type { InstagramTokenService } from '../../instagram-token/instagram-token.service'
+import type { PublicCacheService } from '../../common/public-cache.service'
 import type { InstagramPost, ParsedProject } from '../instagram-types'
 
 // Mock external dependencies
@@ -119,6 +120,8 @@ function makeService(overrides: {
     }),
   }
 
+  const cache = { bust: jest.fn() }
+
   const service = new InstagramImportService(
     projectRepo as unknown as Repository<Project>,
     projectsService as unknown as ProjectsService,
@@ -126,9 +129,10 @@ function makeService(overrides: {
     parseService as unknown as InstagramParseService,
     tokenService as unknown as InstagramTokenService,
     config as unknown as ConfigService,
+    cache as unknown as PublicCacheService,
   )
 
-  return { service, projectRepo, mediaService, parseService, tokenService, transactionSaves }
+  return { service, projectRepo, mediaService, parseService, tokenService, transactionSaves, cache }
 }
 
 // Mock global fetch
@@ -230,7 +234,7 @@ describe('InstagramImportService', () => {
 
     it('saves as draft first, publishes only after media import succeeds', async () => {
       const post = mockPost('pub-id', 'Yeni proje #proje')
-      const { service, projectRepo, transactionSaves } = makeService()
+      const { service, projectRepo, transactionSaves, cache } = makeService()
 
       mockFetch.mockResolvedValue({
         ok: true,
@@ -243,6 +247,8 @@ describe('InstagramImportService', () => {
       expect(transactionSaves[0].published).toBe(false)
       expect(projectRepo.update).toHaveBeenCalledWith('new-project-id', { published: true })
       expect(result.published).toBe(true)
+      // Yayına alma ProjectsService'i bypass eder; public cache burada düşürülmeli
+      expect(cache.bust).toHaveBeenCalledWith('projects')
     })
 
     it('leaves the project as draft when no media could be imported', async () => {

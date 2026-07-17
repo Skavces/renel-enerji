@@ -15,6 +15,7 @@ import { MediaService } from './media.service'
 import { InstagramParseService } from './instagram-parse.service'
 import { InstagramTokenService } from '../instagram-token/instagram-token.service'
 import { fetchWithTimeout } from '../common/fetch-with-timeout'
+import { PublicCacheService } from '../common/public-cache.service'
 import { errorMessage, isUniqueViolation } from '../common/errors'
 import { UPLOADS_DIR } from '../upload/uploaded-files'
 import type { InstagramMediaListResponse, InstagramPost, ParsedProject } from './instagram-types'
@@ -42,6 +43,7 @@ export class InstagramImportService {
     private parseService: InstagramParseService,
     private tokenService: InstagramTokenService,
     private config: ConfigService,
+    private cache: PublicCacheService,
   ) {}
 
   getSyncStatus() {
@@ -194,6 +196,8 @@ export class InstagramImportService {
     if (published && mediaCount > 0) {
       await this.projectRepo.update(saved.id, { published: true })
       saved.published = true
+      // ProjectsService'i bypass eden tek yayına alma yolu; public cache burada düşürülür
+      this.cache.bust('projects')
     } else if (published) {
       this.logger.warn(`Instagram post ${post.id}: hiç medya indirilemedi, proje taslakta bırakıldı (${saved.slug})`)
     }

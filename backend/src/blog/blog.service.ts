@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { DeepPartial, FindManyOptions, Repository } from 'typeorm'
 import { BlogPost } from './entities/blog-post.entity'
 import { BaseContentService } from '../common/base-content.service'
+import { PublicCacheService } from '../common/public-cache.service'
 import { sanitizeRichHtml, stripHtml } from '../common/html-sanitize'
 
 @Injectable()
@@ -12,8 +13,8 @@ export class BlogService extends BaseContentService<BlogPost> {
   protected readonly fileField = 'coverImage'
   protected readonly uniqueConflictMessage = 'Bu slug zaten kullanımda'
 
-  constructor(@InjectRepository(BlogPost) repo: Repository<BlogPost>) {
-    super(repo)
+  constructor(@InjectRepository(BlogPost) repo: Repository<BlogPost>, cache: PublicCacheService) {
+    super(repo, cache)
   }
 
   // Public liste hafif alanlarla ve yayın tarihine göre döner
@@ -40,9 +41,11 @@ export class BlogService extends BaseContentService<BlogPost> {
     if (typeof dto.excerpt === 'string') dto.excerpt = stripHtml(dto.excerpt)
   }
 
-  async findBySlug(slug: string) {
-    const post = await this.repo.findOne({ where: { slug, published: true } })
-    if (!post) throw new NotFoundException('Yazı bulunamadı')
-    return post
+  findBySlug(slug: string) {
+    return this.cache.wrap(this.cacheKey(`slug:${slug}`), async () => {
+      const post = await this.repo.findOne({ where: { slug, published: true } })
+      if (!post) throw new NotFoundException('Yazı bulunamadı')
+      return post
+    })
   }
 }

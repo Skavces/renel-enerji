@@ -7,6 +7,7 @@ import { Reference } from '../../references/entities/reference.entity'
 import { FaqService } from '../../faq/faq.service'
 import { Faq } from '../../faq/entities/faq.entity'
 import { deleteUploadedFile } from '../../upload/uploaded-files'
+import { PublicCacheService } from '../public-cache.service'
 
 jest.mock('../../upload/uploaded-files', () => ({
   deleteUploadedFile: jest.fn().mockResolvedValue(undefined),
@@ -40,21 +41,21 @@ beforeEach(() => mockDeleteFile.mockClear())
 describe('BaseContentService (BlogService üzerinden)', () => {
   it('yayınlanan yeni yazıya publishedAt damgalar', async () => {
     const { repo } = makeRepo<BlogPost>()
-    const service = new BlogService(repo)
+    const service = new BlogService(repo, new PublicCacheService())
     const saved = await service.create({ title: 'a', published: true })
     expect(saved.publishedAt).toBeInstanceOf(Date)
   })
 
   it('taslak yazıya publishedAt damgalamaz', async () => {
     const { repo } = makeRepo<BlogPost>()
-    const service = new BlogService(repo)
+    const service = new BlogService(repo, new PublicCacheService())
     const saved = await service.create({ title: 'a', published: false })
     expect(saved.publishedAt).toBeUndefined()
   })
 
   it('taslak ilk kez yayınlanırken publishedAt damgalar', async () => {
     const { repo } = makeRepo<BlogPost>({ id: '1', published: false, publishedAt: null as unknown as Date })
-    const service = new BlogService(repo)
+    const service = new BlogService(repo, new PublicCacheService())
     const saved = await service.update('1', { published: true })
     expect(saved.publishedAt).toBeInstanceOf(Date)
   })
@@ -62,7 +63,7 @@ describe('BaseContentService (BlogService üzerinden)', () => {
   it('daha önce yayınlanmış yazının publishedAt değerini değiştirmez', async () => {
     const original = new Date('2026-01-01')
     const { repo } = makeRepo<BlogPost>({ id: '1', published: false, publishedAt: original })
-    const service = new BlogService(repo)
+    const service = new BlogService(repo, new PublicCacheService())
     const saved = await service.update('1', { published: true })
     expect(saved.publishedAt).toBe(original)
   })
@@ -70,40 +71,40 @@ describe('BaseContentService (BlogService üzerinden)', () => {
   it('slug çakışmasında (23505) ConflictException fırlatır', async () => {
     const { repo } = makeRepo<BlogPost>()
     ;(repo.save as jest.Mock).mockRejectedValue(Object.assign(new Error('dup'), { code: '23505' }))
-    const service = new BlogService(repo)
+    const service = new BlogService(repo, new PublicCacheService())
     await expect(service.create({ title: 'a', slug: 'x' })).rejects.toThrow(ConflictException)
   })
 
   it('kapak değişince eski dosyayı siler', async () => {
     const { repo } = makeRepo<BlogPost>({ id: '1', coverImage: '/uploads/eski.webp' })
-    const service = new BlogService(repo)
+    const service = new BlogService(repo, new PublicCacheService())
     await service.update('1', { coverImage: '/uploads/yeni.webp' })
     expect(mockDeleteFile).toHaveBeenCalledWith('/uploads/eski.webp')
   })
 
   it('kapak dto\'da yoksa dosya silinmez', async () => {
     const { repo } = makeRepo<BlogPost>({ id: '1', coverImage: '/uploads/eski.webp' })
-    const service = new BlogService(repo)
+    const service = new BlogService(repo, new PublicCacheService())
     await service.update('1', { title: 'yeni başlık' })
     expect(mockDeleteFile).not.toHaveBeenCalled()
   })
 
   it('silinen yazının kapak dosyasını da siler', async () => {
     const { repo } = makeRepo<BlogPost>({ id: '1', coverImage: '/uploads/kapak.webp' })
-    const service = new BlogService(repo)
+    const service = new BlogService(repo, new PublicCacheService())
     await service.remove('1')
     expect(mockDeleteFile).toHaveBeenCalledWith('/uploads/kapak.webp')
   })
 
   it('bulunamayan id için NotFoundException fırlatır', async () => {
     const { repo } = makeRepo<BlogPost>(null)
-    const service = new BlogService(repo)
+    const service = new BlogService(repo, new PublicCacheService())
     await expect(service.findById('yok')).rejects.toThrow(NotFoundException)
   })
 
   it('reorder tüm sıralamayı tek CASE sorgusuyla yazar', async () => {
     const { repo, managerQuery } = makeRepo<BlogPost>()
-    const service = new BlogService(repo)
+    const service = new BlogService(repo, new PublicCacheService())
     await service.reorder(['b', 'a', 'c'])
     expect(managerQuery).toHaveBeenCalledTimes(1)
     const [sql, params] = managerQuery.mock.calls[0]
@@ -112,17 +113,51 @@ describe('BaseContentService (BlogService üzerinden)', () => {
   })
 })
 
+describe('BaseContentService — public cache (4.4)', () => {
+  it('findAllPublic ikinci çağrıda repo\'ya gitmez', async () => {
+    const { repo } = makeRepo<BlogPost>()
+    const service = new BlogService(repo, new PublicCacheService())
+    await service.findAllPublic()
+    await service.findAllPublic()
+    expect(repo.find).toHaveBeenCalledTimes(1)
+  })
+
+  it('create ve reorder cache\'i düşürür (reorder raw SQL kullandığından burası kritik)', async () => {
+    const { repo } = makeRepo<BlogPost>()
+    const service = new BlogService(repo, new PublicCacheService())
+    await service.findAllPublic()
+    await service.create({ title: 'yeni' })
+    await service.findAllPublic()
+    expect(repo.find).toHaveBeenCalledTimes(2)
+    await service.reorder(['a', 'b'])
+    await service.findAllPublic()
+    expect(repo.find).toHaveBeenCalledTimes(3)
+  })
+
+  it('update ve remove cache\'i düşürür', async () => {
+    const { repo } = makeRepo<BlogPost>({ id: '1' })
+    const service = new BlogService(repo, new PublicCacheService())
+    await service.findAllPublic()
+    await service.update('1', { title: 'x' })
+    await service.findAllPublic()
+    expect(repo.find).toHaveBeenCalledTimes(2)
+    await service.remove('1')
+    await service.findAllPublic()
+    expect(repo.find).toHaveBeenCalledTimes(3)
+  })
+})
+
 describe('ReferencesService — logo temizliği', () => {
   it('logo değişince eski dosyayı siler', async () => {
     const { repo } = makeRepo<Reference>({ id: '1', logo: '/uploads/eski-logo.webp' })
-    const service = new ReferencesService(repo)
+    const service = new ReferencesService(repo, new PublicCacheService())
     await service.update('1', { logo: '/uploads/yeni-logo.webp' })
     expect(mockDeleteFile).toHaveBeenCalledWith('/uploads/eski-logo.webp')
   })
 
   it('silinen referansın logosunu da siler', async () => {
     const { repo } = makeRepo<Reference>({ id: '1', logo: '/uploads/logo.webp' })
-    const service = new ReferencesService(repo)
+    const service = new ReferencesService(repo, new PublicCacheService())
     await service.remove('1')
     expect(mockDeleteFile).toHaveBeenCalledWith('/uploads/logo.webp')
   })
@@ -131,7 +166,7 @@ describe('ReferencesService — logo temizliği', () => {
 describe('FaqService — sıralama farkı', () => {
   it('public liste en eski üstte okunur', async () => {
     const { repo } = makeRepo<Faq>()
-    const service = new FaqService(repo)
+    const service = new FaqService(repo, new PublicCacheService())
     await service.findAllPublic()
     expect(repo.find).toHaveBeenCalledWith({
       where: { published: true },
