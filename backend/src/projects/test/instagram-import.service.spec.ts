@@ -31,7 +31,7 @@ const mockPost = (id: string, caption: string): InstagramPost => ({
 // Private metodlara tip güvenli erişim: gerçek imzaların yapısal kopyası
 type ServicePrivates = {
   createProjectFromInstagram(parsed: ParsedProject, post: InstagramPost, published: boolean): Promise<Project>
-  importInstagramImages(project: Pick<Project, 'id' | 'slug'>, post: InstagramPost): Promise<void>
+  importInstagramImages(project: Pick<Project, 'id' | 'slug'>, post: InstagramPost): Promise<number>
 }
 const privates = (s: InstagramImportService) => s as unknown as ServicePrivates
 
@@ -45,7 +45,11 @@ function makeService(overrides: {
 } = {}) {
   const existingIds = new Set(overrides.existingIds ?? [])
 
+  // Transaction'da save'e giden entity'ler: published=false ile kaydedildiği burada doğrulanır
+  const transactionSaves: Record<string, unknown>[] = []
+
   const projectRepo = {
+    update: jest.fn().mockResolvedValue({ affected: 1 }),
     findOne: jest.fn().mockImplementation(({ where }: FindArgs) => {
       const id = where?.instagramMediaId as string | undefined
       return Promise.resolve(id && existingIds.has(id) ? { id: 'existing', instagramMediaId: id } : null)
@@ -67,6 +71,7 @@ function makeService(overrides: {
             create: jest.fn().mockImplementation((_: unknown, data: Record<string, unknown>) => ({ ...data })),
             save: jest.fn().mockImplementation((entity: Record<string, unknown>) => {
               if (overrides.saveShouldFail) throw Object.assign(new Error('DB error'), { code: '99999' })
+              transactionSaves.push(entity)
               return Promise.resolve({ ...entity, id: 'new-project-id' })
             }),
           }
@@ -123,7 +128,7 @@ function makeService(overrides: {
     config as unknown as ConfigService,
   )
 
-  return { service, projectRepo, mediaService, parseService, tokenService }
+  return { service, projectRepo, mediaService, parseService, tokenService, transactionSaves }
 }
 
 // Mock global fetch
@@ -214,6 +219,57 @@ describe('InstagramImportService', () => {
       )
 
       expect(result.instagramMediaId).toBe('race-id')
+    })
+  })
+
+  describe('createProjectFromInstagram — medya bitmeden yayınlanmaz (4.3)', () => {
+    const parsed: ParsedProject = {
+      name: 'Test', location: 'İzmir', kw: 5, date: '2024', description: 'desc',
+      specs: [], highlights: [], statBoxes: [],
+    }
+
+    it('saves as draft first, publishes only after media import succeeds', async () => {
+      const post = mockPost('pub-id', 'Yeni proje #proje')
+      const { service, projectRepo, transactionSaves } = makeService()
+
+      mockFetch.mockResolvedValue({
+        ok: true,
+        arrayBuffer: () => Promise.resolve(Buffer.from('fake')),
+      })
+
+      const result = await privates(service).createProjectFromInstagram(parsed, post, true)
+
+      // İlk kayıt her zaman taslak; yayın ancak medya başarısından sonra
+      expect(transactionSaves[0].published).toBe(false)
+      expect(projectRepo.update).toHaveBeenCalledWith('new-project-id', { published: true })
+      expect(result.published).toBe(true)
+    })
+
+    it('leaves the project as draft when no media could be imported', async () => {
+      const post = mockPost('fail-id', 'Yeni proje #proje')
+      const { service, projectRepo } = makeService()
+
+      mockFetch.mockResolvedValue({ ok: false })
+
+      const result = await privates(service).createProjectFromInstagram(parsed, post, true)
+
+      expect(projectRepo.update).not.toHaveBeenCalled()
+      expect(result.published).toBe(false)
+    })
+
+    it('never publishes when the caller did not request it (manual sync path)', async () => {
+      const post = mockPost('manual-id', 'Yeni proje #proje')
+      const { service, projectRepo } = makeService()
+
+      mockFetch.mockResolvedValue({
+        ok: true,
+        arrayBuffer: () => Promise.resolve(Buffer.from('fake')),
+      })
+
+      const result = await privates(service).createProjectFromInstagram(parsed, post, false)
+
+      expect(projectRepo.update).not.toHaveBeenCalled()
+      expect(result.published).toBe(false)
     })
   })
 

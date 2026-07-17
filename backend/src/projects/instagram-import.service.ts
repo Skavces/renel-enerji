@@ -169,7 +169,9 @@ export class InstagramImportService {
       highlights: parsed.highlights || [],
       statBoxes: parsed.statBoxes || [],
       category: parsed.category || undefined,
-      published,
+      // Medya importu bitmeden yayınlanmaz: süreç yarıda kalırsa sitede medyasız
+      // proje görünmesin (published parametresi yalnızca yayınlama niyetidir)
+      published: false,
       instagramMediaId: post.id,
     }
 
@@ -188,11 +190,18 @@ export class InstagramImportService {
       throw err
     }
 
-    await this.importInstagramImages(saved, post)
+    const mediaCount = await this.importInstagramImages(saved, post)
+    if (published && mediaCount > 0) {
+      await this.projectRepo.update(saved.id, { published: true })
+      saved.published = true
+    } else if (published) {
+      this.logger.warn(`Instagram post ${post.id}: hiç medya indirilemedi, proje taslakta bırakıldı (${saved.slug})`)
+    }
     return saved
   }
 
-  private async importInstagramImages(project: Project, post: InstagramPost): Promise<void> {
+  // Başarıyla eklenen medya sayısını döner; yayınlama kararı buna bakar
+  private async importInstagramImages(project: Project, post: InstagramPost): Promise<number> {
     const items: { url: string; type: MediaType }[] = []
 
     if (post.media_type === 'IMAGE' && post.media_url) {
@@ -213,6 +222,7 @@ export class InstagramImportService {
 
     // Sıralı indirme: paralel indirme + video buffer'lama 512MB container'da
     // carousel'li postlarda OOM'a yol açabiliyordu
+    let imported = 0
     for (const item of items) {
       try {
         const r = await fetchWithTimeout(item.url, undefined, 30000)
@@ -241,9 +251,11 @@ export class InstagramImportService {
           await sharp(buf).webp({ quality: 82 }).toFile(join(UPLOADS_DIR, filename))
           await this.mediaService.addMedia(project.id, MediaType.IMAGE, `/uploads/${filename}`)
         }
+        imported++
       } catch (err) {
         this.logger.warn(`Instagram medya indirilemedi (${item.url}): ${errorMessage(err)}`)
       }
     }
+    return imported
   }
 }
