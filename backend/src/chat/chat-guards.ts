@@ -45,7 +45,9 @@ const ALLOWED_FOREIGN_WORDS = new Set([
 ])
 
 // Sadece q/w/x içermeyen yaygın İngilizce kelimeler; Türkçe eş yazılışlılar
-// (on, can, her, not, but, is...) bilinçli olarak listede YOK
+// (on, can, her, not, but, is...) bilinçli olarak listede YOK.
+// 4.2: liste DONDURULDU — yeni sızıntı türlerini ChatService'teki LLM judge yakalar,
+// buraya ekleme yapma (liste yalnızca judge çağrısını atlatan ucuz ön-filtredir).
 const COMMON_ENGLISH_WORDS = new Set([
   'the', 'and', 'you', 'your', 'please', 'monthly', 'daily', 'yearly', 'about', 'thanks',
   'thank', 'hello', 'could', 'should', 'have', 'are', 'this', 'that', 'these', 'those',

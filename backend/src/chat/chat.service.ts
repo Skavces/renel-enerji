@@ -6,10 +6,10 @@ import {
 } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import Redis from 'ioredis'
-import { GroqService, GROQ_MODEL } from '../groq/groq.service'
+import { GroqService, GROQ_MODEL, GROQ_FALLBACK_MODEL } from '../groq/groq.service'
 import { REDIS_CLIENT } from '../redis/redis.module'
 import { hasNonLatinLeak, isContaminated, sanitizeContent } from './chat-guards'
-import { SUMMARY_PROMPT, SYSTEM_PROMPT } from './chat-prompts'
+import { JUDGE_SYSTEM_PROMPT, SUMMARY_PROMPT, SYSTEM_PROMPT } from './chat-prompts'
 
 export interface ChatMessage {
   role: 'user' | 'assistant'
@@ -95,17 +95,54 @@ export class ChatService {
     return sanitizeContent(content)
   }
 
+  // LLM judge (4.2): heuristiklerin göremediği Latin alfabeli sızıntıları ucuz 8B
+  // çağrısıyla yakalar. Judge erişilemez/anlaşılmaz ise fail-open — bütçe sayacıyla
+  // aynı felsefe: dil saflığı uğruna chatbot susturulmaz.
+  // consumeDailyBudget bilinçli olarak ÇAĞRILMAZ: her judge zaten bütçelenmiş bir
+  // üretim çağrısına 1:1 bağlıdır, toplam Groq kullanımı bütçe×2 ile sınırlıdır.
+  private async isTurkishByJudge(text: string): Promise<boolean> {
+    const { res, data } = await this.groq.call(this.groq.getKeys('chat'), {
+      model: GROQ_FALLBACK_MODEL,
+      messages: [
+        { role: 'system', content: JUDGE_SYSTEM_PROMPT },
+        { role: 'user', content: text },
+      ],
+      max_tokens: 4,
+      temperature: 0,
+    })
+
+    const verdict = data?.choices?.[0]?.message?.content
+    if (!res?.ok || typeof verdict !== 'string' || !verdict.trim()) {
+      this.logger.warn(`Dil denetçisine ulaşılamadı, yanıt kabul edildi (durum: ${res?.status ?? 'ağ hatası'})`)
+      return true
+    }
+    const normalized = verdict.trim().toUpperCase()
+    if (normalized.startsWith('HAYIR')) return false
+    if (!normalized.startsWith('EVET')) {
+      this.logger.warn(`Dil denetçisi beklenmedik yanıt verdi, kabul edildi: "${verdict.slice(0, 40)}"`)
+    }
+    return true
+  }
+
+  // Deterministik guard'lar (ucuz) önce; onlar temiz derse son söz judge'ın
+  private async isLeaky(text: string): Promise<boolean> {
+    if (isContaminated(text)) return true
+    return !(await this.isTurkishByJudge(text))
+  }
+
   async chat(messages: ChatMessage[]): Promise<string> {
     try {
       let reply = await this.callGroq(SYSTEM_PROMPT, messages, 400)
-      if (isContaminated(reply)) {
+      // İç içe yapı bilinçli: temiz yanıt tek judge çağrısıyla geçsin (ardışık iki
+      // if aynı temiz yanıtı iki kez judge'a götürürdü)
+      if (await this.isLeaky(reply)) {
         // Kullanıcıya göstermeden tek sefer yeniden üret; sampling farklı sonuç verir
         this.logger.warn(`Yabancı dil sızıntısı, yanıt yeniden üretiliyor: "${reply.slice(0, 120)}"`)
         reply = await this.callGroq(SYSTEM_PROMPT, messages, 400)
-      }
-      if (isContaminated(reply)) {
-        this.logger.warn(`Yeniden denemede de sızıntı, sabit mesaja düşürüldü: "${reply.slice(0, 120)}"`)
-        return 'Üzgünüm, yanıt oluşturulurken bir sorun yaşandı. Sorunuzu tekrar yazar mısınız?'
+        if (await this.isLeaky(reply)) {
+          this.logger.warn(`Yeniden denemede de sızıntı, sabit mesaja düşürüldü: "${reply.slice(0, 120)}"`)
+          return 'Üzgünüm, yanıt oluşturulurken bir sorun yaşandı. Sorunuzu tekrar yazar mısınız?'
+        }
       }
       return reply
     } catch (err) {
@@ -127,7 +164,9 @@ export class ChatService {
       }
       throw err
     }
-    if (hasNonLatinLeak(text)) {
+    // Özet bilinçli olarak foreign-word ön-filtresine girmez (şablon markalı terim
+    // içerir); alfabe kontrolü + judge yeterli
+    if (hasNonLatinLeak(text) || !(await this.isTurkishByJudge(text))) {
       // Frontend hata durumunda düz wa.me linkine düşüyor; bozuk özeti mesaj yapma
       this.logger.warn(`Türkçe olmayan özet reddedildi: "${text.slice(0, 120)}"`)
       throw new ServiceUnavailableException('Özet oluşturulamadı')

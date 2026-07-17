@@ -1,17 +1,43 @@
 import { ServiceUnavailableException } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { BUDGET_EXCEEDED_MESSAGE, ChatService } from '../chat.service'
+import { JUDGE_SYSTEM_PROMPT } from '../chat-prompts'
 import { GroqService } from '../../groq/groq.service'
 
-function makeService(...replies: string[]): { service: ChatService; call: jest.Mock } {
+type GroqPayload = { messages: { role: string; content: string }[] } & Record<string, unknown>
+
+interface TestService {
+  service: ChatService
+  call: jest.Mock
+  // Judge çağrıları payload'daki JUDGE_SYSTEM_PROMPT üzerinden ayırt edilir
+  judgeCallCount: () => number
+  // Sıradaki judge kararlarını kuyruğa ekler; null = ağ hatası. Kuyruk boşsa EVET.
+  setJudgeVerdicts: (...verdicts: (string | null)[]) => void
+}
+
+function makeService(...replies: string[]): TestService {
   const config = { get: () => undefined }
-  const call = jest.fn()
-  for (const reply of replies) {
-    call.mockResolvedValueOnce({
+  const genQueue = [...replies]
+  const judgeQueue: (string | null)[] = []
+
+  const isJudgePayload = (payload: GroqPayload): boolean =>
+    payload.messages[0]?.content === JUDGE_SYSTEM_PROMPT
+
+  const call = jest.fn((_keys: string[], payload: GroqPayload) => {
+    if (isJudgePayload(payload)) {
+      const verdict = judgeQueue.length ? judgeQueue.shift() : 'EVET'
+      if (verdict == null) return Promise.resolve({ res: null, data: null })
+      return Promise.resolve({
+        res: { ok: true, status: 200 },
+        data: { choices: [{ message: { content: verdict } }] },
+      })
+    }
+    return Promise.resolve({
       res: { ok: true, status: 200 },
-      data: { choices: [{ message: { content: reply } }] },
+      data: { choices: [{ message: { content: genQueue.shift() } }] },
     })
-  }
+  })
+
   const groq = { call, getKeys: jest.fn().mockReturnValue(['key1']) }
   return {
     service: new ChatService(
@@ -21,6 +47,9 @@ function makeService(...replies: string[]): { service: ChatService; call: jest.M
       { incr: jest.fn().mockResolvedValue(1), expire: jest.fn() } as unknown as import('ioredis').Redis,
     ),
     call,
+    judgeCallCount: () =>
+      call.mock.calls.filter(args => isJudgePayload(args[1] as GroqPayload)).length,
+    setJudgeVerdicts: (...verdicts: (string | null)[]) => judgeQueue.push(...verdicts),
   }
 }
 
@@ -28,27 +57,34 @@ const MESSAGES = [{ role: 'user' as const, content: 'merhaba' }]
 
 describe('ChatService — non-Turkish output guard', () => {
   it('returns Groq reply unchanged when Turkish', async () => {
-    const { service } = makeService('Çatı GES için aylık faturanız nedir?')
+    const { service, call, judgeCallCount } = makeService('Çatı GES için aylık faturanız nedir?')
     await expect(service.chat(MESSAGES)).resolves.toBe('Çatı GES için aylık faturanız nedir?')
+    // temiz yol: 1 üretim + 1 judge
+    expect(call).toHaveBeenCalledTimes(2)
+    expect(judgeCallCount()).toBe(1)
   })
 
   it('regenerates once when reply leaks foreign words, then returns the clean retry', async () => {
-    const { service, call } = makeService(
+    const { service, call, judgeCallCount } = makeService(
       'Çatı GES için monthly elektrik faturanız nedir?',
       'Çatı GES için aylık elektrik faturanız nedir?',
     )
     await expect(service.chat(MESSAGES)).resolves.toBe('Çatı GES için aylık elektrik faturanız nedir?')
-    expect(call).toHaveBeenCalledTimes(2)
+    // kirli ilk yanıtta judge atlanır: üretim + üretim + judge
+    expect(call).toHaveBeenCalledTimes(3)
+    expect(judgeCallCount()).toBe(1)
   })
 
   it('falls back to fixed Turkish message when the retry also leaks', async () => {
-    const { service, call } = makeService(
+    const { service, call, judgeCallCount } = makeService(
       'Bilgi almak içinmonthly elektrik faturanız nedir?',
       'Kurulum yeriniz about bir konut çatısı mı?',
     )
     const reply = await service.chat(MESSAGES)
     expect(reply).toBe('Üzgünüm, yanıt oluşturulurken bir sorun yaşandı. Sorunuzu tekrar yazar mısınız?')
+    // iki yanıt da deterministik kirli: judge hiç çağrılmaz
     expect(call).toHaveBeenCalledTimes(2)
+    expect(judgeCallCount()).toBe(0)
   })
 
   it('replaces non-Latin chat reply with fixed Turkish message after retry', async () => {
@@ -61,8 +97,55 @@ describe('ChatService — non-Turkish output guard', () => {
   })
 
   it('throws 503 for non-Latin summary so frontend falls back to plain WhatsApp link', async () => {
-    const { service } = makeService('Здравствуйте, я использовал систему консультаций')
+    const { service, judgeCallCount } = makeService('Здравствуйте, я использовал систему консультаций')
     await expect(service.generateSummary(MESSAGES)).rejects.toThrow(ServiceUnavailableException)
+    // alfabe kontrolü kısa devre yapar, judge'a gidilmez
+    expect(judgeCallCount()).toBe(0)
+  })
+})
+
+describe('ChatService — LLM dil denetçisi (judge)', () => {
+  it('regenerates when the judge rejects a heuristically clean reply', async () => {
+    const { service, call, setJudgeVerdicts } = makeService(
+      'Selamlar, size nasıl yardımcı olabilirim acaba efendim?',
+      'Çatı GES için aylık faturanız nedir?',
+    )
+    setJudgeVerdicts('HAYIR', 'EVET')
+    await expect(service.chat(MESSAGES)).resolves.toBe('Çatı GES için aylık faturanız nedir?')
+    // üretim + judge(HAYIR) + üretim + judge(EVET)
+    expect(call).toHaveBeenCalledTimes(4)
+  })
+
+  it('falls back to the fixed message when the judge rejects both attempts', async () => {
+    const { service, call, setJudgeVerdicts } = makeService('İlk yanıt', 'İkinci yanıt')
+    setJudgeVerdicts('HAYIR', 'HAYIR')
+    const reply = await service.chat(MESSAGES)
+    expect(reply).toBe('Üzgünüm, yanıt oluşturulurken bir sorun yaşandı. Sorunuzu tekrar yazar mısınız?')
+    expect(call).toHaveBeenCalledTimes(4)
+  })
+
+  it('fails open when the judge is unreachable', async () => {
+    const { service, setJudgeVerdicts } = makeService('Çatı GES için aylık faturanız nedir?')
+    setJudgeVerdicts(null) // ağ hatası
+    await expect(service.chat(MESSAGES)).resolves.toBe('Çatı GES için aylık faturanız nedir?')
+  })
+
+  it('fails open on an unexpected judge verdict', async () => {
+    const { service, setJudgeVerdicts } = makeService('Çatı GES için aylık faturanız nedir?')
+    setJudgeVerdicts('BELKİ')
+    await expect(service.chat(MESSAGES)).resolves.toBe('Çatı GES için aylık faturanız nedir?')
+  })
+
+  it('rejects a summary when the judge says HAYIR', async () => {
+    const { service, setJudgeVerdicts } = makeService('Merhaba, teklif almak istiyorum.')
+    setJudgeVerdicts('HAYIR')
+    await expect(service.generateSummary(MESSAGES)).rejects.toThrow(ServiceUnavailableException)
+  })
+
+  it('returns the summary when the judge approves', async () => {
+    const { service, judgeCallCount } = makeService('Merhaba, teklif almak istiyorum.')
+    await expect(service.generateSummary(MESSAGES)).resolves.toBe('Merhaba, teklif almak istiyorum.')
+    expect(judgeCallCount()).toBe(1)
   })
 })
 
@@ -89,12 +172,15 @@ describe('ChatService — Groq günlük bütçe devre kesici', () => {
   })
 
   it('allows the request and sets a TTL on the first increment of the day', async () => {
-    const { service } = makeService('Çatı GES için aylık faturanız nedir?')
+    const { service, judgeCallCount } = makeService('Çatı GES için aylık faturanız nedir?')
     const redis = withRedis(service, 1)
 
     await expect(service.chat(MESSAGES)).resolves.toBe('Çatı GES için aylık faturanız nedir?')
     expect(redis.incr).toHaveBeenCalledWith(expect.stringMatching(/^groq:daily:\d{4}-\d{2}-\d{2}$/))
     expect(redis.expire).toHaveBeenCalledTimes(1)
+    // judge bütçe sayacını TÜKETMEZ: 1 üretim + 1 judge'a rağmen incr 1 kez çağrılır
+    expect(judgeCallCount()).toBe(1)
+    expect(redis.incr).toHaveBeenCalledTimes(1)
   })
 
   it('fails open when Redis is unreachable', async () => {
