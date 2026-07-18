@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ScrollText, AlertCircle, AlertTriangle, ChevronDown, Copy, Check } from 'lucide-react'
 import { fetchLogs } from '../../api/admin'
+import { dayRangeToIso } from '../../lib/date'
 import { useAdminAuth } from '../../contexts/AdminAuthContext'
 import AdminPager from '../../components/AdminPager'
+import AdminDateRange from '../../components/AdminDateRange'
 
 function formatDate(value) {
   return new Date(value).toLocaleString('tr-TR', {
@@ -109,10 +111,12 @@ export default function Loglar() {
   const [loading, setLoading] = useState(true)
   const [level, setLevel] = useState('all') // 'all' | 'error' | 'warn'
   const [page, setPage] = useState(1)
+  const [fromDay, setFromDay] = useState('') // YYYY-MM-DD, boş = filtre yok
+  const [toDay, setToDay] = useState('')
 
   useEffect(() => {
     setLoading(true)
-    fetchLogs(level === 'all' ? undefined : level, page)
+    fetchLogs({ level: level === 'all' ? undefined : level, page, ...dayRangeToIso(fromDay, toDay) })
       .then(setData)
       .catch((err) => {
         if (err.message.includes('401') || err.message.includes('Unauthorized')) {
@@ -121,11 +125,17 @@ export default function Loglar() {
         }
       })
       .finally(() => setLoading(false))
-  }, [level, page]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [level, page, fromDay, toDay]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function changeLevel(next) {
     setLevel(next)
     setPage(1) // filtre değişince ilk sayfaya dön
+  }
+
+  function changeDates(nextFrom, nextTo) {
+    setFromDay(nextFrom)
+    setToDay(nextTo)
+    setPage(1)
   }
 
   const stats = data?.stats ?? { total: 0, errors24h: 0, warns24h: 0 }
@@ -148,7 +158,8 @@ export default function Loglar() {
             Backend hata ve uyarıları · sayfa başına 50 kayıt · 30 gün saklanır
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <AdminDateRange from={fromDay} to={toDay} onChange={changeDates} />
           {logs.length > 0 && (
             <CopyButton
               getText={() => logs.map(logToText).join('\n')}
@@ -187,8 +198,14 @@ export default function Loglar() {
       {logs.length === 0 ? (
         <div className="text-center py-20 text-gray-400">
           <ScrollText size={36} className="mx-auto mb-3 text-gray-300" />
-          <p>Kayıt yok — her şey yolunda görünüyor.</p>
-          <p className="text-xs mt-1">Backend'de hata veya uyarı oluşunca burada görünür.</p>
+          {level !== 'all' || fromDay || toDay ? (
+            <p>Filtreyle eşleşen kayıt yok.</p>
+          ) : (
+            <>
+              <p>Kayıt yok — her şey yolunda görünüyor.</p>
+              <p className="text-xs mt-1">Backend'de hata veya uyarı oluşunca burada görünür.</p>
+            </>
+          )}
         </div>
       ) : (
         <>

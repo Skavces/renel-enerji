@@ -11,6 +11,7 @@ import { ChatBodyDto, SummaryBodyDto } from './dto/chat-body.dto'
 import { RatingBodyDto } from './dto/rating-body.dto'
 import { EventBodyDto } from './dto/event-body.dto'
 import { parsePage } from '../common/pagination'
+import { parseDateRange } from '../common/date-range'
 
 @Controller('chat')
 export class ChatController {
@@ -104,8 +105,14 @@ export class ChatController {
 
   @UseGuards(JwtAuthGuard)
   @Get('lead/admin/all')
-  adminLeads(@Query('page') page?: string) {
-    return this.leadService.findAllWithStats(parsePage(page))
+  adminLeads(
+    @Query('page') page?: string,
+    @Query('status') status?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    const narrowed = status === 'active' || status === 'whatsapp' ? status : undefined
+    return this.leadService.findAllWithStats(parsePage(page), narrowed, parseDateRange(from, to))
   }
 
   @UseGuards(JwtAuthGuard)

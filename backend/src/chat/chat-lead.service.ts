@@ -1,8 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Repository } from 'typeorm'
+import { FindOptionsWhere, Repository } from 'typeorm'
 import { ChatLead } from './entities/chat-lead.entity'
 import { ChatMessage } from './chat.service'
+import { DateRange, dateRangeOperator } from '../common/date-range'
 
 export interface LeadStats {
   total: number
@@ -57,9 +58,19 @@ export class ChatLeadService {
 
   async findAllWithStats(
     page = 1,
+    status?: 'active' | 'whatsapp',
+    range: DateRange = {},
   ): Promise<{ stats: LeadStats; leads: ChatLead[]; page: number; pageCount: number }> {
-    const [leads, total, whatsapp] = await Promise.all([
-      this.repo.find({ order: { updatedAt: 'DESC' }, take: PAGE_SIZE, skip: (page - 1) * PAGE_SIZE }),
+    // Tarih filtresi createdAt üzerinden (talebin geldiği tarih); sıralama
+    // updatedAt DESC kalır. Stats her zaman global — logs level deseniyle aynı.
+    const where: FindOptionsWhere<ChatLead> = {}
+    if (status) where.status = status
+    const createdAt = dateRangeOperator(range)
+    if (createdAt) where.createdAt = createdAt
+
+    const [leads, filteredTotal, total, whatsapp] = await Promise.all([
+      this.repo.find({ where, order: { updatedAt: 'DESC' }, take: PAGE_SIZE, skip: (page - 1) * PAGE_SIZE }),
+      this.repo.count({ where }),
       this.repo.count(),
       this.repo.count({ where: { status: 'whatsapp' } }),
     ])
@@ -67,7 +78,7 @@ export class ChatLeadService {
       stats: { total, whatsapp, active: total - whatsapp },
       leads,
       page,
-      pageCount: Math.max(1, Math.ceil(total / PAGE_SIZE)),
+      pageCount: Math.max(1, Math.ceil(filteredTotal / PAGE_SIZE)),
     }
   }
 }

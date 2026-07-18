@@ -1,4 +1,4 @@
-import { Repository } from 'typeorm'
+import { Between, Repository } from 'typeorm'
 import { ChatLeadService } from '../chat-lead.service'
 import { ChatLead } from '../entities/chat-lead.entity'
 
@@ -67,6 +67,50 @@ describe('ChatLeadService', () => {
       expect(repo.create).not.toHaveBeenCalled()
       expect(existing.messageCount).toBe(3)
       expect(existing.conversation).toHaveLength(6)
+    })
+  })
+
+  describe('findAllWithStats', () => {
+    it('filtresiz çağrıda boş where ile listeler, stats globaldir', async () => {
+      const { service, repo } = makeService()
+      ;(repo.count as jest.Mock)
+        .mockResolvedValueOnce(60) // filtreli toplam (sayfa hesabı)
+        .mockResolvedValueOnce(60) // stats.total
+        .mockResolvedValueOnce(25) // stats.whatsapp
+      const result = await service.findAllWithStats()
+      expect(repo.find).toHaveBeenCalledWith({
+        where: {},
+        order: { updatedAt: 'DESC' },
+        take: 50,
+        skip: 0,
+      })
+      expect(result.stats).toEqual({ total: 60, whatsapp: 25, active: 35 })
+      expect(result.pageCount).toBe(2)
+    })
+
+    it('status filtresi where\'e uygulanır, sayfa sayısı filtreli count\'tan gelir', async () => {
+      const { service, repo } = makeService()
+      ;(repo.count as jest.Mock)
+        .mockResolvedValueOnce(3) // filtreli toplam
+        .mockResolvedValueOnce(60)
+        .mockResolvedValueOnce(25)
+      const result = await service.findAllWithStats(1, 'active')
+      expect((repo.find as jest.Mock).mock.calls[0][0].where).toEqual({ status: 'active' })
+      expect((repo.count as jest.Mock).mock.calls[0][0]).toEqual({ where: { status: 'active' } })
+      expect(result.pageCount).toBe(1)
+      // stats status filtresinden etkilenmez
+      expect(result.stats.total).toBe(60)
+    })
+
+    it('tarih aralığı createdAt üzerinden filtrelenir, status ile birleşir', async () => {
+      const { service, repo } = makeService()
+      const from = new Date('2026-07-01T00:00:00.000Z')
+      const to = new Date('2026-07-15T23:59:59.999Z')
+      await service.findAllWithStats(1, 'whatsapp', { from, to })
+      expect((repo.find as jest.Mock).mock.calls[0][0].where).toEqual({
+        status: 'whatsapp',
+        createdAt: Between(from, to),
+      })
     })
   })
 

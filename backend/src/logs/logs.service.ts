@@ -1,8 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Cron } from '@nestjs/schedule'
-import { MoreThan, Repository } from 'typeorm'
+import { FindOptionsWhere, MoreThan, Repository } from 'typeorm'
 import { AppLog, LogLevel } from './entities/app-log.entity'
+import { DateRange, dateRangeOperator } from '../common/date-range'
 
 // Loglar sayfasında gösterilen saklama süresi; değişirse purge cron'u ile senkron kalmalı
 export const LOG_RETENTION_INTERVAL = '30 days'
@@ -69,9 +70,13 @@ export class LogsService {
   async findAllWithStats(
     level?: LogLevel,
     page = 1,
+    range: DateRange = {},
   ): Promise<{ stats: LogStats; logs: AppLog[]; page: number; pageCount: number }> {
     const cutoff = new Date(Date.now() - DAY_MS)
-    const where = level ? { level } : {}
+    const where: FindOptionsWhere<AppLog> = {}
+    if (level) where.level = level
+    const createdAt = dateRangeOperator(range)
+    if (createdAt) where.createdAt = createdAt
     const [logs, filteredTotal, total, errors24h, warns24h] = await Promise.all([
       this.repo.find({
         where,

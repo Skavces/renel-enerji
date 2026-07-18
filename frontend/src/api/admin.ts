@@ -345,9 +345,13 @@ export async function fetchChatRatings(
 
 // Chat potansiyel talepleri (lead)
 export async function fetchChatLeads(
-  page = 1,
+  { page = 1, status, from, to }: { page?: number; status?: 'active' | 'whatsapp'; from?: string; to?: string } = {},
 ): Promise<{ stats: ChatLeadStats; leads: ChatLead[]; page: number; pageCount: number }> {
-  const res = await fetch(`${API}/api/chat/lead/admin/all?page=${page}`, authOptions())
+  const params = new URLSearchParams({ page: String(page) })
+  if (status) params.set('status', status)
+  if (from) params.set('from', from)
+  if (to) params.set('to', to)
+  const res = await fetch(`${API}/api/chat/lead/admin/all?${params}`, authOptions())
   if (!res.ok) throw new Error('Talepler yüklenemedi')
   return res.json()
 }
@@ -379,11 +383,12 @@ export async function reorderFaqs(orderedIds: string[]): Promise<void> {
 
 // Backend hata/uyarı logları (admin panel → Loglar)
 export async function fetchLogs(
-  level?: 'error' | 'warn',
-  page = 1,
+  { level, page = 1, from, to }: { level?: 'error' | 'warn'; page?: number; from?: string; to?: string } = {},
 ): Promise<{ stats: LogStats; logs: AppLog[]; page: number; pageCount: number }> {
   const params = new URLSearchParams({ page: String(page) })
   if (level) params.set('level', level)
+  if (from) params.set('from', from)
+  if (to) params.set('to', to)
   const res = await fetch(`${API}/api/logs/admin/all?${params}`, authOptions())
   if (!res.ok) throw new Error('Loglar yüklenemedi')
   return res.json()

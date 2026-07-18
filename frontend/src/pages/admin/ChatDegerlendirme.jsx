@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Star, ChevronDown, ChevronRight, MessageCircle, Bot, Users, Send, Clock, TrendingUp, Trash2 } from 'lucide-react'
 import { fetchChatRatings, fetchChatLeads, fetchChatFunnel, deleteChatLead, deleteChatRating } from '../../api/admin'
+import { dayRangeToIso } from '../../lib/date'
 import { useAdminAuth } from '../../contexts/AdminAuthContext'
 import AdminPager from '../../components/AdminPager'
+import AdminDateRange from '../../components/AdminDateRange'
 
 function Stars({ value, size = 15 }) {
   return (
@@ -213,7 +215,7 @@ function FunnelSection() {
   )
 }
 
-function LeadsTab({ leadData, onDeleteLead, deletingId, onPageChange }) {
+function LeadsTab({ leadData, onDeleteLead, deletingId, onPageChange, status, fromDay, toDay, onStatusChange, onDatesChange }) {
   const stats = leadData?.stats ?? { total: 0, active: 0, whatsapp: 0 }
   const leads = leadData?.leads ?? []
 
@@ -234,11 +236,37 @@ function LeadsTab({ leadData, onDeleteLead, deletingId, onPageChange }) {
         <StatCard label="WhatsApp'a Geçen" value={stats.whatsapp} icon={Send} />
         <StatCard label="Kaçan (Geçmeyen)" value={stats.active} icon={Clock} />
       </div>
-      <div className="space-y-3">
-        {leads.map(l => (
-          <LeadRow key={l.id} lead={l} onDelete={onDeleteLead} deleting={deletingId === l.id} />
-        ))}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+        <div className="flex bg-gray-100 rounded-xl p-1 gap-0.5">
+          {[
+            { id: 'all', label: 'Tümü' },
+            { id: 'active', label: 'Geçmeyen' },
+            { id: 'whatsapp', label: "WhatsApp'a Geçen" },
+          ].map(t => (
+            <button
+              key={t.id}
+              onClick={() => onStatusChange(t.id)}
+              className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+                status === t.id ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+        <AdminDateRange from={fromDay} to={toDay} onChange={onDatesChange} />
       </div>
+      {leads.length === 0 ? (
+        <div className="text-center py-16 text-gray-400">
+          <p>Filtreyle eşleşen talep yok.</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {leads.map(l => (
+            <LeadRow key={l.id} lead={l} onDelete={onDeleteLead} deleting={deletingId === l.id} />
+          ))}
+        </div>
+      )}
       <AdminPager page={leadData?.page ?? 1} pageCount={leadData?.pageCount ?? 1} onChange={onPageChange} />
     </>
   )
@@ -301,6 +329,9 @@ export default function ChatDegerlendirme() {
   const [tab, setTab] = useState('leads') // 'leads' | 'ratings'
   const [deletingId, setDeletingId] = useState(null)
   const [leadPage, setLeadPage] = useState(1)
+  const [leadStatus, setLeadStatus] = useState('all') // 'all' | 'active' | 'whatsapp'
+  const [leadFromDay, setLeadFromDay] = useState('') // YYYY-MM-DD, boş = filtre yok
+  const [leadToDay, setLeadToDay] = useState('')
   const [ratingPage, setRatingPage] = useState(1)
 
   function handleFetchError(err) {
@@ -310,12 +341,31 @@ export default function ChatDegerlendirme() {
     }
   }
 
+  function leadQuery() {
+    return {
+      page: leadPage,
+      status: leadStatus === 'all' ? undefined : leadStatus,
+      ...dayRangeToIso(leadFromDay, leadToDay),
+    }
+  }
+
   useEffect(() => {
-    fetchChatLeads(leadPage)
+    fetchChatLeads(leadQuery())
       .then(setLeadData)
       .catch(handleFetchError)
       .finally(() => setLoading(false))
-  }, [leadPage]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [leadPage, leadStatus, leadFromDay, leadToDay]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  function changeLeadStatus(next) {
+    setLeadStatus(next)
+    setLeadPage(1) // filtre değişince ilk sayfaya dön
+  }
+
+  function changeLeadDates(nextFrom, nextTo) {
+    setLeadFromDay(nextFrom)
+    setLeadToDay(nextTo)
+    setLeadPage(1)
+  }
 
   useEffect(() => {
     fetchChatRatings(ratingPage).then(setRatingData).catch(handleFetchError)
@@ -326,7 +376,7 @@ export default function ChatDegerlendirme() {
     setDeletingId(id)
     try {
       await deleteChatLead(id)
-      setLeadData(await fetchChatLeads(leadPage))
+      setLeadData(await fetchChatLeads(leadQuery()))
     } catch (err) {
       alert('Silinemedi: ' + err.message)
     } finally {
@@ -390,6 +440,11 @@ export default function ChatDegerlendirme() {
           onDeleteLead={handleDeleteLead}
           deletingId={deletingId}
           onPageChange={setLeadPage}
+          status={leadStatus}
+          fromDay={leadFromDay}
+          toDay={leadToDay}
+          onStatusChange={changeLeadStatus}
+          onDatesChange={changeLeadDates}
         />
       ) : (
         <RatingsTab

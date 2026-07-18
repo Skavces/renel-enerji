@@ -1,4 +1,4 @@
-import { Repository } from 'typeorm'
+import { Between, MoreThanOrEqual, Repository } from 'typeorm'
 import { LogsService } from '../logs.service'
 import { AppLog } from '../entities/app-log.entity'
 
@@ -104,6 +104,27 @@ describe('LogsService', () => {
       const { service, repo } = makeService()
       await service.findAllWithStats('error')
       expect((repo.find as jest.Mock).mock.calls[0][0].where).toEqual({ level: 'error' })
+    })
+
+    it('tarih aralığı createdAt üzerinden Between filtresine çevrilir', async () => {
+      const { service, repo } = makeService()
+      const from = new Date('2026-07-01T00:00:00.000Z')
+      const to = new Date('2026-07-15T23:59:59.999Z')
+      await service.findAllWithStats(undefined, 1, { from, to })
+      const where = (repo.find as jest.Mock).mock.calls[0][0].where
+      expect(where).toEqual({ createdAt: Between(from, to) })
+      // pageCount aynı filtreli where ile sayılır
+      expect((repo.count as jest.Mock).mock.calls[0][0]).toEqual({ where })
+    })
+
+    it('level ve tek uçlu tarih birlikte uygulanır', async () => {
+      const { service, repo } = makeService()
+      const from = new Date('2026-07-01T00:00:00.000Z')
+      await service.findAllWithStats('error', 1, { from })
+      expect((repo.find as jest.Mock).mock.calls[0][0].where).toEqual({
+        level: 'error',
+        createdAt: MoreThanOrEqual(from),
+      })
     })
 
     it('page parametresi skip değerine çevrilir', async () => {
