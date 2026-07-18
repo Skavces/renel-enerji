@@ -7,6 +7,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { join } from 'path'
 import { AppModule } from './app.module'
 import { configureApp } from './configure-app'
+import { resolveCorsOrigins } from './common/cors-origins'
 import { DbLogger } from './logs/db-logger.service'
 
 async function bootstrap() {
@@ -21,15 +22,8 @@ async function bootstrap() {
   if (!allowedOrigin) {
     throw new Error('FRONTEND_URL env variable is not set')
   }
-  const originUrl = new URL(allowedOrigin)
-  const wwwOrigins: string[] = []
-  const isIp = /^[\d.]+$/.test(originUrl.hostname)
-  if (!originUrl.hostname.startsWith('www.') && !isIp) {
-    originUrl.hostname = `www.${originUrl.hostname}`
-    wwwOrigins.push(originUrl.toString().replace(/\/$/, ''))
-  }
   app.enableCors({
-    origin: [allowedOrigin, ...wwwOrigins],
+    origin: resolveCorsOrigins(process.env.CORS_ORIGINS, allowedOrigin),
     methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
     credentials: true,
   })

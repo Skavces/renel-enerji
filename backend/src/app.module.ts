@@ -59,6 +59,17 @@ import { HealthController } from './health.controller'
         INSTAGRAM_HASHTAG: Joi.string().empty('').default('#proje'),
         GROQ_DAILY_LIMIT: Joi.number().integer().min(1).empty('').default(1000),
         // ── Opsiyonel (boşsa ilgili özellik devre dışı) ──
+        // Virgüllü açık CORS origin listesi; boşsa FRONTEND_URL'den www türetilir
+        CORS_ORIGINS: Joi.string().allow('').optional().custom((value: string, helpers) => {
+          const bad = value
+            .split(',')
+            .map((origin) => origin.trim())
+            .filter((origin) => origin !== '' && !/^https?:\/\/[^\s,/]+$/.test(origin.replace(/\/+$/, '')))
+          if (bad.length > 0) {
+            return helpers.message({ custom: `CORS_ORIGINS geçersiz origin içeriyor: ${bad.join(', ')}` })
+          }
+          return value
+        }),
         UMAMI_URL: Joi.string().uri().allow('').optional(),
         UMAMI_WEBSITE_ID: Joi.string().allow('').optional(),
         OPENWEATHER_API_KEY: Joi.string().allow('').optional(),
