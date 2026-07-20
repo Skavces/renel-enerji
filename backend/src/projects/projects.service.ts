@@ -50,9 +50,16 @@ export class ProjectsService {
     })
   }
 
+  // published filtresi ŞART: taslak proje listeden gizlense de slug'ı proje
+  // adından deterministik üretildiğinden (toSlug) tahmin edilebilir. Filtre
+  // olmadan taslaklar doğrudan URL'den okunuyordu (blog aynı yeri baştan beri
+  // doğru yapıyordu). Admin taslağı admin/all üzerinden okur, buradan değil.
   findBySlug(slug: string) {
     return this.cache.wrap(`projects:slug:${slug}`, async () => {
-      const project = await this.projectRepo.findOne({ where: { slug }, relations: { media: true } })
+      const project = await this.projectRepo.findOne({
+        where: { slug, published: true },
+        relations: { media: true },
+      })
       if (!project) throw new NotFoundException('Proje bulunamadı')
       return project
     })

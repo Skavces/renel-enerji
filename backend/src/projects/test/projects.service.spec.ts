@@ -1,3 +1,4 @@
+import { NotFoundException } from '@nestjs/common'
 import { Repository } from 'typeorm'
 import { ProjectsService } from '../projects.service'
 import { Project } from '../entities/project.entity'
@@ -95,6 +96,27 @@ describe('ProjectsService.findAllPublic — kapak görseli', () => {
       relations: { media: true },
       order: { sortOrder: 'ASC', createdAt: 'DESC' },
     })
+  })
+})
+
+// Regresyon: findBySlug'da published filtresi yoktu ve taslak projeler slug
+// URL'inden okunabiliyordu. Mevcut cache testleri where argümanını hiç
+// doğrulamadığı için bug'ı yakalayamamışlardı — burada argüman explicit denetlenir.
+describe('ProjectsService.findBySlug — published filtresi', () => {
+  it('repo\'dan yalnızca yayınlanmış projeyi ister', async () => {
+    const { service, repo } = makeService([])
+    repo.findOne.mockResolvedValue({ id: 'p1', slug: 'ges' } as Project)
+    await service.findBySlug('ges')
+    expect(repo.findOne).toHaveBeenCalledWith({
+      where: { slug: 'ges', published: true },
+      relations: { media: true },
+    })
+  })
+
+  it('taslak proje bulunamadı sayılır (404)', async () => {
+    const { service, repo } = makeService([])
+    repo.findOne.mockResolvedValue(null)
+    await expect(service.findBySlug('taslak')).rejects.toThrow(NotFoundException)
   })
 })
 
