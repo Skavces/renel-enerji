@@ -187,6 +187,35 @@ describe('InstagramImportService', () => {
       expect(result.imported).toBe(0)
       expect(parseService.parseInstagram).not.toHaveBeenCalled()
     })
+
+    // B.1: parseInstagram bozuk ALANLARI düşürüp gönderiyi kurtarıyor, ama
+    // kurtarılamayan durumlarda (name yok, Groq erişilemiyor) hâlâ throw ediyor.
+    // Döngünün o postu atlayıp DİĞERLERİNE DEVAM ettiğini kilitler — tek bozuk
+    // gönderi tüm sync partisini düşürmemeli.
+    it('skips a post whose parse failed and keeps importing the rest', async () => {
+      const posts = [mockPost('bad-1', 'Bozuk gönderi #proje'), mockPost('good-1', 'İyi gönderi #proje')]
+      const { service, parseService } = makeService()
+
+      parseService.parseInstagram
+        .mockRejectedValueOnce(new InternalServerErrorException('LLM çıktısı şemaya uymuyor (specs)'))
+        .mockResolvedValueOnce({ name: 'İyi Proje', location: 'Manisa', kw: 5, date: '2025', description: 'x' })
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ data: posts }),
+        text: () => Promise.resolve(''),
+      })
+      mockFetch.mockResolvedValue({
+        ok: true,
+        arrayBuffer: () => Promise.resolve(Buffer.from('fake-image')),
+      })
+
+      const result = await service.syncInstagram()
+
+      expect(parseService.parseInstagram).toHaveBeenCalledTimes(2)
+      expect(result.imported).toBe(1)
+      expect(result.skipped).toBe(1)
+    })
   })
 
   describe('createProjectFromInstagram — transaction', () => {

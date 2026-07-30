@@ -4,15 +4,15 @@ Corporate website and admin panel for **RenEl Enerji**, a solar energy solutions
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|------------|
-| Frontend | React 19, Vite 8, Tailwind CSS 4 |
-| Backend | NestJS, TypeORM, PostgreSQL, Redis |
-| AI / Chatbot | Groq |
-| Analytics | Umami |
-| Logs | In-panel log viewer (backend errors/warnings, 30-day retention) |
-| Error Tracking | Sentry (optional) |
-| Deployment | Docker Compose, Nginx, prerender (SEO for SPA) |
+| Layer          | Technology                                                      |
+| -------------- | --------------------------------------------------------------- |
+| Frontend       | React 19, Vite 8, Tailwind CSS 4                                |
+| Backend        | NestJS, TypeORM, PostgreSQL, Redis                              |
+| AI / Chatbot   | Groq                                                            |
+| Analytics      | Umami                                                           |
+| Logs           | In-panel log viewer (backend errors/warnings, 30-day retention) |
+| Error Tracking | Sentry (optional)                                               |
+| Deployment     | Docker Compose, Nginx, prerender (SEO for SPA)                  |
 
 ## Project Structure
 

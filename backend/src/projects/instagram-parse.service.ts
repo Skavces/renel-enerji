@@ -1,5 +1,9 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common'
+import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common'
+import { plainToInstance } from 'class-transformer'
+import { validate } from 'class-validator'
 import { GroqService, GROQ_MODEL } from '../groq/groq.service'
+import { ParsedProjectDto } from './dto/parsed-project.dto'
+import { errorMessage } from '../common/errors'
 import type { ParsedProject } from './instagram-types'
 
 const PARSE_PROMPT = `Sen RenEl Enerji şirketinin web sitesi için Instagram gönderilerinden proje bilgisi çıkaran bir içerik asistanısın.
@@ -28,6 +32,8 @@ Kurallar:
 
 @Injectable()
 export class InstagramParseService {
+  private readonly logger = new Logger(InstagramParseService.name)
+
   constructor(private groq: GroqService) {}
 
   async parseInstagram(text: string): Promise<ParsedProject> {
@@ -49,12 +55,48 @@ export class InstagramParseService {
     const jsonMatch = content.match(/\{[\s\S]*\}/)
     if (!jsonMatch) throw new InternalServerErrorException('Groq geçersiz yanıt döndürdü')
 
+    let raw: unknown
     try {
-      return JSON.parse(jsonMatch[0]) as ParsedProject
+      raw = JSON.parse(jsonMatch[0])
     } catch (err) {
       throw new InternalServerErrorException(
-        `JSON parse hatası: ${(err as Error).message}. Ham yanıt: ${jsonMatch[0].slice(0, 200)}`,
+        `JSON parse hatası: ${errorMessage(err)}. Ham yanıt: ${jsonMatch[0].slice(0, 200)}`,
       )
     }
+
+    // `as ParsedProject` bir İDDİA'ydı, kontrol değil: model ne döndürürse
+    // döndürsün doğrudan DB'ye gidiyordu (instagram-import manager.save ile
+    // yazdığı için CreateProjectDto'nun ValidationPipe'ı bu yolda çalışmıyor).
+    // Şema doğrulaması burada, çünkü hem IG sync hem de admin panelindeki
+    // parse butonu aynı metottan geçiyor.
+    //
+    // whitelist:true ama forbidNonWhitelisted YOK (global pipe'ın aksine):
+    // modelin uydurduğu fazladan anahtar sessizce düşürülür, postun tamamı
+    // reddedilmez. Bilinen alanların tipinde katıyız, bilinmeyenlerin varlığında değil.
+    const dto = plainToInstance(ParsedProjectDto, raw)
+    const errors = await validate(dto, { whitelist: true })
+
+    // Geçersiz alanlar DÜŞÜRÜLÜR, gönderi kurtarılır. Proje zaten published:false
+    // taslak olarak kaydediliyor (4.3) ve admin yayınlamadan önce inceliyor —
+    // yani eksik alan beklenen durum, importu tamamen kaybetmekten iyi.
+    // Import servisi her alanı `parsed.x || default` ile dolduruyor, o yüzden
+    // düşen alan aşağı akışta güvenli.
+    if (errors.length) {
+      for (const err of errors) Reflect.deleteProperty(dto, err.property)
+      this.logger.warn(
+        `LLM çıktısında geçersiz alanlar düşürüldü (${errors.map(e => e.property).join(', ')}). ` +
+        `Ham yanıt: ${jsonMatch[0].slice(0, 200)}`,
+      )
+    }
+
+    // Tek istisna: name olmadan anlamlı proje üretilemez — slug ondan türüyor
+    // (toSlug('') -> 'proje', 'proje-1', 'proje-2'... çöp kayıtlar doğar).
+    // Bu durumda gönderi atlanır; sync döngüsündeki mevcut catch yakalar.
+    if (!dto.name) {
+      throw new InternalServerErrorException(
+        `LLM çıktısında kullanılabilir 'name' yok. Ham yanıt: ${jsonMatch[0].slice(0, 200)}`,
+      )
+    }
+    return dto
   }
 }
