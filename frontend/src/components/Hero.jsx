@@ -12,7 +12,7 @@ export default function Hero() {
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden -mt-24">
       {/* Background image */}
-      <div className="absolute inset-0">
+      <div className="absolute inset-0 bg-gray-900">
         <img
           src="/hero.webp"
           alt="Güneş enerjisi"
