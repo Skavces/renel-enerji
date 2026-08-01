@@ -84,3 +84,94 @@ describe('Blog cover upload (e2e)', () => {
     await unlink(`.${coverImage}`)
   })
 })
+
+describe('Project media upload (e2e)', () => {
+  let app: NestExpressApplication
+  let server: ReturnType<NestExpressApplication['getHttpServer']>
+  let cookie: string
+  let projectId: string
+
+  beforeAll(async () => {
+    app = await createE2eApp()
+    server = app.getHttpServer()
+    await resetAdminConfig(app)
+    await flushTestRedis(app)
+
+    const login = await request(server)
+      .post('/api/auth/login')
+      .send({ username: E2E_ADMIN_USERNAME, password: E2E_ADMIN_PASSWORD })
+      .expect(201)
+    cookie = extractAdminCookie(login.headers['set-cookie'])
+
+    const project = await request(server)
+      .post('/api/projects')
+      .set('Cookie', cookie)
+      .send({
+        slug: 'e2e-medya-projesi',
+        name: 'E2E medya projesi',
+        location: 'İzmir',
+        kw: 10,
+        date: '2026',
+        description: 'B.2 regresyon testi',
+      })
+      .expect(201)
+    projectId = project.body.id
+  })
+
+  afterAll(async () => {
+    if (projectId) {
+      await request(server).delete(`/api/projects/${projectId}`).set('Cookie', cookie)
+    }
+    await app.close()
+  })
+
+  it('leaves no file behind when the project does not exist', async () => {
+    const before = await readdir(UPLOADS_DIR)
+
+    await request(server)
+      .post('/api/upload/projects/00000000-0000-0000-0000-000000000000/media')
+      .set('Cookie', cookie)
+      .attach('files', REAL_PNG, 'a.png')
+      .attach('files', REAL_PNG, 'b.png')
+      .attach('files', REAL_PNG, 'c.png')
+      .expect(404)
+
+    const after = await readdir(UPLOADS_DIR)
+    expect(after.sort()).toEqual(before.sort())
+  })
+
+  it('leaves no file behind when one file in the batch fails the magic-byte check', async () => {
+    const before = await readdir(UPLOADS_DIR)
+
+    await request(server)
+      .post(`/api/upload/projects/${projectId}/media`)
+      .set('Cookie', cookie)
+      // İlk dosya sahte — hiçbir şey kalıcı olmamalı
+      .attach('files', Buffer.from('bu dosya aslinda png degil'), 'sahte.png')
+      .attach('files', REAL_PNG, 'b.png')
+      .attach('files', REAL_PNG, 'c.png')
+      .expect(400)
+
+    const after = await readdir(UPLOADS_DIR)
+    expect(after.sort()).toEqual(before.sort())
+
+    const list = await request(server).get('/api/projects/admin/all').set('Cookie', cookie).expect(200)
+    const project = (list.body as Array<{ id: string; media: unknown[] }>).find(p => p.id === projectId)
+    expect(project?.media ?? []).toEqual([])
+  })
+
+  it('accepts a batch of real PNGs and converts each to webp', async () => {
+    const res = await request(server)
+      .post(`/api/upload/projects/${projectId}/media`)
+      .set('Cookie', cookie)
+      .attach('files', REAL_PNG, 'a.png')
+      .attach('files', REAL_PNG, 'b.png')
+      .expect(201)
+
+    expect(res.body).toHaveLength(2)
+    for (const media of res.body) {
+      expect(media.src).toMatch(/^\/uploads\/e2e-medya-projesi-gunes-enerjisi-\d+-\d+\.webp$/)
+      await unlink(`.${media.src}`)
+    }
+  })
+})

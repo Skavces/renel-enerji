@@ -49,7 +49,13 @@ export const logoFilter = mimeFilter(ALLOWED_LOGO_MIMES)
 export async function toWebp(filePath: string): Promise<string> {
   const webpPath = filePath.replace(/\.[^.]+$/, '.webp')
   if (filePath === webpPath) return filePath
-  await sharp(filePath).webp({ quality: 82 }).toFile(webpPath)
+  try {
+    await sharp(filePath).webp({ quality: 82 }).toFile(webpPath)
+  } catch (err) {
+    // sharp yarım dosya bırakmış olabilir; kaynak dosya çağıranın sorumluluğunda
+    await unlink(webpPath).catch(() => {})
+    throw err
+  }
   await unlink(filePath)
   return webpPath
 }

@@ -6,6 +6,7 @@ import { LinkMediaDto } from './dto/link-media.dto'
 import { ProjectsService } from '../projects/projects.service'
 import { MediaService } from '../projects/media.service'
 import { MediaType, ProjectMedia } from '../projects/entities/project-media.entity'
+import { deleteUploadedFile } from './uploaded-files'
 import {
   imageStorage,
   VIDEO_MIMES,
@@ -37,24 +38,44 @@ export class ProjectUploadController {
     @Param('id') projectId: string,
     @UploadedFiles() files: Express.Multer.File[],
   ) {
-    const project = await this.projectsService.findById(projectId)
-    const results: ProjectMedia[] = []
-    for (const file of files) {
-      const detectedMime = await assertMagicBytes(file.path, ALLOWED_MEDIA_MIMES)
-      const isVideo = VIDEO_MIMES.includes(detectedMime)
-      const ext = isVideo ? (videoExtMap[detectedMime] ?? '.mp4') : '.webp'
-      let src: string
-      try {
-        const converted = isVideo ? file.path : await toWebp(file.path)
-        src = await saveWithSeoName(converted, project.slug, ext)
-      } catch (err) {
-        await unlink(file.path).catch(() => {})
-        throw err
+    // Multer dosyaları controller çalışmadan önce diske yazar; bu noktadan sonra
+    // hangi dosyada/adımda hata olursa olsun diskte artık DB'nin sahiplenmediği
+    // dosya bırakılmamalı. pendingPaths henüz SEO adıyla kaydedilmemiş dosyaları,
+    // pendingSrcs ise kaydedilmiş ama DB'ye henüz yazılmamış olanları tutar.
+    const pendingPaths = new Set(files.map(f => f.path))
+    const pendingSrcs = new Set<string>()
+    const discardPending = () =>
+      Promise.all([
+        ...[...pendingPaths].map(p => unlink(p).catch(() => {})),
+        ...[...pendingSrcs].map(src => deleteUploadedFile(src)),
+      ])
+
+    try {
+      // Önce proje var mı: 404'ü tek bir dosya işlenmeden ver
+      const project = await this.projectsService.findById(projectId)
+      const results: ProjectMedia[] = []
+      for (const file of files) {
+        let currentPath = file.path
+        const detectedMime = await assertMagicBytes(currentPath, ALLOWED_MEDIA_MIMES)
+        const isVideo = VIDEO_MIMES.includes(detectedMime)
+        const ext = isVideo ? (videoExtMap[detectedMime] ?? '.mp4') : '.webp'
+        if (!isVideo) {
+          currentPath = await toWebp(currentPath)
+          pendingPaths.delete(file.path)
+          pendingPaths.add(currentPath)
+        }
+        const src = await saveWithSeoName(currentPath, project.slug, ext)
+        pendingPaths.delete(currentPath)
+        pendingSrcs.add(src)
+        const media = await this.mediaService.addMedia(projectId, isVideo ? MediaType.VIDEO : MediaType.IMAGE, src)
+        pendingSrcs.delete(src)
+        results.push(media)
       }
-      const media = await this.mediaService.addMedia(projectId, isVideo ? MediaType.VIDEO : MediaType.IMAGE, src)
-      results.push(media)
+      return results
+    } catch (err) {
+      await discardPending()
+      throw err
     }
-    return results
   }
 
   @UseGuards(JwtAuthGuard)
