@@ -53,7 +53,7 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const { pathname } = useLocation()
   const isHome = pathname === '/'
-  const transparent = isHome && !scrolled
+  const transparent = isHome && !scrolled && !open
   const dropdownRef = useRef(null)
   const closeTimer = useRef(null)
 
@@ -185,7 +185,7 @@ export default function Navbar() {
           {/* Mobile menu button */}
           <div className="flex items-center gap-4">
             <button
-              className={`lg:hidden p-2 transition-colors ${transparent && !open ? 'text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]' : 'text-gray-700'}`}
+              className={`lg:hidden p-2 transition-colors ${transparent ? 'text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]' : 'text-gray-700'}`}
               onClick={() => { setOpen(o => !o); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
               aria-label="Menü"
             >
