@@ -1,5 +1,6 @@
 import { Helmet } from 'react-helmet-async'
 import { useLocation } from 'react-router-dom'
+import { serializeJsonLd } from '../lib/jsonLd'
 
 const SITE_NAME = 'RenEl Enerji Mühendislik'
 const SITE_URL = 'https://renelenerji.com'
@@ -44,7 +45,7 @@ export default function SEO({
       <meta name="twitter:image" content={image} />
 
       {jsonLd && (
-        <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
+        <script type="application/ld+json">{serializeJsonLd(jsonLd)}</script>
       )}
     </Helmet>
   )
