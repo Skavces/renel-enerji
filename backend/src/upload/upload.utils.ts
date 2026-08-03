@@ -4,7 +4,7 @@ import type { FileFilterCallback } from 'multer'
 import type { Request } from 'express'
 import { extname, join } from 'path'
 import { unlink, rename } from 'fs/promises'
-import { fileTypeFromFile } from 'file-type'
+import { fileTypeFromBuffer, fileTypeFromFile } from 'file-type'
 import sharp from 'sharp'
 import { UPLOADS_DIR } from './uploaded-files'
 
@@ -64,6 +64,17 @@ export async function assertMagicBytes(filePath: string, allowedMimes: string[])
   const detected = await fileTypeFromFile(filePath)
   if (!detected || !allowedMimes.includes(detected.mime)) {
     await unlink(filePath)
+    throw new BadRequestException('Dosya içeriği izin verilen türlerle eşleşmiyor')
+  }
+  return detected.mime
+}
+
+export async function assertMagicBytesFromBuffer(
+  buf: Buffer,
+  allowedMimes: string[],
+): Promise<string> {
+  const detected = await fileTypeFromBuffer(buf)
+  if (!detected || !allowedMimes.includes(detected.mime)) {
     throw new BadRequestException('Dosya içeriği izin verilen türlerle eşleşmiyor')
   }
   return detected.mime

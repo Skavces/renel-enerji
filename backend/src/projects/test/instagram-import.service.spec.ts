@@ -19,7 +19,15 @@ jest.mock('stream/promises', () => ({ pipeline: jest.fn().mockResolvedValue(unde
 import { createWriteStream } from 'fs'
 import { rm } from 'fs/promises'
 import { pipeline } from 'stream/promises'
+import sharp from 'sharp'
 import { MediaType } from '../entities/project-media.entity'
+
+// 1x1 şeffaf piksel — gerçek PNG magic byte'ları; assertMagicBytesFromBuffer
+// artık gerçek file-type kontrolü yaptığı için mutlu yol testlerinde bu şart
+const REAL_PNG = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+  'base64',
+)
 
 const mockPost = (id: string, caption: string): InstagramPost => ({
   id,
@@ -267,7 +275,7 @@ describe('InstagramImportService', () => {
 
       mockFetch.mockResolvedValue({
         ok: true,
-        arrayBuffer: () => Promise.resolve(Buffer.from('fake')),
+        arrayBuffer: () => Promise.resolve(REAL_PNG),
       })
 
       const result = await privates(service).createProjectFromInstagram(parsed, post, true)
@@ -383,6 +391,52 @@ describe('InstagramImportService', () => {
 
       expect(mockFetch).toHaveBeenCalledTimes(3)
       expect(maxInFlight).toBe(1)
+    })
+  })
+
+  describe('importInstagramImages — magic-byte doğrulaması (sharp CVE maruziyeti)', () => {
+    const imagePost: InstagramPost = {
+      id: 'image-id',
+      media_type: 'IMAGE',
+      media_url: 'https://example.com/image.jpg',
+      thumbnail_url: null,
+    }
+
+    it('reddedilen bir buffer için sharp\'ı hiç çağırmaz, medyayı kaydetmez', async () => {
+      const { service, mediaService } = makeService()
+      mockFetch.mockResolvedValue({
+        ok: true,
+        arrayBuffer: () => Promise.resolve(Buffer.from('bu bir görsel değil')),
+      })
+
+      const imported = await privates(service).importInstagramImages(
+        { id: 'p1', slug: 'test-proje' },
+        imagePost,
+      )
+
+      expect(imported).toBe(0)
+      expect(sharp).not.toHaveBeenCalled()
+      expect(mediaService.addMedia).not.toHaveBeenCalled()
+    })
+
+    it('gerçek bir görsel buffer\'ını sharp\'a geçirir', async () => {
+      const { service, mediaService } = makeService()
+      mockFetch.mockResolvedValue({
+        ok: true,
+        arrayBuffer: () => Promise.resolve(REAL_PNG),
+      })
+
+      const imported = await privates(service).importInstagramImages(
+        { id: 'p1', slug: 'test-proje' },
+        imagePost,
+      )
+
+      expect(imported).toBe(1)
+      expect(mediaService.addMedia).toHaveBeenCalledWith(
+        'p1',
+        MediaType.IMAGE,
+        expect.stringMatching(/^\/uploads\/test-proje-ig-.*\.webp$/),
+      )
     })
   })
 })

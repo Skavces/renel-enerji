@@ -18,6 +18,7 @@ import { fetchWithTimeout } from '../common/fetch-with-timeout'
 import { PublicCacheService } from '../common/public-cache.service'
 import { errorMessage, isUniqueViolation } from '../common/errors'
 import { UPLOADS_DIR } from '../upload/uploaded-files'
+import { ALLOWED_IMAGE_MIMES, assertMagicBytesFromBuffer } from '../upload/upload.utils'
 import type { InstagramMediaListResponse, InstagramPost, ParsedProject } from './instagram-types'
 
 const INSTAGRAM_API_VERSION = 'v21.0'
@@ -251,6 +252,7 @@ export class InstagramImportService {
           await this.mediaService.addMedia(project.id, MediaType.VIDEO, `/uploads/${filename}`)
         } else {
           const buf = Buffer.from(await r.arrayBuffer())
+          await assertMagicBytesFromBuffer(buf, ALLOWED_IMAGE_MIMES)
           const filename = `${project.slug}-ig-${Date.now()}-${Math.round(Math.random() * 1e4)}.webp`
           await sharp(buf).webp({ quality: 82 }).toFile(join(UPLOADS_DIR, filename))
           await this.mediaService.addMedia(project.id, MediaType.IMAGE, `/uploads/${filename}`)
