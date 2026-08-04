@@ -79,7 +79,9 @@ services:
       retries: 5
 
   prerender:
-    image: tvanro/prerender-alpine:latest
+    # Pinned to the digest already running in prod (2026-08-04) to close a
+    # supply-chain gap flagged in the pentest — bump deliberately, not via :latest.
+    image: tvanro/prerender-alpine:7.2.0@sha256:52dc60a435c3508dd63cf558e0d2139e7eae2d59c907da959de450205347485a
     restart: unless-stopped
     expose:
       - "3000"
@@ -121,7 +123,9 @@ services:
       retries: 10
 
   umami:
-    image: ghcr.io/umami-software/umami:postgresql-latest
+    # Pinned to the digest already running in prod (2026-08-04); v3.1.0+ dropped
+    # the separate postgresql-* tag, image auto-detects DB type from DATABASE_URL.
+    image: ghcr.io/umami-software/umami:3.1.0@sha256:e3f80c0625aad7179b49da27d475357cabb1068b8cacd9a792cfd6966888b123
     restart: unless-stopped
     ports:
       - "127.0.0.1:3002:3000"
