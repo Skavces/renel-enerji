@@ -82,18 +82,19 @@ server {
 
     server_tokens off;
 
+    # TLS terminates at Cloudflare; nginx listens on plain 8080, so an
+    # absolute redirect would leak "http://host:8080/..." to clients.
+    absolute_redirect off;
+
     gzip on;
     gzip_types text/plain text/css application/javascript application/json image/svg+xml;
     gzip_min_length 1024;
     gzip_comp_level 6;
 
-    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
-    add_header X-Content-Type-Options "nosniff" always;
-    add_header X-Frame-Options "DENY" always;
-    add_header Cross-Origin-Opener-Policy "same-origin" always;
-    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
-    add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
-    add_header Content-Security-Policy "default-src 'self'; script-src 'self' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https:; media-src 'self' blob: https:; connect-src 'self' https://*.sentry.io https://*.ingest.us.sentry.io https://*.ingest.de.sentry.io https://*.cloudflareinsights.com; frame-src https://maps.google.com https://www.google.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';" always;
+    # Single source of truth for security headers — see step 3 in the pentest
+    # fix plan for why every location that sets its own add_header needs this
+    # repeated (nginx does not inherit add_header into a location that has one).
+    include /etc/nginx/snippets/security-headers.conf;
 
     location ^~ /umami/ {
         proxy_pass http://umami:3000/;
@@ -101,8 +102,12 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_redirect / /umami/;
+        # Upstream Next.js sets its own CSP — drop it so ours (below) is the only one
+        proxy_hide_header Content-Security-Policy;
 
-        # add_header in location blocks does NOT inherit from server block — repeat all headers
+        # Can't use the shared snippet here — its CSP conflicts with the relaxed
+        # one below (nginx stacks repeated add_header of the same name rather
+        # than overriding it), so all 7 headers stay inline for this location.
         add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
         add_header X-Content-Type-Options "nosniff" always;
         add_header X-Frame-Options "DENY" always;
@@ -120,6 +125,7 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         expires 1y;
         add_header Cache-Control "public, immutable";
+        include /etc/nginx/snippets/security-headers.conf;
     }
 
     # Suppress favicon/manifest 404s that Umami's HTML triggers
@@ -128,11 +134,31 @@ server {
     location = /favicon-16x16.png { return 204; access_log off; }
     location = /site.webmanifest { return 204; access_log off; }
 
+    # Headers helmet sets on the backend (backend/src/configure-app.ts) that
+    # would otherwise duplicate ours below — nginx is the single source of truth.
+    proxy_hide_header Content-Security-Policy;
+    proxy_hide_header X-Frame-Options;
+    proxy_hide_header Referrer-Policy;
+    proxy_hide_header Cross-Origin-Opener-Policy;
+    proxy_hide_header Strict-Transport-Security;
+    proxy_hide_header X-Content-Type-Options;
+
     location ^~ /sitemap.xml {
         proxy_pass http://backend:3001/sitemap.xml;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
+        # A location with its own proxy_hide_header stops inheriting the
+        # server-level list entirely, so it's repeated here in full, plus
+        # Cache-Control (the controller also sets it — same value, one copy wins).
+        proxy_hide_header Content-Security-Policy;
+        proxy_hide_header X-Frame-Options;
+        proxy_hide_header Referrer-Policy;
+        proxy_hide_header Cross-Origin-Opener-Policy;
+        proxy_hide_header Strict-Transport-Security;
+        proxy_hide_header X-Content-Type-Options;
+        proxy_hide_header Cache-Control;
         add_header Cache-Control "public, max-age=3600";
+        include /etc/nginx/snippets/security-headers.conf;
     }
 
     location ^~ /api/ {
@@ -148,16 +174,19 @@ server {
         proxy_set_header Host $host;
         expires 30d;
         add_header Cache-Control "public, immutable";
+        include /etc/nginx/snippets/security-headers.conf;
     }
 
     location ~* \.(js|css|woff2|woff|ttf|ico|svg)$ {
         expires 1y;
         add_header Cache-Control "public, immutable";
+        include /etc/nginx/snippets/security-headers.conf;
     }
 
     location ~* \.(jpg|jpeg|png|gif|webp)$ {
         expires 30d;
         add_header Cache-Control "public";
+        include /etc/nginx/snippets/security-headers.conf;
     }
 
     location / {
