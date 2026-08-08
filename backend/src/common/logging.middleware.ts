@@ -1,5 +1,6 @@
 import { Injectable, Logger, NestMiddleware } from '@nestjs/common'
 import { Request, Response, NextFunction } from 'express'
+import { redactUrlSecrets } from './redact'
 
 @Injectable()
 export class LoggingMiddleware implements NestMiddleware {
@@ -12,10 +13,7 @@ export class LoggingMiddleware implements NestMiddleware {
     res.on('finish', () => {
       const ms = Date.now() - start
       const { statusCode } = res
-      const sanitizedUrl = originalUrl.replace(
-        /(hub\.verify_token|access_token|token|secret|password)=[^&]*/gi,
-        '$1=[REDACTED]',
-      )
+      const sanitizedUrl = redactUrlSecrets(originalUrl)
       this.logger.log(`${method} ${sanitizedUrl} ${statusCode} ${ms}ms`)
     })
 

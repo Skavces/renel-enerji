@@ -11,6 +11,7 @@ if (sentryDsn) {
     dsn: sentryDsn,
     environment: import.meta.env.MODE,
     tracesSampleRate: import.meta.env.PROD ? 0.2 : 0,
+    sendDefaultPii: false,
   })
 }
 
