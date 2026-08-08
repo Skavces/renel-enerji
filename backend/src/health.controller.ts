@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common'
+import { Controller, Get, Logger } from '@nestjs/common'
 import {
   HealthCheck,
   HealthCheckError,
@@ -9,9 +9,12 @@ import {
 import { InjectDataSource } from '@nestjs/typeorm'
 import { DataSource } from 'typeorm'
 import { AuthService } from './auth/auth.service'
+import { errorMessage } from './common/errors'
 
 @Controller('health')
 export class HealthController {
+  private readonly logger = new Logger(HealthController.name)
+
   constructor(
     private health: HealthCheckService,
     private db: TypeOrmHealthIndicator,
@@ -34,8 +37,9 @@ export class HealthController {
       await this.authService.pingRedis()
       return { redis: { status: 'up' } }
     } catch (err) {
+      this.logger.error(`Redis health check başarısız: ${errorMessage(err)}`)
       throw new HealthCheckError('Redis erişilemiyor', {
-        redis: { status: 'down', message: err instanceof Error ? err.message : String(err) },
+        redis: { status: 'down' },
       })
     }
   }
