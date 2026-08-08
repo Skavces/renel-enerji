@@ -1,0 +1,29 @@
+# Sırlar — asıl amaç bu
+.env
+.env.*
+!.env.example
+
+# Host'ta kurulu (glibc/Arch) — builder'ın kendi npm ci çıktısının üzerine
+# yazıp bozuk native binary (sharp, bcrypt) üretmesini önler
+node_modules
+
+# Build çıktıları / cache — builder yeniden üretir; stale tsbuildinfo
+# incremental derlemeyi atlatıp eksik dist üretebiliyor
+dist
+tsconfig.tsbuildinfo
+coverage
+
+# Runtime verisi — named volume'dan gelir, image'a girmemeli
+uploads
+
+# nest build tsconfig.json exclude'unda "test" var ama src/**/*.spec.ts yok;
+# ikisini de context'ten çıkarmak test kodunun prod image'ına gitmesini engeller
+test
+src/**/*.spec.ts
+
+# Araç/geliştirme artıkları
+.git
+.gitignore
+Dockerfile
+eslint.config.mjs
+*.log

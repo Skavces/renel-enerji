@@ -1,0 +1,18 @@
+# Sırlar — bugün aktif değer taşımıyor ama disiplin için
+.env
+.env.*
+!.env.example
+
+# Host'ta kurulu — builder'ın kendi npm ci çıktısının üzerine yazmasın
+node_modules
+
+# Build çıktıları
+dist
+coverage
+
+# Araç/geliştirme artıkları
+.git
+.gitignore
+Dockerfile
+eslint.config.js
+*.log
