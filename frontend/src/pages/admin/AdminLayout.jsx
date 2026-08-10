@@ -47,74 +47,71 @@ export default function AdminLayout() {
   }
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-gray-50">
-      {/* Navbar */}
-      <header className="bg-white shadow-lg shrink-0 relative z-20">
-        <div className="max-w-6xl mx-auto flex items-center h-16 lg:h-24 px-4 min-[1400px]:px-6 gap-4 min-[1400px]:gap-8">
-          {/* Logo */}
-          <div className="flex items-center lg:flex-1">
-            <Link to="/admin" className="shrink-0">
-              <Logo className="h-14 lg:h-16 min-[1400px]:h-20 w-auto" />
-            </Link>
-          </div>
+    <div className="flex flex-col lg:flex-row h-screen overflow-hidden bg-gray-50">
+      {/* Sidebar — masaüstü */}
+      <aside className="hidden lg:flex flex-col w-64 shrink-0 h-screen bg-white border-r border-gray-200">
+        <Link to="/admin" className="flex items-center px-6 py-6 shrink-0">
+          <Logo className="h-16 w-auto" />
+        </Link>
 
-          {/* Nav links — desktop only */}
-          <nav className="hidden lg:flex items-center gap-0.5 shrink-0">
-            {/* eslint-disable-next-line no-unused-vars */}
-            {NAV.map(({ to, label, icon: Icon, match }) => {
-              const active = match(pathname)
-              return (
-                <Link
-                  key={to}
-                  to={to}
-                  className={`flex items-center gap-1 min-[1400px]:gap-1.5 px-2 min-[1400px]:px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 whitespace-nowrap ${
-                    active
-                      ? 'bg-[#448834] text-white'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                  }`}
-                >
-                  <Icon size={16} className="shrink-0" />
-                  <span>{label}</span>
-                </Link>
-              )
-            })}
-          </nav>
+        <nav className="flex-1 overflow-y-auto px-3 space-y-0.5">
+          {/* eslint-disable-next-line no-unused-vars */}
+          {NAV.map(({ to, label, icon: Icon, match }) => {
+            const active = match(pathname)
+            return (
+              <Link
+                key={to}
+                to={to}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
+                  active
+                    ? 'bg-[#448834] text-white'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                }`}
+              >
+                <Icon size={16} className="shrink-0" />
+                <span>{label}</span>
+              </Link>
+            )
+          })}
+        </nav>
 
-          {/* Right actions — desktop only */}
-          <div className="hidden lg:flex items-center gap-0.5 lg:flex-1 justify-end">
-            <a
-              href="/"
-              target="_blank"
-              rel="noopener noreferrer"
-              title="Siteyi Gör"
-              className="flex items-center gap-2 px-2 min-[1400px]:px-4 py-2.5 rounded-lg text-sm text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-all duration-150 whitespace-nowrap"
-            >
-              <ExternalLink size={17} className="shrink-0" />
-              <span className="hidden min-[1400px]:inline">Siteyi Gör</span>
-            </a>
-            <button
-              onClick={handleLogout}
-              title="Çıkış"
-              className="flex items-center gap-2 px-2 min-[1400px]:px-4 py-2.5 rounded-lg text-sm text-gray-500 hover:text-red-500 hover:bg-red-50 transition-all duration-150 whitespace-nowrap"
-            >
-              <LogOut size={17} className="shrink-0" />
-              <span className="hidden min-[1400px]:inline">Çıkış</span>
-            </button>
-          </div>
+        <div className="border-t border-gray-100 p-3 space-y-0.5 shrink-0">
+          <a
+            href="/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-all duration-150"
+          >
+            <ExternalLink size={17} className="shrink-0" />
+            <span>Siteyi Gör</span>
+          </a>
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-500 hover:text-red-500 hover:bg-red-50 transition-all duration-150"
+          >
+            <LogOut size={17} className="shrink-0" />
+            <span>Çıkış</span>
+          </button>
+        </div>
+      </aside>
 
-          {/* Hamburger — mobile & tablet */}
+      {/* Üst bar — mobil & tablet */}
+      <header className="lg:hidden bg-white shadow-lg shrink-0 relative z-20">
+        <div className="flex items-center h-16 px-4 gap-4">
+          <Link to="/admin" className="shrink-0">
+            <Logo className="h-14 w-auto" />
+          </Link>
           <button
             onClick={() => setMobileOpen((o) => !o)}
-            className="lg:hidden ml-auto p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+            className="ml-auto p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
             aria-label="Menü"
           >
             {mobileOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
 
-        {/* Mobile menu */}
         {mobileOpen && (
-          <div className="lg:hidden border-t border-gray-100 bg-white px-4 py-3 space-y-1 shadow-lg">
+          <div className="border-t border-gray-100 bg-white px-4 py-3 space-y-1 shadow-lg">
             {/* eslint-disable-next-line no-unused-vars */}
             {NAV.map(({ to, label, icon: Icon, match }) => {
               const active = match(pathname)
