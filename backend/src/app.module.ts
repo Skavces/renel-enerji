@@ -19,6 +19,7 @@ import { BlogModule } from './blog/blog.module'
 import { FaqModule } from './faq/faq.module'
 import { SitemapModule } from './sitemap/sitemap.module'
 import { ChatModule } from './chat/chat.module'
+import { QuoteModule } from './quote/quote.module'
 import { WebhooksModule } from './webhooks/webhooks.module'
 import { InstagramTokenModule } from './instagram-token/instagram-token.module'
 import { GroqModule } from './groq/groq.module'
@@ -131,6 +132,7 @@ import { HealthController } from './health.controller'
     FaqModule,
     SitemapModule,
     ChatModule,
+    QuoteModule,
     WebhooksModule,
     InstagramTokenModule,
     GroqModule,

@@ -1,9 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useEffect, lazy, Suspense, useState } from 'react'
-import { Bot } from 'lucide-react'
+import { Bot, Zap } from 'lucide-react'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import TeklifChatbot from './components/TeklifChatbot'
+import TeklifModal from './components/TeklifModal'
 import { AdminAuthProvider, useAdminAuth } from './contexts/AdminAuthContext'
 
 const Home = lazy(() => import('./pages/Home'))
@@ -33,6 +34,7 @@ const BlogAdmin = lazy(() => import('./pages/admin/BlogAdmin'))
 const BlogForm = lazy(() => import('./pages/admin/BlogForm'))
 const SSSAdmin = lazy(() => import('./pages/admin/SSSAdmin'))
 const ChatDegerlendirme = lazy(() => import('./pages/admin/ChatDegerlendirme'))
+const TeklifTalepleri = lazy(() => import('./pages/admin/TeklifTalepleri'))
 const Loglar = lazy(() => import('./pages/admin/Loglar'))
 const Analitik = lazy(() => import('./pages/admin/Analitik'))
 const Guvenlik = lazy(() => import('./pages/admin/Guvenlik'))
@@ -66,11 +68,22 @@ function PublicLayout() {
   // Konuşma başına lead takibi için kimlik; sayfa yenilenene kadar sabit (mesajlar gibi)
   const [chatSessionId] = useState(() => crypto.randomUUID())
 
+  const [teklifOpen, setTeklifOpen] = useState(false)
+  const [teklifClosing, setTeklifClosing] = useState(false)
+
   function handleCloseChat() {
     setChatClosing(true)
     setTimeout(() => {
       setChatOpen(false)
       setChatClosing(false)
+    }, 220)
+  }
+
+  function handleCloseTeklif() {
+    setTeklifClosing(true)
+    setTimeout(() => {
+      setTeklifOpen(false)
+      setTeklifClosing(false)
     }, 220)
   }
 
@@ -82,6 +95,13 @@ function PublicLayout() {
     }
     window.addEventListener('open-chat', open)
     return () => window.removeEventListener('open-chat', open)
+  }, [])
+
+  // Sayfa içi CTA'lar (örn. hizmet detay sayfaları) teklif modalını bu event ile açar
+  useEffect(() => {
+    const open = () => setTeklifOpen(true)
+    window.addEventListener('open-teklif', open)
+    return () => window.removeEventListener('open-teklif', open)
   }, [])
 
   return (
@@ -111,12 +131,21 @@ function PublicLayout() {
       </main>
       <Footer />
       <button
-        onClick={() => openChat(setChatOpen, setChatPrefill)}
-        className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 bg-[#357228] hover:bg-[#2d6124] text-white font-semibold text-sm px-5 py-3 rounded-full shadow-lg shadow-black/15 transition-all hover:scale-105"
+        onClick={() => setTeklifOpen(true)}
+        className="fixed bottom-20 right-6 z-50 flex items-center gap-2.5 bg-[#448834] hover:bg-[#357228] text-white font-semibold text-sm px-5 py-3 rounded-full shadow-lg shadow-black/15 transition-all hover:scale-105"
       >
-        <Bot size={18} />
-        Size Nasıl Yardımcı Olabiliriz?
+        <Zap size={18} />
+        Ücretsiz Teklif Al
       </button>
+      <div className="ai-button-ring fixed bottom-6 right-6 z-50 rounded-full p-0.5">
+        <button
+          onClick={() => openChat(setChatOpen, setChatPrefill)}
+          className="flex items-center gap-2.5 bg-[#357228] hover:bg-[#2d6124] text-white font-semibold text-sm px-5 py-3 rounded-full shadow-lg shadow-black/15 transition-all hover:scale-105"
+        >
+          <Bot size={18} />
+          Size Nasıl Yardımcı Olabiliriz?
+        </button>
+      </div>
       {chatOpen && (
         <TeklifChatbot
           onClose={handleCloseChat}
@@ -127,6 +156,7 @@ function PublicLayout() {
           prefill={chatPrefill}
         />
       )}
+      {teklifOpen && <TeklifModal closing={teklifClosing} onClose={handleCloseTeklif} />}
     </>
   )
 }
@@ -150,6 +180,7 @@ function AdminRoutes() {
             <Route path="blog/:id/duzenle" element={<BlogForm />} />
             <Route path="sss" element={<SSSAdmin />} />
             <Route path="degerlendirmeler" element={<ChatDegerlendirme />} />
+            <Route path="teklif-talepleri" element={<TeklifTalepleri />} />
             <Route path="loglar" element={<Loglar />} />
             <Route path="analitik" element={<Analitik />} />
             <Route path="guvenlik" element={<Guvenlik />} />

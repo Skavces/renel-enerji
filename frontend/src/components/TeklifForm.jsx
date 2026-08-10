@@ -1,0 +1,198 @@
+import { useState } from 'react'
+import { CheckCircle2, Loader2 } from 'lucide-react'
+import { submitQuoteRequest } from '../api/quote'
+import { waLink } from '../lib/whatsapp'
+
+const SERVICE_TYPES = [
+  { value: 'cati-ges', label: 'Çatı Tipi GES' },
+  { value: 'tarimsal-sulama', label: 'Tarımsal Sulama GES' },
+  { value: 'ev-sarj', label: 'EV Şarj İstasyonu' },
+  { value: 'diger', label: 'Diğer' },
+]
+
+const INPUT_CLASS =
+  'w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#448834]/30 focus:border-[#448834]'
+const LABEL_CLASS = 'block text-sm font-medium text-gray-700 mb-1'
+
+const INITIAL_FORM = {
+  name: '',
+  phone: '',
+  city: '',
+  serviceType: 'cati-ges',
+  monthlyBill: '',
+  message: '',
+  kvkkConsent: false,
+  website: '', // honeypot
+}
+
+// Hem TeklifModal içinde hem Iletisim sayfasında gömülü olarak kullanılır.
+// onSuccess: modal kabuğunun otomatik kapanabilmesi için opsiyonel geri çağrı.
+export default function TeklifForm({ onSuccess }) {
+  const [form, setForm] = useState(INITIAL_FORM)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+    try {
+      await submitQuoteRequest({
+        name: form.name,
+        phone: form.phone,
+        city: form.city || undefined,
+        serviceType: form.serviceType,
+        monthlyBill: form.monthlyBill ? Number(form.monthlyBill) : undefined,
+        message: form.message || undefined,
+        kvkkConsent: form.kvkkConsent,
+        website: form.website || undefined,
+      })
+      setSubmitted(true)
+      onSuccess?.()
+    } catch (err) {
+      setError(err.message || 'Talebiniz gönderilemedi. Lütfen tekrar deneyin.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (submitted) {
+    return (
+      <div className="text-center py-8 px-4">
+        <div className="w-14 h-14 bg-[#448834]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+          <CheckCircle2 size={28} className="text-[#448834]" />
+        </div>
+        <p className="font-semibold text-gray-900 mb-1.5">Talebiniz alındı</p>
+        <p className="text-sm text-gray-500 max-w-xs mx-auto">
+          Ekibimiz en kısa sürede sizinle iletişime geçecek. Acil bir durum varsa WhatsApp'tan da yazabilirsiniz.
+        </p>
+        <a
+          href={waLink(`Merhaba, ${form.name} olarak az önce teklif formu doldurdum.`)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-block mt-4 text-sm font-semibold text-[#448834] hover:text-[#357228] transition-colors"
+        >
+          WhatsApp'tan da yazın →
+        </a>
+      </div>
+    )
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Honeypot: gerçek kullanıcılar görmez/doldurmaz */}
+      <input
+        type="text"
+        name="website"
+        value={form.website}
+        onChange={e => setForm({ ...form, website: e.target.value })}
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+        className="absolute -left-[9999px] w-px h-px opacity-0"
+      />
+
+      <div className="grid sm:grid-cols-2 gap-4">
+        <div>
+          <label className={LABEL_CLASS}>Ad Soyad *</label>
+          <input
+            type="text"
+            required
+            maxLength={120}
+            value={form.name}
+            onChange={e => setForm({ ...form, name: e.target.value })}
+            className={INPUT_CLASS}
+            autoComplete="name"
+            data-teklif-autofocus
+          />
+        </div>
+        <div>
+          <label className={LABEL_CLASS}>Telefon *</label>
+          <input
+            type="tel"
+            required
+            value={form.phone}
+            onChange={e => setForm({ ...form, phone: e.target.value })}
+            className={INPUT_CLASS}
+            placeholder="0554 379 60 04"
+            autoComplete="tel"
+          />
+        </div>
+        <div>
+          <label className={LABEL_CLASS}>İl / İlçe</label>
+          <input
+            type="text"
+            maxLength={120}
+            value={form.city}
+            onChange={e => setForm({ ...form, city: e.target.value })}
+            className={INPUT_CLASS}
+            placeholder="Soma / Manisa"
+          />
+        </div>
+        <div>
+          <label className={LABEL_CLASS}>Hangi hizmet? *</label>
+          <select
+            required
+            value={form.serviceType}
+            onChange={e => setForm({ ...form, serviceType: e.target.value })}
+            className={INPUT_CLASS}
+          >
+            {SERVICE_TYPES.map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label className={LABEL_CLASS}>Aylık elektrik faturanız (TL)</label>
+        <input
+          type="number"
+          inputMode="numeric"
+          min={0}
+          max={1000000}
+          value={form.monthlyBill}
+          onChange={e => setForm({ ...form, monthlyBill: e.target.value })}
+          className={INPUT_CLASS}
+          placeholder="Örn. 2500"
+        />
+      </div>
+
+      <div>
+        <label className={LABEL_CLASS}>Mesajınız</label>
+        <textarea
+          value={form.message}
+          onChange={e => setForm({ ...form, message: e.target.value })}
+          className={`${INPUT_CLASS} resize-none`}
+          rows={3}
+          maxLength={2000}
+        />
+      </div>
+
+      <label className="flex items-start gap-2.5 cursor-pointer select-none">
+        <input
+          type="checkbox"
+          required
+          checked={form.kvkkConsent}
+          onChange={e => setForm({ ...form, kvkkConsent: e.target.checked })}
+          className="w-4 h-4 mt-0.5 rounded accent-[#448834] shrink-0"
+        />
+        <span className="text-sm text-gray-600">
+          <a href="/kvkk" target="_blank" rel="noopener noreferrer" className="text-[#448834] hover:underline">KVKK aydınlatma metnini</a> okudum, kişisel verilerimin işlenmesini kabul ediyorum.
+        </span>
+      </label>
+
+      {error && <p className="text-red-500 text-sm bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
+
+      <button
+        type="submit"
+        disabled={loading}
+        className="w-full flex items-center justify-center gap-2 bg-[#448834] hover:bg-[#357228] disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold py-2.5 rounded-lg transition-colors"
+      >
+        {loading && <Loader2 size={16} className="animate-spin" />}
+        {loading ? 'Gönderiliyor...' : 'Teklif İste'}
+      </button>
+    </form>
+  )
+}

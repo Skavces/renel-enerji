@@ -125,3 +125,29 @@ export interface SyncStatus {
   lastResult: { imported: number; skipped: number } | null
   lastError: string | null
 }
+
+export type QuoteServiceType = 'cati-ges' | 'tarimsal-sulama' | 'ev-sarj' | 'diger'
+export type QuoteStatus = 'new' | 'contacted' | 'won' | 'lost'
+
+export interface QuoteRequest {
+  id: string
+  name: string | null
+  phone: string | null
+  city: string | null
+  serviceType: QuoteServiceType
+  monthlyBill: number | null
+  message: string | null
+  kvkkConsent: boolean
+  consentAt: string
+  status: QuoteStatus
+  createdAt: string
+  updatedAt: string
+}
+
+export interface QuoteStats {
+  total: number
+  new: number
+  contacted: number
+  won: number
+  lost: number
+}

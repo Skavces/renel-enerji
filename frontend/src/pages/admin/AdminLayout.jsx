@@ -12,6 +12,7 @@ import {
   LogOut,
   BookOpen,
   HelpCircle,
+  Inbox,
   Menu,
   X,
 } from 'lucide-react'
@@ -24,6 +25,7 @@ const NAV = [
   { to: '/admin/referanslar', label: 'Referanslar', icon: Star, match: (p) => p.startsWith('/admin/referanslar') },
   { to: '/admin/blog', label: 'Blog', icon: BookOpen, match: (p) => p.startsWith('/admin/blog') },
   { to: '/admin/sss', label: 'S.S.S.', icon: HelpCircle, match: (p) => p.startsWith('/admin/sss') },
+  { to: '/admin/teklif-talepleri', label: 'Teklif Talepleri', icon: Inbox, match: (p) => p.startsWith('/admin/teklif-talepleri') },
   { to: '/admin/degerlendirmeler', label: 'Chatbot', icon: Bot, match: (p) => p.startsWith('/admin/degerlendirmeler') },
   { to: '/admin/analitik', label: 'Analitik', icon: BarChart2, match: (p) => p.startsWith('/admin/analitik') },
   { to: '/admin/loglar', label: 'Loglar', icon: ScrollText, match: (p) => p.startsWith('/admin/loglar') },

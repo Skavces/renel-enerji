@@ -1,6 +1,7 @@
-import { Phone, Mail, MapPin, Clock } from 'lucide-react'
+import { Phone, Mail, MapPin, Clock, Zap } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
 import SEO from '../components/SEO'
+import TeklifForm from '../components/TeklifForm'
 import { WA_NUMBER } from '../lib/whatsapp'
 
 const jsonLd = {
@@ -98,6 +99,21 @@ export default function Iletisim() {
             </div>
           </div>
 
+        </div>
+      </section>
+
+      <section className="pb-16 bg-gray-50">
+        <div className="max-w-2xl mx-auto px-6">
+          <div className="bg-white border border-gray-200 rounded-2xl p-7 sm:p-9">
+            <div className="flex items-center gap-2.5 mb-6">
+              <Zap size={22} className="text-[#448834]" />
+              <div>
+                <h3 className="font-bold text-gray-900">Ücretsiz Teklif Al</h3>
+                <p className="text-sm text-gray-400">Formu doldurun, ekibimiz sizi arasın.</p>
+              </div>
+            </div>
+            <TeklifForm />
+          </div>
         </div>
       </section>
 

@@ -12,11 +12,12 @@ const SECTIONS = [
     title: '2. İşlenen Kişisel Veriler',
     body: `Web sitemizi kullandığınızda aşağıdaki veriler işlenebilir:
 
+• "Ücretsiz Teklif Al" formu: Ad soyad, telefon numarası, il/ilçe, talep ettiğiniz hizmet türü, isteğe bağlı olarak aylık elektrik fatura tutarınız ve eklediğiniz mesaj.
 • Dijital danışman (chatbot) görüşme kayıtları: Sohbet sırasında yazdığınız mesajlar, talebinizin durumu ve görüşme sonunda verdiğiniz değerlendirme puanı. Mesajlarınızda paylaşmayı tercih ettiğiniz bilgiler (ör. konum, elektrik tüketimi) bu kapsamdadır.
 • Teknik veriler: IP adresi ve sunucu erişim kayıtları (güvenlik amacıyla).
 • Anonim ziyaret istatistikleri: Sayfa görüntüleme sayıları gibi kimliğinizle ilişkilendirilmeyen kullanım verileri.
 
-Sitemizde üyelik veya iletişim formu bulunmamaktadır; WhatsApp üzerinden kurduğunuz iletişim WhatsApp'ın kendi gizlilik politikasına tabidir.`,
+Sitemizde üyelik bulunmamaktadır. WhatsApp üzerinden kurduğunuz iletişim WhatsApp'ın kendi gizlilik politikasına tabidir.`,
   },
   {
     title: '3. İşleme Amaçları ve Hukuki Sebep',
@@ -24,7 +25,7 @@ Sitemizde üyelik veya iletişim formu bulunmamaktadır; WhatsApp üzerinden kur
   },
   {
     title: '4. Saklama Süresi',
-    body: `Chatbot görüşme dökümleri (mesaj içerikleri), kaydedildikleri tarihten itibaren 6 ay sonra otomatik olarak silinir; geriye yalnızca kimliğinizle ilişkilendirilemeyen istatistiksel veriler (puan ortalaması, talep sayısı gibi) kalır. Sunucu erişim kayıtları ilgili mevzuattaki sürelere uygun olarak silinir.`,
+    body: `Teklif formuyla ilettiğiniz kişisel veriler (ad soyad, telefon, il/ilçe, mesaj), talebinizin oluşturulduğu tarihten itibaren 12 ay sonra otomatik olarak silinir; geriye yalnızca kimliğinizle ilişkilendirilemeyen istatistiksel veriler (talep durumu, tarih gibi) kalır. Chatbot görüşme dökümleri (mesaj içerikleri), kaydedildikleri tarihten itibaren 6 ay sonra aynı şekilde otomatik olarak silinir. Sunucu erişim kayıtları ilgili mevzuattaki sürelere uygun olarak silinir.`,
   },
   {
     title: '5. Haklarınız',

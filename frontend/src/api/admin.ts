@@ -1,5 +1,5 @@
 import { API } from './config'
-import type { Project, ProjectMedia, Reference, BlogPost, Faq, SyncStatus, ChatRating, ChatRatingStats, ChatLead, ChatLeadStats, ChatFunnel, AppLog, LogStats } from '../types'
+import type { Project, ProjectMedia, Reference, BlogPost, Faq, SyncStatus, ChatRating, ChatRatingStats, ChatLead, ChatLeadStats, ChatFunnel, AppLog, LogStats, QuoteRequest, QuoteStats, QuoteStatus } from '../types'
 
 function authOptions(extra: RequestInit = {}): RequestInit {
   return {
@@ -379,6 +379,34 @@ export async function reorderFaqs(orderedIds: string[]): Promise<void> {
     body: JSON.stringify({ orderedIds }),
   })
   if (!res.ok) throw new Error('Sıralama kaydedilemedi')
+}
+
+// Teklif talepleri ("Teklif Al" formu)
+export async function fetchQuoteRequests(
+  { page = 1, status, from, to }: { page?: number; status?: QuoteStatus; from?: string; to?: string } = {},
+): Promise<{ stats: QuoteStats; requests: QuoteRequest[]; page: number; pageCount: number }> {
+  const params = new URLSearchParams({ page: String(page) })
+  if (status) params.set('status', status)
+  if (from) params.set('from', from)
+  if (to) params.set('to', to)
+  const res = await fetch(`${API}/api/quote/admin/all?${params}`, authOptions())
+  if (!res.ok) throw new Error('Talepler yüklenemedi')
+  return res.json()
+}
+
+export async function updateQuoteStatus(id: string, status: QuoteStatus): Promise<QuoteRequest> {
+  const res = await fetch(`${API}/api/quote/admin/${id}/status`, {
+    ...authOptions({ method: 'PATCH' }),
+    body: JSON.stringify({ status }),
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.message || 'Durum güncellenemedi')
+  return json
+}
+
+export async function deleteQuoteRequest(id: string): Promise<void> {
+  const res = await fetch(`${API}/api/quote/admin/${id}`, authOptions({ method: 'DELETE' }))
+  if (!res.ok) throw new Error('Talep silinemedi')
 }
 
 // Backend hata/uyarı logları (admin panel → Loglar)
