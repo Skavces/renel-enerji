@@ -14,6 +14,22 @@ const INPUT_CLASS =
   'w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#448834]/30 focus:border-[#448834]'
 const LABEL_CLASS = 'block text-sm font-medium text-gray-700 mb-1'
 
+// "0554 379 60 04" biçiminde gruplu gösterim; en fazla 11 hane (0 + 10 haneli numara)
+function formatPhone(digits) {
+  let result = digits.slice(0, 4)
+  if (digits.length > 4) result += ' ' + digits.slice(4, 7)
+  if (digits.length > 7) result += ' ' + digits.slice(7, 9)
+  if (digits.length > 9) result += ' ' + digits.slice(9, 11)
+  return result
+}
+
+function handlePhoneInput(raw) {
+  let digits = raw.replace(/\D/g, '')
+  if (digits && !digits.startsWith('0')) digits = `0${digits}`
+  digits = digits.slice(0, 11)
+  return formatPhone(digits)
+}
+
 const INITIAL_FORM = {
   name: '',
   phone: '',
@@ -113,10 +129,11 @@ export default function TeklifForm({ onSuccess }) {
             type="tel"
             required
             value={form.phone}
-            onChange={e => setForm({ ...form, phone: e.target.value })}
+            onChange={e => setForm({ ...form, phone: handlePhoneInput(e.target.value) })}
             className={INPUT_CLASS}
             placeholder="0554 379 60 04"
             autoComplete="tel"
+            inputMode="numeric"
           />
         </div>
         <div>
