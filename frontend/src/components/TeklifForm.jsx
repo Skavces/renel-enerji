@@ -76,8 +76,8 @@ export default function TeklifForm({ onSuccess }) {
   if (submitted) {
     return (
       <div className="text-center py-8 px-4">
-        <div className="w-14 h-14 bg-[#448834]/10 rounded-full flex items-center justify-center mx-auto mb-4">
-          <CheckCircle2 size={28} className="text-[#448834]" />
+        <div className="flex items-center justify-center mb-4">
+          <CheckCircle2 size={40} className="text-[#448834]" />
         </div>
         <p className="font-semibold text-gray-900 mb-1.5">Talebiniz alındı</p>
         <p className="text-sm text-gray-500 max-w-xs mx-auto">
