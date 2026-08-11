@@ -144,7 +144,14 @@ server {
     proxy_hide_header X-Content-Type-Options;
 
     location ^~ /sitemap.xml {
-        proxy_pass http://backend:3001/sitemap.xml;
+        # backend'i degiskenle cozup resolver'a birakiyoruz: proxy_pass literal
+        # hostname kullanirsa nginx bunu worker baslangicinda bir kere cozup
+        # onbellekliyor — backend container'i tek basina yeniden olusturulunca
+        # (deploy sadece backend'i etkilerse) IP degisir ama nginx eskisini
+        # kullanmaya devam eder ve "Failed to fetch" verir (ayni sinif hata,
+        # prerender proxy'si icin yukarida zaten cozulmustu).
+        set $backend_sitemap http://backend:3001;
+        proxy_pass $backend_sitemap;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         # A location with its own proxy_hide_header stops inheriting the
@@ -162,7 +169,9 @@ server {
     }
 
     location ^~ /api/ {
-        proxy_pass http://backend:3001;
+        # bkz. /sitemap.xml uzerindeki not — ayni DNS onbellek hatasindan kacinmak icin degisken kullanilir
+        set $backend_api http://backend:3001;
+        proxy_pass $backend_api;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $remote_addr;
@@ -170,7 +179,8 @@ server {
     }
 
     location ^~ /uploads/ {
-        proxy_pass http://backend:3001;
+        set $backend_uploads http://backend:3001;
+        proxy_pass $backend_uploads;
         proxy_set_header Host $host;
         expires 30d;
         add_header Cache-Control "public, immutable";
