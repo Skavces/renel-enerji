@@ -121,7 +121,7 @@ export default function Services() {
     <section id="hizmetler" className="relative py-24 bg-white overflow-hidden">
       {/* Decorative background */}
       <div className="absolute left-0 bottom-0 w-187.5 h-187.5 pointer-events-none select-none opacity-70">
-        <img src="/banner.webp" alt="" className="w-full h-full object-contain object-bottom-left" loading="lazy" />
+        <img src="/banner.webp" alt="" width="639" height="565" className="w-full h-full object-contain object-bottom-left" loading="lazy" />
       </div>
 
       <div className="max-w-350 mx-auto px-6">
@@ -182,6 +182,8 @@ export default function Services() {
                     <Link to={`/hizmetler/${s.slug}`} className="block h-36 overflow-hidden">
                       <img
                         src={s.photo}
+                        srcSet={`${s.photo.replace('.webp', '-400w.webp')} 400w, ${s.photo.replace('.webp', '-800w.webp')} 800w`}
+                        sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
                         alt={s.photoAlt ?? s.title}
                         className="w-full h-full object-cover"
                         loading="lazy"

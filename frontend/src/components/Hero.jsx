@@ -15,6 +15,8 @@ export default function Hero() {
       <div className="absolute inset-0 bg-gray-900">
         <img
           src="/hero.webp"
+          srcSet="/hero-640w.webp 640w, /hero-1024w.webp 1024w, /hero-1600w.webp 1600w, /hero.webp 1672w"
+          sizes="100vw"
           alt="Güneş enerjisi"
           className="w-full h-full object-cover"
           width="1672"
