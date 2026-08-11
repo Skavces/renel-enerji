@@ -97,7 +97,13 @@ server {
     include /etc/nginx/snippets/security-headers.conf;
 
     location ^~ /umami/ {
-        proxy_pass http://umami:3000/;
+        # bkz. /api/ uzerindeki not (ayni DNS onbellek tuzagi) — burada ayrica
+        # /umami/ onekini soyup umami'ye kok olarak iletmek icin rewrite+break
+        # sart: degiskenli proxy_pass otomatik onek degistirmeyi devre disi
+        # birakiyor, rewrite ile $uri'yi elle guncelleyip onu iletiyoruz.
+        set $umami_upstream http://umami:3000;
+        rewrite ^/umami/(.*)$ /$1 break;
+        proxy_pass $umami_upstream;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -120,7 +126,8 @@ server {
 
     # Umami Next.js static assets — requested at /_next/ without /umami/ prefix
     location ^~ /_next/ {
-        proxy_pass http://umami:3000/_next/;
+        set $umami_next_upstream http://umami:3000;
+        proxy_pass $umami_next_upstream;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         expires 1y;
