@@ -1,15 +1,26 @@
 import { useState } from 'react'
 import { Helmet } from 'react-helmet-async'
 
-const RICKROLL_URL = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
-
 export default function AdminHoneypot() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [caught, setCaught] = useState(false)
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    window.location.href = RICKROLL_URL
+    setCaught(true)
+  }
+
+  if (caught) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000' }}>
+        <Helmet>
+          <meta name="robots" content="noindex, nofollow" />
+          <title>Admin Panel</title>
+        </Helmet>
+        <video src="/media/rickroll.mp4" autoPlay controls style={{ maxWidth: '100%', maxHeight: '100vh' }} />
+      </div>
+    )
   }
 
   return (
@@ -20,6 +31,7 @@ export default function AdminHoneypot() {
       </Helmet>
       <form onSubmit={handleSubmit} style={{ background: '#fff', border: '1px solid #ccc', borderRadius: 4, padding: 24, width: 280, boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }}>
         <h2 style={{ fontSize: 16, margin: '0 0 16px', color: '#333', fontWeight: 'bold' }}>Yönetici Girişi</h2>
+        <p style={{ fontSize: 10, color: '#ccc', marginBottom: 12, fontFamily: 'monospace' }}>&lt;!-- TODO: sil: admin / admin123 --&gt;</p>
         <div style={{ marginBottom: 10 }}>
           <label style={{ display: 'block', fontSize: 12, color: '#666', marginBottom: 4 }}>Kullanıcı Adı</label>
           <input
@@ -28,6 +40,7 @@ export default function AdminHoneypot() {
             onChange={(e) => setUsername(e.target.value)}
             style={{ width: '100%', padding: '5px 6px', border: '1px solid #bbb', borderRadius: 2, fontSize: 13, boxSizing: 'border-box' }}
             autoComplete="off"
+            required
           />
         </div>
         <div style={{ marginBottom: 16 }}>
@@ -38,6 +51,7 @@ export default function AdminHoneypot() {
             onChange={(e) => setPassword(e.target.value)}
             style={{ width: '100%', padding: '5px 6px', border: '1px solid #bbb', borderRadius: 2, fontSize: 13, boxSizing: 'border-box' }}
             autoComplete="off"
+            required
           />
         </div>
         <button
