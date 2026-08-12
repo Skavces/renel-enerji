@@ -57,7 +57,7 @@ function SortableRow({ r, onDelete, deletingId }) {
       <td className="px-5 py-5">
         <div className="flex items-center gap-2 justify-end">
           <Link
-            to={`/admin/referanslar/${r.id}/duzenle`}
+            to={`/rnl-panel/referanslar/${r.id}/duzenle`}
             className="p-2 text-gray-400 hover:text-[#448834] hover:bg-green-50 rounded-lg transition-colors"
           >
             <Pencil size={16} />
@@ -92,7 +92,7 @@ export default function ReferanslarAdmin() {
       .catch((err) => {
         if (err.message.includes('401') || err.message.includes('Unauthorized')) {
           logout()
-          navigate('/admin/login')
+          navigate('/rnl-panel/login')
         }
       })
       .finally(() => setLoading(false))
@@ -125,7 +125,7 @@ export default function ReferanslarAdmin() {
           </p>
         </div>
         <Link
-          to="/admin/referanslar/yeni"
+          to="/rnl-panel/referanslar/yeni"
           className="inline-flex items-center gap-2 bg-[#448834] hover:bg-[#357228] text-white font-bold px-4 py-2 rounded-lg transition-colors text-sm"
         >
           <Plus size={16} />
@@ -138,7 +138,7 @@ export default function ReferanslarAdmin() {
       ) : refs.length === 0 ? (
         <div className="text-center py-20 text-gray-400">
           <p className="mb-4">Henüz referans yok.</p>
-          <Link to="/admin/referanslar/yeni" className="text-[#448834] font-semibold hover:underline">
+          <Link to="/rnl-panel/referanslar/yeni" className="text-[#448834] font-semibold hover:underline">
             İlk referansı ekle
           </Link>
         </div>

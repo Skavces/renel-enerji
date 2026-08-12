@@ -278,12 +278,12 @@ export default function Guvenlik() {
   const [removePassword, setRemovePassword] = useState('')
 
   useEffect(() => {
-    get2FAStatus().then(setTwoFaStatus).catch(() => navigate('/admin'))
+    get2FAStatus().then(setTwoFaStatus).catch(() => navigate('/rnl-panel'))
   }, [navigate])
 
   const handleCredentialDone = () => {
     setCredSuccess('Bilgiler değiştirildi. Tekrar giriş yapın...')
-    setTimeout(() => { logout(); navigate('/admin/login') }, 2000)
+    setTimeout(() => { logout(); navigate('/rnl-panel/login') }, 2000)
   }
 
   const startSetup = async () => {

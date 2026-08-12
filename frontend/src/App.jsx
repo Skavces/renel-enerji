@@ -47,7 +47,7 @@ function ScrollToTop() {
 
 function ProtectedRoute({ children }) {
   const { isAuth } = useAdminAuth()
-  if (!isAuth) return <Navigate to="/admin/login" replace />
+  if (!isAuth) return <Navigate to="/rnl-panel/login" replace />
   return children
 }
 
@@ -195,7 +195,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/admin/*" element={<AdminRoutes />} />
+        <Route path="/rnl-panel/*" element={<AdminRoutes />} />
         <Route path="/*" element={<PublicLayout />} />
       </Routes>
     </BrowserRouter>

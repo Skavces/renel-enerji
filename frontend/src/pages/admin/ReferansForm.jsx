@@ -59,7 +59,7 @@ export default function ReferansForm() {
       if (logoFile) {
         await uploadReferenceLogo(saved.id, logoFile)
       }
-      navigate('/admin/referanslar')
+      navigate('/rnl-panel/referanslar')
     } catch (err) {
       setError(err.message)
     } finally {
@@ -70,7 +70,7 @@ export default function ReferansForm() {
   return (
     <main className="max-w-lg mx-auto px-6 py-8">
         <Link
-          to="/admin/referanslar"
+          to="/rnl-panel/referanslar"
           className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600 mb-6"
         >
           <ArrowLeft size={14} />
@@ -163,7 +163,7 @@ export default function ReferansForm() {
 
             <div className="flex justify-end gap-3">
               <Link
-                to="/admin/referanslar"
+                to="/rnl-panel/referanslar"
                 className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 border border-gray-200 rounded-lg bg-white transition-colors"
               >
                 İptal

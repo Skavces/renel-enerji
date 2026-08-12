@@ -337,7 +337,7 @@ export default function ChatDegerlendirme() {
   function handleFetchError(err) {
     if (err.message.includes('401') || err.message.includes('Unauthorized')) {
       logout()
-      navigate('/admin/login')
+      navigate('/rnl-panel/login')
     }
   }
 
