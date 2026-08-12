@@ -22,6 +22,7 @@ const SSS = lazy(() => import('./pages/SSS'))
 const Kvkk = lazy(() => import('./pages/Kvkk'))
 const TasarrufHesaplayici = lazy(() => import('./pages/TasarrufHesaplayici'))
 const NotFound = lazy(() => import('./pages/NotFound'))
+const AdminHoneypot = lazy(() => import('./pages/admin/AdminHoneypot'))
 
 const AdminLogin = lazy(() => import('./pages/admin/AdminLogin'))
 const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'))
@@ -196,6 +197,14 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/rnl-panel/*" element={<AdminRoutes />} />
+        <Route
+          path="/admin/*"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <AdminHoneypot />
+            </Suspense>
+          }
+        />
         <Route path="/*" element={<PublicLayout />} />
       </Routes>
     </BrowserRouter>
