@@ -206,6 +206,12 @@ server {
         include /etc/nginx/snippets/security-headers.conf;
     }
 
+    location ~* \.mp4$ {
+        expires 30d;
+        add_header Cache-Control "public";
+        include /etc/nginx/snippets/security-headers.conf;
+    }
+
     location / {
         limit_req zone=prerender burst=20 nodelay;
         limit_req_status 429;
