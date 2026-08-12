@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
 import { Eye, EyeOff, ShieldCheck } from 'lucide-react'
 import { login, verify2FA } from '../../api/admin'
 import { useAdminAuth } from '../../contexts/AdminAuthContext'
@@ -48,7 +49,7 @@ export default function AdminLogin() {
         if (remember) localStorage.setItem('admin_remember_user', form.username)
         else localStorage.removeItem('admin_remember_user')
         saveToken()
-        navigate('/admin')
+        navigate('/rnl-panel')
       }
     } catch (err) {
       if (err.status === 429) handleRateLimit()
@@ -68,7 +69,7 @@ export default function AdminLogin() {
       if (remember) localStorage.setItem('admin_remember_user', form.username)
       else localStorage.removeItem('admin_remember_user')
       saveToken()
-      navigate('/admin')
+      navigate('/rnl-panel')
     } catch (err) {
       if (err.status === 429) handleRateLimit()
       else {
@@ -83,6 +84,9 @@ export default function AdminLogin() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+      <Helmet>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <div className="bg-white rounded-2xl border border-gray-100 shadow-lg p-8 w-full max-w-sm">
 
         {/* Logo */}

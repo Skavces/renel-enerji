@@ -46,7 +46,7 @@ export default function BlogForm() {
     if (!isEdit) return
     fetchAllBlogPosts().then((posts) => {
       const post = posts.find((p) => p.id === id)
-      if (!post) { navigate('/admin/blog'); return }
+      if (!post) { navigate('/rnl-panel/blog'); return }
       setForm({
         title: post.title || '',
         slug: post.slug || '',
@@ -99,7 +99,7 @@ export default function BlogForm() {
       if (coverFile) {
         await uploadBlogCover(post.id, coverFile)
       }
-      navigate('/admin/blog')
+      navigate('/rnl-panel/blog')
     } catch (err) {
       setError(err.message)
     } finally {
@@ -118,7 +118,7 @@ export default function BlogForm() {
   return (
     <main className="max-w-3xl mx-auto px-6 py-8">
       <button
-        onClick={() => navigate('/admin/blog')}
+        onClick={() => navigate('/rnl-panel/blog')}
         className="flex items-center gap-2 text-sm text-gray-400 hover:text-gray-700 mb-6 transition-colors"
       >
         <ArrowLeft size={16} />
@@ -259,7 +259,7 @@ export default function BlogForm() {
           </button>
           <button
             type="button"
-            onClick={() => navigate('/admin/blog')}
+            onClick={() => navigate('/rnl-panel/blog')}
             className="px-6 py-3 border border-gray-200 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition-colors"
           >
             İptal

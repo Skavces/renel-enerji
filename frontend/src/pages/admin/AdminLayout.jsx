@@ -20,16 +20,16 @@ import { useAdminAuth } from '../../contexts/AdminAuthContext'
 import Logo from '../../components/Logo'
 
 const NAV = [
-  { to: '/admin', label: 'Ana Sayfa', icon: LayoutDashboard, match: (p) => p === '/admin' },
-  { to: '/admin/projeler', label: 'Projeler', icon: FolderOpen, match: (p) => p.startsWith('/admin/projeler') },
-  { to: '/admin/referanslar', label: 'Referanslar', icon: Star, match: (p) => p.startsWith('/admin/referanslar') },
-  { to: '/admin/blog', label: 'Blog', icon: BookOpen, match: (p) => p.startsWith('/admin/blog') },
-  { to: '/admin/sss', label: 'S.S.S.', icon: HelpCircle, match: (p) => p.startsWith('/admin/sss') },
-  { to: '/admin/teklif-talepleri', label: 'Teklif Talepleri', icon: Inbox, match: (p) => p.startsWith('/admin/teklif-talepleri') },
-  { to: '/admin/degerlendirmeler', label: 'Chatbot', icon: Bot, match: (p) => p.startsWith('/admin/degerlendirmeler') },
-  { to: '/admin/analitik', label: 'Analitik', icon: BarChart2, match: (p) => p.startsWith('/admin/analitik') },
-  { to: '/admin/loglar', label: 'Loglar', icon: ScrollText, match: (p) => p.startsWith('/admin/loglar') },
-  { to: '/admin/guvenlik', label: 'Güvenlik', icon: Shield, match: (p) => p.startsWith('/admin/guvenlik') },
+  { to: '/rnl-panel', label: 'Ana Sayfa', icon: LayoutDashboard, match: (p) => p === '/rnl-panel' },
+  { to: '/rnl-panel/projeler', label: 'Projeler', icon: FolderOpen, match: (p) => p.startsWith('/rnl-panel/projeler') },
+  { to: '/rnl-panel/referanslar', label: 'Referanslar', icon: Star, match: (p) => p.startsWith('/rnl-panel/referanslar') },
+  { to: '/rnl-panel/blog', label: 'Blog', icon: BookOpen, match: (p) => p.startsWith('/rnl-panel/blog') },
+  { to: '/rnl-panel/sss', label: 'S.S.S.', icon: HelpCircle, match: (p) => p.startsWith('/rnl-panel/sss') },
+  { to: '/rnl-panel/teklif-talepleri', label: 'Teklif Talepleri', icon: Inbox, match: (p) => p.startsWith('/rnl-panel/teklif-talepleri') },
+  { to: '/rnl-panel/degerlendirmeler', label: 'Chatbot', icon: Bot, match: (p) => p.startsWith('/rnl-panel/degerlendirmeler') },
+  { to: '/rnl-panel/analitik', label: 'Analitik', icon: BarChart2, match: (p) => p.startsWith('/rnl-panel/analitik') },
+  { to: '/rnl-panel/loglar', label: 'Loglar', icon: ScrollText, match: (p) => p.startsWith('/rnl-panel/loglar') },
+  { to: '/rnl-panel/guvenlik', label: 'Güvenlik', icon: Shield, match: (p) => p.startsWith('/rnl-panel/guvenlik') },
 ]
 
 export default function AdminLayout() {
@@ -43,14 +43,14 @@ export default function AdminLayout() {
 
   const handleLogout = async () => {
     await logout()
-    navigate('/admin/login')
+    navigate('/rnl-panel/login')
   }
 
   return (
     <div className="flex flex-col lg:flex-row h-screen overflow-hidden bg-gray-50">
       {/* Sidebar — masaüstü */}
       <aside className="hidden lg:flex flex-col w-64 shrink-0 h-screen bg-white border-r border-gray-200">
-        <Link to="/admin" className="flex items-center px-6 py-6 shrink-0">
+        <Link to="/rnl-panel" className="flex items-center px-6 py-6 shrink-0">
           <Logo className="h-16 w-auto" />
         </Link>
 
@@ -98,7 +98,7 @@ export default function AdminLayout() {
       {/* Üst bar — mobil & tablet */}
       <header className="lg:hidden bg-white shadow-lg shrink-0 relative z-20">
         <div className="flex items-center h-16 px-4 gap-4">
-          <Link to="/admin" className="shrink-0">
+          <Link to="/rnl-panel" className="shrink-0">
             <Logo className="h-14 w-auto" />
           </Link>
           <button

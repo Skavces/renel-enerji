@@ -18,7 +18,7 @@ export default function AdminDashboard() {
       .catch((err) => {
         if (err.message.includes('401') || err.message.includes('Unauthorized')) {
           logout()
-          navigate('/admin/login')
+          navigate('/rnl-panel/login')
         }
       })
       .finally(() => setLoading(false))
@@ -95,7 +95,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <Link to="/admin/loglar" className="relative flex-1 px-6 sm:px-7 py-5 sm:py-6 overflow-hidden hover:bg-gray-50 transition-colors">
+        <Link to="/rnl-panel/loglar" className="relative flex-1 px-6 sm:px-7 py-5 sm:py-6 overflow-hidden hover:bg-gray-50 transition-colors">
           <div className="relative z-10">
             <p className={`text-5xl font-bold font-['Rajdhani'] drop-shadow-sm ${(logStats?.errors24h ?? 0) > 0 ? 'text-red-500' : 'text-[#448834]'}`}>
               {logStats?.errors24h ?? 0}
@@ -118,7 +118,7 @@ export default function AdminDashboard() {
         </p>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Link
-          to="/admin/projeler/yeni"
+          to="/rnl-panel/projeler/yeni"
           className="group relative bg-white hover:bg-gray-50 rounded-2xl overflow-hidden flex items-center px-6 py-5 min-h-22.5 transition-all duration-200 border border-gray-100 border-l-4 border-l-[#448834] shadow-md hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
         >
           <img src="/yeni_proje.webp" alt="" className="absolute w-44 h-44 object-contain shrink-0 opacity-10" style={{ right: -30, bottom: -47 }} />
@@ -132,7 +132,7 @@ export default function AdminDashboard() {
         </Link>
 
         <Link
-          to="/admin/referanslar/yeni"
+          to="/rnl-panel/referanslar/yeni"
           className="group relative bg-white hover:bg-gray-50 rounded-2xl overflow-hidden flex items-center px-6 py-5 min-h-22.5 transition-all duration-200 border border-gray-100 border-l-4 border-l-[#448834] shadow-md hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
         >
           <img src="/yeni_referans.webp" alt="" className="absolute w-36 h-36 object-contain shrink-0 opacity-10" style={{ right: -25, bottom: -30 }} />
@@ -146,7 +146,7 @@ export default function AdminDashboard() {
         </Link>
 
         <Link
-          to="/admin/analitik"
+          to="/rnl-panel/analitik"
           className="group relative bg-white hover:bg-gray-50 rounded-2xl overflow-hidden flex items-center px-6 py-5 min-h-22.5 transition-all duration-200 border border-gray-100 border-l-4 border-l-[#448834] shadow-md hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
         >
           <img src="/analitik_banner.webp" alt="" className="absolute w-36 h-36 object-contain shrink-0 opacity-10" style={{ right: -25, bottom: -35 }} />

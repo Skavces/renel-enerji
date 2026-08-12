@@ -16,7 +16,7 @@ export default function TwoFactorSetup() {
   const [removePassword, setRemovePassword] = useState('')
 
   useEffect(() => {
-    get2FAStatus().then(setStatus).catch(() => navigate('/admin'))
+    get2FAStatus().then(setStatus).catch(() => navigate('/rnl-panel'))
   }, [navigate])
 
   const startSetup = async () => {

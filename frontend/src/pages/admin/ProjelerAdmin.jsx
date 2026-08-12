@@ -78,7 +78,7 @@ function SortableRow({ p, coverPhoto, onDelete, deletingId, onTogglePublish, tog
       <td className="px-5 py-5">
         <div className="flex items-center gap-2 justify-end">
           <Link
-            to={`/admin/projeler/${p.id}/duzenle`}
+            to={`/rnl-panel/projeler/${p.id}/duzenle`}
             className="p-2 text-gray-400 hover:text-[#448834] hover:bg-green-50 rounded-lg transition-colors"
           >
             <Pencil size={17} />
@@ -116,7 +116,7 @@ export default function ProjelerAdmin() {
       .catch((err) => {
         if (err.message.includes('401') || err.message.includes('Unauthorized')) {
           logout()
-          navigate('/admin/login')
+          navigate('/rnl-panel/login')
         }
       })
       .finally(() => setLoading(false))
@@ -192,7 +192,7 @@ export default function ProjelerAdmin() {
               <span className="hidden sm:inline">{syncing ? 'Çekiliyor...' : 'Instagram\'dan Çek'}</span>
             </button>
             <Link
-              to="/admin/projeler/yeni"
+              to="/rnl-panel/projeler/yeni"
               className="inline-flex items-center gap-2 bg-[#448834] hover:bg-[#357228] text-white font-bold px-4 py-2 rounded-lg transition-colors text-sm"
             >
               <Plus size={16} />
@@ -206,7 +206,7 @@ export default function ProjelerAdmin() {
         ) : projects.length === 0 ? (
           <div className="text-center py-20 text-gray-400">
             <p className="mb-4">Henüz proje yok.</p>
-            <Link to="/admin/projeler/yeni" className="text-[#448834] font-semibold hover:underline">
+            <Link to="/rnl-panel/projeler/yeni" className="text-[#448834] font-semibold hover:underline">
               İlk projeyi ekle
             </Link>
           </div>

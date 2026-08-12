@@ -56,7 +56,7 @@ export default function ProjeForm() {
     fetchAllProjects()
       .then((projects) => {
         const p = projects.find((x) => x.id === id)
-        if (!p) { navigate('/admin/projeler'); return }
+        if (!p) { navigate('/rnl-panel/projeler'); return }
         setForm({
           slug: p.slug, name: p.name, location: p.location, kw: p.kw,
           date: p.date, description: p.description,
@@ -71,7 +71,7 @@ export default function ProjeForm() {
         setExistingMedia(sorted)
         setSlugManual(true)
       })
-      .catch(() => { logout(); navigate('/admin/login') })
+      .catch(() => { logout(); navigate('/rnl-panel/login') })
       .finally(() => setLoading(false))
   }, [id, isEdit, logout, navigate])
 
@@ -169,7 +169,7 @@ if (parsed.description) { set('description', parsed.description); count++ }
         setNewFiles([])
       }
 
-      navigate('/admin/projeler')
+      navigate('/rnl-panel/projeler')
     } catch (err) {
       setError(err.message)
     } finally {
@@ -186,7 +186,7 @@ if (parsed.description) { set('description', parsed.description); count++ }
     <main className="max-w-3xl mx-auto px-6 py-8">
       {/* Header */}
       <div className="flex items-center gap-3 mb-8">
-        <Link to="/admin/projeler" className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+        <Link to="/rnl-panel/projeler" className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
           <ArrowLeft size={18} />
         </Link>
         <div>
@@ -532,7 +532,7 @@ if (parsed.description) { set('description', parsed.description); count++ }
               ? (uploadingMedia ? 'Medya yükleniyor...' : 'Kaydediliyor...')
               : (isEdit ? 'Değişiklikleri Kaydet' : 'Projeyi Oluştur')}
           </button>
-          <Link to="/admin/projeler" className="text-sm text-gray-500 hover:text-gray-700 font-medium px-2">
+          <Link to="/rnl-panel/projeler" className="text-sm text-gray-500 hover:text-gray-700 font-medium px-2">
             İptal
           </Link>
         </div>
