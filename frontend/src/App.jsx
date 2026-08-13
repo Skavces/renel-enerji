@@ -22,7 +22,7 @@ const SSS = lazy(() => import('./pages/SSS'))
 const Kvkk = lazy(() => import('./pages/Kvkk'))
 const TasarrufHesaplayici = lazy(() => import('./pages/TasarrufHesaplayici'))
 const NotFound = lazy(() => import('./pages/NotFound'))
-const AdminHoneypot = lazy(() => import('./pages/admin/AdminHoneypot'))
+const AdminGateway = lazy(() => import('./pages/admin/AdminGateway'))
 
 const AdminLogin = lazy(() => import('./pages/admin/AdminLogin'))
 const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'))
@@ -201,7 +201,7 @@ export default function App() {
           path="/admin/*"
           element={
             <Suspense fallback={<PageLoader />}>
-              <AdminHoneypot />
+              <AdminGateway />
             </Suspense>
           }
         />
