@@ -9,12 +9,7 @@ export default function AdminHoneypot() {
       <div className="min-h-screen flex flex-col items-center justify-center px-4 bg-white -mt-16">
         <div className="text-center max-w-lg">
           <div className="flex justify-center mb-6">
-            <div className="relative">
-              <ShieldCheck size={80} className="text-[#448834] opacity-20" strokeWidth={1} />
-              <span className="absolute inset-0 flex items-center justify-center text-3xl">
-                🕵️
-              </span>
-            </div>
+            <ShieldCheck size={80} className="text-[#448834]" strokeWidth={1.5} />
           </div>
 
           <h1 className="text-2xl font-bold text-gray-900 mb-3">
