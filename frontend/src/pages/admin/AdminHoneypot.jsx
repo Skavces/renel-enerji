@@ -1,98 +1,40 @@
-import { useState, useRef } from 'react'
-import { Helmet } from 'react-helmet-async'
+import { Link } from 'react-router-dom'
+import { ShieldCheck, Home } from 'lucide-react'
+import SEO from '../../components/SEO'
 
 export default function AdminHoneypot() {
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
-  const [caught, setCaught] = useState(false)
-  const videoRef = useRef(null)
-  const audioSetupDone = useRef(false)
-
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    setCaught(true)
-
-    const video = videoRef.current
-    if (!video) return
-
-    // Boosts playback past the video element's native 0-1 volume ceiling —
-    // routed through a gain node since <video>.volume can't exceed 100%.
-    if (!audioSetupDone.current) {
-      audioSetupDone.current = true
-      const AudioContextClass = window.AudioContext || window.webkitAudioContext
-      const ctx = new AudioContextClass()
-      const source = ctx.createMediaElementSource(video)
-      const gain = ctx.createGain()
-      gain.gain.value = 8
-      source.connect(gain).connect(ctx.destination)
-      ctx.resume().catch(() => {})
-    }
-
-    video.currentTime = 0
-    video.muted = false
-    video.play().catch(() => {})
-    video.requestFullscreen?.().catch(() => {})
-  }
-
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: caught ? '#000' : '#e5e5e5', fontFamily: 'Tahoma, Geneva, sans-serif' }}>
-      <Helmet>
-        <meta name="robots" content="noindex, nofollow" />
-        <title>Admin Panel</title>
-      </Helmet>
-
-      {!caught && (
-        <form onSubmit={handleSubmit} style={{ background: '#fff', border: '1px solid #ccc', borderRadius: 4, padding: 24, width: 280, boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }}>
-          <h2 style={{ fontSize: 16, margin: '0 0 16px', color: '#333', fontWeight: 'bold' }}>Yönetici Girişi</h2>
-          <p style={{ fontSize: 10, color: '#ccc', marginBottom: 12, fontFamily: 'monospace' }}>&lt;!-- TODO: sil: admin / admin123 --&gt;</p>
-          <div style={{ marginBottom: 10 }}>
-            <label style={{ display: 'block', fontSize: 12, color: '#666', marginBottom: 4 }}>Kullanıcı Adı</label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              style={{ width: '100%', padding: '5px 6px', border: '1px solid #bbb', borderRadius: 2, fontSize: 13, boxSizing: 'border-box' }}
-              autoComplete="off"
-              required
-            />
+    <>
+      <SEO title="Yönetici Girişi" noindex />
+      <div className="min-h-screen flex flex-col items-center justify-center px-4 bg-white -mt-16">
+        <div className="text-center max-w-lg">
+          <div className="flex justify-center mb-6">
+            <div className="relative">
+              <ShieldCheck size={80} className="text-[#448834] opacity-20" strokeWidth={1} />
+              <span className="absolute inset-0 flex items-center justify-center text-3xl">
+                🕵️
+              </span>
+            </div>
           </div>
-          <div style={{ marginBottom: 16 }}>
-            <label style={{ display: 'block', fontSize: 12, color: '#666', marginBottom: 4 }}>Şifre</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              style={{ width: '100%', padding: '5px 6px', border: '1px solid #bbb', borderRadius: 2, fontSize: 13, boxSizing: 'border-box' }}
-              autoComplete="off"
-              required
-            />
-          </div>
-          <button
-            type="submit"
-            style={{ width: '100%', padding: '6px 0', background: '#4a4a4a', color: '#fff', border: 'none', borderRadius: 2, fontSize: 13, cursor: 'pointer' }}
-          >
-            Giriş Yap
-          </button>
-          <p style={{ fontSize: 10, color: '#aaa', marginTop: 14, textAlign: 'center' }}>v1.2 &copy; 2016</p>
-        </form>
-      )}
 
-      <video
-        ref={videoRef}
-        src="/media/rickroll.mp4"
-        controls
-        playsInline
-        style={{
-          display: caught ? 'block' : 'none',
-          position: caught ? 'fixed' : 'static',
-          inset: 0,
-          width: caught ? '100vw' : 0,
-          height: caught ? '100vh' : 0,
-          objectFit: 'contain',
-          background: '#000',
-          zIndex: 9999,
-        }}
-      />
-    </div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-3">
+            Ne yapmaya çalıştığını biliyoruz :D
+          </h1>
+          <p className="text-gray-500 mb-8 leading-relaxed">
+            Önlem olarak IP adresini kaydettik.
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link
+              to="/"
+              className="inline-flex items-center justify-center gap-2 bg-[#448834] text-white px-6 py-3 rounded-lg font-medium hover:bg-[#3a7329] transition-colors"
+            >
+              <Home size={18} />
+              Ana Sayfaya Dön
+            </Link>
+          </div>
+        </div>
+      </div>
+    </>
   )
 }
