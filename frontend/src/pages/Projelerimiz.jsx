@@ -2,18 +2,28 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, MapPin, Zap, Calendar } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
+import PageLoader from '../components/PageLoader'
+import LoadError from '../components/LoadError'
 import { fetchProjects, mediaUrl } from '../api/projects'
 import SEO from '../components/SEO'
 
 export default function Projelerimiz() {
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
 
-  useEffect(() => {
+  function load() {
+    setLoading(true)
+    setError(false)
     fetchProjects()
       .then(setProjects)
-      .catch(console.error)
+      .catch(() => setError(true))
       .finally(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    load()
   }, [])
 
   const totalKw = projects.reduce((sum, p) => sum + Number(p.kw), 0)
@@ -85,7 +95,9 @@ export default function Projelerimiz() {
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-6">
           {loading ? (
-            <div className="text-center py-20 text-gray-400">Projeler yükleniyor...</div>
+            <PageLoader label="Projeler yükleniyor..." />
+          ) : error ? (
+            <LoadError message="Projeler yüklenemedi. Bağlantınızı kontrol edip tekrar deneyin." onRetry={load} />
           ) : projects.length === 0 ? (
             <div className="text-center py-20 text-gray-400">Henüz proje eklenmemiş.</div>
           ) : (

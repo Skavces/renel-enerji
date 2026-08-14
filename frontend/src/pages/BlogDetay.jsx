@@ -3,8 +3,9 @@ import { Link, useParams, useNavigate } from 'react-router-dom'
 import { Calendar, ArrowLeft } from 'lucide-react'
 import DOMPurify from 'dompurify'
 import PageHeader from '../components/PageHeader'
+import PageLoader from '../components/PageLoader'
+import LoadError from '../components/LoadError'
 import SEO from '../components/SEO'
-import Spinner from '../components/Spinner'
 import { fetchPostBySlug } from '../api/blog.js'
 import { formatDate } from '../lib/date.js'
 import { API } from '../api/config.js'
@@ -14,19 +15,36 @@ export default function BlogDetay() {
   const navigate = useNavigate()
   const [post, setPost] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-  useEffect(() => {
+  function load() {
+    setLoading(true)
+    setError(null)
     fetchPostBySlug(slug)
       .then(setPost)
-      .catch(() => navigate('/blog', { replace: true }))
+      .catch((err) => {
+        if (err.status === 404) {
+          navigate('/blog', { replace: true })
+          return
+        }
+        setError(err)
+      })
       .finally(() => setLoading(false))
-  }, [slug, navigate])
+  }
 
-  if (loading) {
+  useEffect(() => {
+    load()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slug])
+
+  if (loading) return <PageLoader fullScreen label="Yazı yükleniyor..." />
+
+  if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Spinner />
-      </div>
+      <>
+        <PageHeader title="Blog" parent={{ to: '/blog', label: 'Blog' }} />
+        <LoadError message="Yazı yüklenemedi. Bağlantınızı kontrol edip tekrar deneyin." onRetry={load} />
+      </>
     )
   }
 

@@ -5,6 +5,7 @@ import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import TeklifChatbot from './components/TeklifChatbot'
 import TeklifModal from './components/TeklifModal'
+import PageLoader from './components/PageLoader'
 import { AdminAuthProvider, useAdminAuth } from './contexts/AdminAuthContext'
 
 const Home = lazy(() => import('./pages/Home'))
@@ -50,10 +51,6 @@ function ProtectedRoute({ children }) {
   const { isAuth } = useAdminAuth()
   if (!isAuth) return <Navigate to="/rnl-panel/login" replace />
   return children
-}
-
-function PageLoader() {
-  return <div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-2 border-[#448834] border-t-transparent rounded-full animate-spin" /></div>
 }
 
 function openChat(setChatOpen, setChatPrefill) {
@@ -110,7 +107,7 @@ function PublicLayout() {
       <ScrollToTop />
       <Navbar />
       <main>
-        <Suspense fallback={<PageLoader />}>
+        <Suspense fallback={<PageLoader fullScreen />}>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/hizmetler" element={<Hizmetler />} />
@@ -165,7 +162,7 @@ function PublicLayout() {
 function AdminRoutes() {
   return (
     <AdminAuthProvider>
-      <Suspense fallback={<PageLoader />}>
+      <Suspense fallback={<PageLoader fullScreen />}>
         <Routes>
           <Route path="login" element={<AdminLogin />} />
           <Route element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
@@ -200,7 +197,7 @@ export default function App() {
         <Route
           path="/admin/*"
           element={
-            <Suspense fallback={<PageLoader />}>
+            <Suspense fallback={<PageLoader fullScreen />}>
               <AdminGateway />
             </Suspense>
           }

@@ -1,14 +1,27 @@
 import { useEffect, useState } from 'react'
 import { fetchReferences } from '../api/references'
 import { API } from '../api/config.js'
+import PageLoader from './PageLoader'
+import LoadError from './LoadError'
 
 export default function References() {
   const [refs, setRefs] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
+
+  function load() {
+    setLoading(true)
+    setError(false)
+    fetchReferences().then(setRefs).catch(() => setError(true)).finally(() => setLoading(false))
+  }
 
   useEffect(() => {
-    fetchReferences().then(setRefs).catch(() => {})
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    load()
   }, [])
 
+  if (loading) return <PageLoader label="Referanslar yükleniyor..." />
+  if (error) return <LoadError message="Referanslar yüklenemedi. Bağlantınızı kontrol edip tekrar deneyin." onRetry={load} />
   if (refs.length === 0) return null
 
   return (

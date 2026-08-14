@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, CheckCircle2, X, Play, Zap } from 'lucide-react'
 import PageHeader from '../../components/PageHeader'
+import PageLoader from '../../components/PageLoader'
+import LoadError from '../../components/LoadError'
 import { fetchProjectBySlug, mediaUrl } from '../../api/projects'
 import SEO from '../../components/SEO'
 import { waLink } from '../../lib/whatsapp'
@@ -14,22 +16,36 @@ export default function ProjeDetay() {
   const [current, setCurrent] = useState(0)
   const [lightbox, setLightbox] = useState(null)
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+  function load() {
     setLoading(true)
-    setCurrent(0)
-    setLightbox(null)
+    setError(null)
     fetchProjectBySlug(slug)
       .then(setProject)
-      .catch((err) => setError(err.message))
+      .catch((err) => setError(err))
       .finally(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    setCurrent(0)
+    setLightbox(null)
+    load()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug])
 
   if (loading) {
     return (
       <>
         <PageHeader title="Proje Detayı" parent={{ label: 'Projelerimiz', to: '/projelerimiz' }} />
-        <div className="py-32 text-center text-gray-400">Yükleniyor...</div>
+        <PageLoader label="Proje yükleniyor..." />
+      </>
+    )
+  }
+
+  if (error && error.status !== 404) {
+    return (
+      <>
+        <PageHeader title="Proje Detayı" parent={{ label: 'Projelerimiz', to: '/projelerimiz' }} />
+        <LoadError message="Proje yüklenemedi. Bağlantınızı kontrol edip tekrar deneyin." onRetry={load} />
       </>
     )
   }
