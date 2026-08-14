@@ -2,6 +2,17 @@
 
 Corporate website and admin panel for **RenEl Enerji**, a solar energy solutions company based in Turkey.
 
+## Screenshots
+
+| | |
+| --- | --- |
+| ![Homepage](docs/screenshots/anasayfa-hero.jpg) | ![Services](docs/screenshots/anasayfa-hizmetler.jpg) |
+| Homepage — savings calculator widget, stats | Services section |
+| ![Projects](docs/screenshots/projelerimiz.jpg) | ![Savings calculator](docs/screenshots/tasarruf-hesaplayici.jpg) |
+| Completed projects, auto-synced counters | Savings calculator with live result |
+| ![References](docs/screenshots/referanslar.jpg) | ![Blog](docs/screenshots/blog.jpg) |
+| Client references | Blog |
+
 ## Tech Stack
 
 | Layer          | Technology                                                      |
@@ -166,7 +177,14 @@ Uploaded files (project/blog media) live in the `uploads` volume — back up the
 
 ## Admin Panel
 
-Accessible at `/admin`, protected by JWT authentication.
+Accessible at `/rnl-panel`, protected by JWT authentication. (`/admin` is a decoy honeypot route that logs the requester's IP.)
+
+| | |
+| --- | --- |
+| ![Dashboard](docs/screenshots/panel-dashboard.jpg) | ![Projects management](docs/screenshots/panel-projeler.jpg) |
+| Dashboard — aggregate stats, quick actions | Project management |
+| ![Analytics](docs/screenshots/panel-analitik.jpg) | |
+| Analytics (Umami) | |
 
 **Features:**
 - Project management (create, edit, delete, media upload, Instagram import)
