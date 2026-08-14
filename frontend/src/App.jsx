@@ -59,6 +59,7 @@ function openChat(setChatOpen, setChatPrefill) {
 }
 
 function PublicLayout() {
+  const location = useLocation()
   const [chatOpen, setChatOpen] = useState(false)
   const [chatClosing, setChatClosing] = useState(false)
   const [chatMessages, setChatMessages] = useState(null)
@@ -108,23 +109,25 @@ function PublicLayout() {
       <Navbar />
       <main>
         <Suspense fallback={<PageLoader fullScreen />}>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/hizmetler" element={<Hizmetler />} />
-            <Route path="/hizmetler/:slug" element={<HizmetDetay />} />
-            <Route path="/kurumsal" element={<Kurumsal />} />
-            <Route path="/projelerimiz" element={<Projelerimiz />} />
-            <Route path="/projelerimiz/:slug" element={<ProjeDetay />} />
-            <Route path="/neden-biz/:slug" element={<NedenBizDetay />} />
-            <Route path="/referanslar" element={<Referanslar />} />
-            <Route path="/blog" element={<Blog />} />
-            <Route path="/blog/:slug" element={<BlogDetay />} />
-            <Route path="/sss" element={<SSS />} />
-            <Route path="/kvkk" element={<Kvkk />} />
-            <Route path="/tasarruf-hesaplayici" element={<TasarrufHesaplayici />} />
-            <Route path="/iletisim" element={<Iletisim />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <div key={location.pathname} className="page-transition">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/hizmetler" element={<Hizmetler />} />
+              <Route path="/hizmetler/:slug" element={<HizmetDetay />} />
+              <Route path="/kurumsal" element={<Kurumsal />} />
+              <Route path="/projelerimiz" element={<Projelerimiz />} />
+              <Route path="/projelerimiz/:slug" element={<ProjeDetay />} />
+              <Route path="/neden-biz/:slug" element={<NedenBizDetay />} />
+              <Route path="/referanslar" element={<Referanslar />} />
+              <Route path="/blog" element={<Blog />} />
+              <Route path="/blog/:slug" element={<BlogDetay />} />
+              <Route path="/sss" element={<SSS />} />
+              <Route path="/kvkk" element={<Kvkk />} />
+              <Route path="/tasarruf-hesaplayici" element={<TasarrufHesaplayici />} />
+              <Route path="/iletisim" element={<Iletisim />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </div>
         </Suspense>
       </main>
       <Footer />
