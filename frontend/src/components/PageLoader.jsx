@@ -1,10 +1,8 @@
 // Marka renkleriyle dönen halka + logo — sayfa/route geçişlerinde ve veri
 // yüklenirken kullanılan tek tip yükleme göstergesi.
-// overlay: tam ekranı kaplayan beyaz perde olarak gösterir (navigasyon
-// geçişindeki markalı ekranla birebir aynı görünüm).
-// animated: sadece App.jsx'teki zorunlu 2sn'lik geçiş perdesi için — sabit
-// süreli fade in/out. Veri yüklenirken (süresi belirsiz) kullanılmaz.
-export default function PageLoader({ label = 'Yükleniyor...', fullScreen = false, overlay = false, animated = false }) {
+// overlay: tam ekranı kaplayan beyaz perde olarak gösterir — navigasyon
+// geçişi ve sayfa içi veri yüklemesi birebir aynı görünümü kullanır.
+export default function PageLoader({ label = 'Yükleniyor...', fullScreen = false, overlay = false }) {
   const ringSize = fullScreen ? 'w-24 h-24' : 'w-14 h-14'
   const logoSize = fullScreen ? 'w-12 h-12' : 'w-7 h-7'
 
@@ -22,9 +20,7 @@ export default function PageLoader({ label = 'Yükleniyor...', fullScreen = fals
   if (!overlay) return spinner
 
   return (
-    <div
-      className={`fixed inset-0 z-[100] bg-white flex items-center justify-center pointer-events-none ${animated ? 'route-overlay' : ''}`}
-    >
+    <div className="backdrop-enter fixed inset-0 z-[100] bg-white flex items-center justify-center pointer-events-none">
       {spinner}
     </div>
   )
