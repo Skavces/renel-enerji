@@ -85,7 +85,7 @@ export default function SSS() {
       <section className="py-16 bg-gray-50">
         <div className="max-w-3xl mx-auto px-6">
           {loading ? (
-            <PageLoader label="Sorular yükleniyor..." />
+            <PageLoader label="" fullScreen overlay />
           ) : error ? (
             <LoadError message="Sorular yüklenemedi. Bağlantınızı kontrol edip tekrar deneyin." onRetry={load} />
           ) : faqs.length === 0 ? (

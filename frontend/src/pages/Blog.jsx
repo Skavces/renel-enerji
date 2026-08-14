@@ -67,7 +67,7 @@ export default function Blog() {
       <section className="py-16 bg-gray-50">
         <div className="max-w-5xl mx-auto px-6">
           {loading ? (
-            <PageLoader label="Yazılar yükleniyor..." />
+            <PageLoader label="" fullScreen overlay />
           ) : error ? (
             <LoadError message="Blog yazıları yüklenemedi. Bağlantınızı kontrol edip tekrar deneyin." onRetry={load} />
           ) : posts.length === 0 ? (
