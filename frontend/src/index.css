@@ -144,16 +144,6 @@
   50%      { transform: scale(1.08); }
 }
 
-@keyframes route-overlay {
-  0%   { opacity: 0; }
-  15%  { opacity: 1; }
-  85%  { opacity: 1; }
-  100% { opacity: 0; }
-}
-.route-overlay {
-  animation: route-overlay 2s ease both;
-}
-
 @keyframes chatbot-in {
   from { opacity: 0; transform: translateY(20px) scale(0.95); }
   to   { opacity: 1; transform: translateY(0)    scale(1); }

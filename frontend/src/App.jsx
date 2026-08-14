@@ -53,23 +53,72 @@ function ProtectedRoute({ children }) {
   return children
 }
 
-// Chunk zaten indirilmiş olsa da (Suspense tetiklenmez) her sayfa geçişinde
-// markalı yükleme animasyonunu 2sn zorunlu gösterir — hedef sayfanın verisi
-// bu sürede yüklenir, "yüklenmedi" flaşı görünmez. İlk site açılışı hariçtir.
+const OVERLAY_MIN_MS = 250
+const OVERLAY_MAX_MS = 6000
+
+// React Router, hedef sayfanın lazy chunk'ı inene kadar pathname'i perde
+// arkasında bekletiyor (startTransition) — yani pathname değişimini izlemek
+// chunk büyük/yavaşsa animasyonu saniyelerce geç tetikliyor. Bunun yerine
+// tıklamanın kendisini dinleyip animasyonu anında gösteriyoruz; pathname
+// gerçekten değiştiğinde (= hedef sayfa hazır) kapatıyoruz. Flaş görünmemesi
+// için en az OVERLAY_MIN_MS gösteriliyor; pathname hiç değişmezse (harici
+// link, aynı sayfa vs.) OVERLAY_MAX_MS sonunda güvenlik amaçlı kapanıyor.
 function usePageTransitionOverlay(pathname) {
   const [visible, setVisible] = useState(false)
-  const isFirst = useRef(true)
+  const shownAtRef = useRef(0)
+  const hideTimerRef = useRef(null)
+  const maxTimerRef = useRef(null)
+  // window.location.pathname, history.pushState ile TIKLAMA ANINDA değişiyor
+  // (React'ın kendi pathname state'i transition yüzünden geç günceller) —
+  // "hedef zaten aynı sayfa mı" kontrolünü window.location yerine React'ın
+  // henüz commit ettiği son pathname'e göre yapmak için bu ref kullanılıyor.
+  const pathnameRef = useRef(pathname)
 
   useEffect(() => {
+    function handleClick(e) {
+      const anchor = e.target.closest('a')
+      if (!anchor) return
+      if (anchor.target === '_blank' || anchor.hasAttribute('download')) return
+      let url
+      try {
+        url = new URL(anchor.href, window.location.href)
+      } catch {
+        return
+      }
+      if (url.origin !== window.location.origin) return
+      if (url.pathname === pathnameRef.current) return
+
+      clearTimeout(hideTimerRef.current)
+      clearTimeout(maxTimerRef.current)
+      shownAtRef.current = performance.now()
+      setVisible(true)
+      maxTimerRef.current = setTimeout(() => setVisible(false), OVERLAY_MAX_MS)
+    }
+    document.addEventListener('click', handleClick)
+    return () => document.removeEventListener('click', handleClick)
+  }, [])
+
+  const isFirst = useRef(true)
+  useEffect(() => {
+    pathnameRef.current = pathname
     if (isFirst.current) {
       isFirst.current = false
       return
     }
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setVisible(true)
-    const timer = setTimeout(() => setVisible(false), 2000)
-    return () => clearTimeout(timer)
+    clearTimeout(maxTimerRef.current)
+    const remaining = OVERLAY_MIN_MS - (performance.now() - shownAtRef.current)
+    if (remaining > 0) {
+      hideTimerRef.current = setTimeout(() => setVisible(false), remaining)
+    } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setVisible(false)
+    }
   }, [pathname])
+
+  useEffect(() => () => {
+    clearTimeout(hideTimerRef.current)
+    clearTimeout(maxTimerRef.current)
+  }, [])
 
   return visible
 }
@@ -128,7 +177,7 @@ function PublicLayout() {
   return (
     <>
       <ScrollToTop />
-      {showRouteOverlay && <PageLoader label="" fullScreen overlay animated />}
+      {showRouteOverlay && <PageLoader label="" fullScreen overlay />}
       <Navbar />
       <main>
         <Suspense fallback={<PageLoader fullScreen />}>
