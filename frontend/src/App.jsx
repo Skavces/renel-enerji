@@ -54,7 +54,8 @@ function ProtectedRoute({ children }) {
 }
 
 // Chunk zaten indirilmiş olsa da (Suspense tetiklenmez) her sayfa geçişinde
-// markalı yükleme animasyonunu kısaca gösterir — ilk site açılışını hariç tutar.
+// markalı yükleme animasyonunu 2sn zorunlu gösterir — hedef sayfanın verisi
+// bu sürede yüklenir, "yüklenmedi" flaşı görünmez. İlk site açılışı hariçtir.
 function usePageTransitionOverlay(pathname) {
   const [visible, setVisible] = useState(false)
   const isFirst = useRef(true)
@@ -66,7 +67,7 @@ function usePageTransitionOverlay(pathname) {
     }
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setVisible(true)
-    const timer = setTimeout(() => setVisible(false), 500)
+    const timer = setTimeout(() => setVisible(false), 2000)
     return () => clearTimeout(timer)
   }, [pathname])
 
@@ -127,33 +128,27 @@ function PublicLayout() {
   return (
     <>
       <ScrollToTop />
-      {showRouteOverlay && (
-        <div className="route-overlay fixed inset-0 z-[100] bg-white flex items-center justify-center pointer-events-none">
-          <PageLoader label="" fullScreen />
-        </div>
-      )}
+      {showRouteOverlay && <PageLoader label="" fullScreen overlay animated />}
       <Navbar />
       <main>
         <Suspense fallback={<PageLoader fullScreen />}>
-          <div key={location.pathname} className="page-transition">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/hizmetler" element={<Hizmetler />} />
-              <Route path="/hizmetler/:slug" element={<HizmetDetay />} />
-              <Route path="/kurumsal" element={<Kurumsal />} />
-              <Route path="/projelerimiz" element={<Projelerimiz />} />
-              <Route path="/projelerimiz/:slug" element={<ProjeDetay />} />
-              <Route path="/neden-biz/:slug" element={<NedenBizDetay />} />
-              <Route path="/referanslar" element={<Referanslar />} />
-              <Route path="/blog" element={<Blog />} />
-              <Route path="/blog/:slug" element={<BlogDetay />} />
-              <Route path="/sss" element={<SSS />} />
-              <Route path="/kvkk" element={<Kvkk />} />
-              <Route path="/tasarruf-hesaplayici" element={<TasarrufHesaplayici />} />
-              <Route path="/iletisim" element={<Iletisim />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </div>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/hizmetler" element={<Hizmetler />} />
+            <Route path="/hizmetler/:slug" element={<HizmetDetay />} />
+            <Route path="/kurumsal" element={<Kurumsal />} />
+            <Route path="/projelerimiz" element={<Projelerimiz />} />
+            <Route path="/projelerimiz/:slug" element={<ProjeDetay />} />
+            <Route path="/neden-biz/:slug" element={<NedenBizDetay />} />
+            <Route path="/referanslar" element={<Referanslar />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/:slug" element={<BlogDetay />} />
+            <Route path="/sss" element={<SSS />} />
+            <Route path="/kvkk" element={<Kvkk />} />
+            <Route path="/tasarruf-hesaplayici" element={<TasarrufHesaplayici />} />
+            <Route path="/iletisim" element={<Iletisim />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
         </Suspense>
       </main>
       <Footer />

@@ -95,7 +95,7 @@ export default function Projelerimiz() {
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-6">
           {loading ? (
-            <PageLoader label="Projeler yükleniyor..." />
+            <PageLoader label="" fullScreen overlay />
           ) : error ? (
             <LoadError message="Projeler yüklenemedi. Bağlantınızı kontrol edip tekrar deneyin." onRetry={load} />
           ) : projects.length === 0 ? (

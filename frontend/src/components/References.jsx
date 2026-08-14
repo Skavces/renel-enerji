@@ -20,7 +20,7 @@ export default function References() {
     load()
   }, [])
 
-  if (loading) return <PageLoader label="Referanslar yükleniyor..." />
+  if (loading) return <PageLoader label="" fullScreen overlay />
   if (error) return <LoadError message="Referanslar yüklenemedi. Bağlantınızı kontrol edip tekrar deneyin." onRetry={load} />
   if (refs.length === 0) return null
 

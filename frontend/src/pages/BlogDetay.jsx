@@ -37,7 +37,7 @@ export default function BlogDetay() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug])
 
-  if (loading) return <PageLoader fullScreen label="Yazı yükleniyor..." />
+  if (loading) return <PageLoader label="" fullScreen overlay />
 
   if (error) {
     return (

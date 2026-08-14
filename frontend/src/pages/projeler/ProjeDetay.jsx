@@ -33,12 +33,7 @@ export default function ProjeDetay() {
   }, [slug])
 
   if (loading) {
-    return (
-      <>
-        <PageHeader title="Proje Detayı" parent={{ label: 'Projelerimiz', to: '/projelerimiz' }} />
-        <PageLoader label="Proje yükleniyor..." />
-      </>
-    )
+    return <PageLoader label="" fullScreen overlay />
   }
 
   if (error && error.status !== 404) {
