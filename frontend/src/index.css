@@ -152,6 +152,16 @@
   animation: page-in 0.4s cubic-bezier(0.22,1,0.36,1) both;
 }
 
+@keyframes route-overlay {
+  0%   { opacity: 0; }
+  15%  { opacity: 1; }
+  85%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+.route-overlay {
+  animation: route-overlay 0.5s ease both;
+}
+
 @keyframes chatbot-in {
   from { opacity: 0; transform: translateY(20px) scale(0.95); }
   to   { opacity: 1; transform: translateY(0)    scale(1); }
