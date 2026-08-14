@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Calendar, ArrowRight } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
+import PageLoader from '../components/PageLoader'
+import LoadError from '../components/LoadError'
 import SEO from '../components/SEO'
 import { fetchPosts } from '../api/blog.js'
 import { formatDate } from '../lib/date.js'
@@ -10,12 +12,20 @@ import { API } from '../api/config.js'
 export default function Blog() {
   const [posts, setPosts] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
 
-  useEffect(() => {
+  function load() {
+    setLoading(true)
+    setError(false)
     fetchPosts()
       .then(setPosts)
-      .catch(console.error)
+      .catch(() => setError(true))
       .finally(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    load()
   }, [])
 
   const jsonLd = posts.length > 0 ? {
@@ -57,7 +67,9 @@ export default function Blog() {
       <section className="py-16 bg-gray-50">
         <div className="max-w-5xl mx-auto px-6">
           {loading ? (
-            <div className="text-center py-20 text-gray-400">Yükleniyor...</div>
+            <PageLoader label="Yazılar yükleniyor..." />
+          ) : error ? (
+            <LoadError message="Blog yazıları yüklenemedi. Bağlantınızı kontrol edip tekrar deneyin." onRetry={load} />
           ) : posts.length === 0 ? (
             <div className="text-center py-20 text-gray-400">
               <p>Henüz yazı yayınlanmamış.</p>

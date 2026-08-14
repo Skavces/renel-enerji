@@ -16,6 +16,11 @@ export async function fetchProjects(): Promise<Project[]> {
 
 export async function fetchProjectBySlug(slug: string): Promise<Project> {
   const res = await fetch(`${API}/api/projects/${encodeURIComponent(slug)}`)
-  if (!res.ok) throw new Error('Proje bulunamadı')
+  if (res.status === 404) {
+    const err: Error & { status?: number } = new Error('Proje bulunamadı')
+    err.status = 404
+    throw err
+  }
+  if (!res.ok) throw new Error('Proje yüklenemedi')
   return res.json()
 }

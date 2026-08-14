@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ChevronDown, ArrowRight } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
+import PageLoader from '../components/PageLoader'
+import LoadError from '../components/LoadError'
 import SEO from '../components/SEO'
 import { fetchFaqs } from '../api/faq.js'
 
@@ -30,13 +32,21 @@ function FaqItem({ faq, isOpen, onToggle }) {
 export default function SSS() {
   const [faqs, setFaqs] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
   const [openId, setOpenId] = useState(null)
 
-  useEffect(() => {
+  function load() {
+    setLoading(true)
+    setError(false)
     fetchFaqs()
       .then(setFaqs)
-      .catch(console.error)
+      .catch(() => setError(true))
       .finally(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    load()
   }, [])
 
   const toggle = (id) => setOpenId((prev) => (prev === id ? null : id))
@@ -75,7 +85,9 @@ export default function SSS() {
       <section className="py-16 bg-gray-50">
         <div className="max-w-3xl mx-auto px-6">
           {loading ? (
-            <div className="text-center py-20 text-gray-400">Yükleniyor...</div>
+            <PageLoader label="Sorular yükleniyor..." />
+          ) : error ? (
+            <LoadError message="Sorular yüklenemedi. Bağlantınızı kontrol edip tekrar deneyin." onRetry={load} />
           ) : faqs.length === 0 ? (
             <div className="text-center py-20 text-gray-400">
               <p>Henüz soru eklenmemiş.</p>
