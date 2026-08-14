@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
-import { useEffect, lazy, Suspense, useState } from 'react'
+import { useEffect, lazy, Suspense, useState, useRef } from 'react'
 import { Bot, Zap } from 'lucide-react'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
@@ -53,6 +53,26 @@ function ProtectedRoute({ children }) {
   return children
 }
 
+// Chunk zaten indirilmiş olsa da (Suspense tetiklenmez) her sayfa geçişinde
+// markalı yükleme animasyonunu kısaca gösterir — ilk site açılışını hariç tutar.
+function usePageTransitionOverlay(pathname) {
+  const [visible, setVisible] = useState(false)
+  const isFirst = useRef(true)
+
+  useEffect(() => {
+    if (isFirst.current) {
+      isFirst.current = false
+      return
+    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setVisible(true)
+    const timer = setTimeout(() => setVisible(false), 500)
+    return () => clearTimeout(timer)
+  }, [pathname])
+
+  return visible
+}
+
 function openChat(setChatOpen, setChatPrefill) {
   setChatPrefill('')
   setChatOpen(true)
@@ -60,6 +80,7 @@ function openChat(setChatOpen, setChatPrefill) {
 
 function PublicLayout() {
   const location = useLocation()
+  const showRouteOverlay = usePageTransitionOverlay(location.pathname)
   const [chatOpen, setChatOpen] = useState(false)
   const [chatClosing, setChatClosing] = useState(false)
   const [chatMessages, setChatMessages] = useState(null)
@@ -106,6 +127,11 @@ function PublicLayout() {
   return (
     <>
       <ScrollToTop />
+      {showRouteOverlay && (
+        <div className="route-overlay fixed inset-0 z-[100] bg-white flex items-center justify-center pointer-events-none">
+          <PageLoader label="" fullScreen />
+        </div>
+      )}
       <Navbar />
       <main>
         <Suspense fallback={<PageLoader fullScreen />}>
