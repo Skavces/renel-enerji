@@ -37,20 +37,15 @@ export default function BlogDetay() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug])
 
-  if (loading) {
+  if (loading || error) {
     return (
       <>
         <PageHeader title="Blog" parent={{ to: '/blog', label: 'Blog' }} />
-        <BlogDetaySkeleton />
-      </>
-    )
-  }
-
-  if (error) {
-    return (
-      <>
-        <PageHeader title="Blog" parent={{ to: '/blog', label: 'Blog' }} />
-        <LoadError message="Yazı yüklenemedi. Bağlantınızı kontrol edip tekrar deneyin." onRetry={load} />
+        {loading ? (
+          <BlogDetaySkeleton />
+        ) : (
+          <LoadError message="Yazı yüklenemedi. Bağlantınızı kontrol edip tekrar deneyin." onRetry={load} />
+        )}
       </>
     )
   }

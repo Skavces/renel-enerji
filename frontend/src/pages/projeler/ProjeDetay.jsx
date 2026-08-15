@@ -32,20 +32,15 @@ export default function ProjeDetay() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug])
 
-  if (loading) {
+  if (loading || (error && error.status !== 404)) {
     return (
       <>
         <PageHeader title="Proje Detayı" parent={{ label: 'Projelerimiz', to: '/projelerimiz' }} />
-        <ProjeDetaySkeleton />
-      </>
-    )
-  }
-
-  if (error && error.status !== 404) {
-    return (
-      <>
-        <PageHeader title="Proje Detayı" parent={{ label: 'Projelerimiz', to: '/projelerimiz' }} />
-        <LoadError message="Proje yüklenemedi. Bağlantınızı kontrol edip tekrar deneyin." onRetry={load} />
+        {loading ? (
+          <ProjeDetaySkeleton />
+        ) : (
+          <LoadError message="Proje yüklenemedi. Bağlantınızı kontrol edip tekrar deneyin." onRetry={load} />
+        )}
       </>
     )
   }

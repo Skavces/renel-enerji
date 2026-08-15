@@ -1,15 +1,13 @@
 // Marka renkleriyle dönen halka + logo — sayfa/route geçişlerinde ve veri
 // yüklenirken kullanılan tek tip yükleme göstergesi.
-// overlay: tam ekranı kaplayan beyaz perde olarak gösterir — navigasyon
-// geçişi ve sayfa içi veri yüklemesi birebir aynı görünümü kullanır.
-// show: verildiğinde overlay hiç unmount edilmez, görünürlük opacity
-// transition'ıyla kontrol edilir (bkz. App.jsx). Art arda hızlı gelen
-// navigasyonlarda (örn. bir linke tıklayıp 250ms içinde başka birine
-// tıklamak) overlay tam kapanıp yeniden mount olursa, arada gerçek
-// içeriğin 1 kare görünüp ardından animasyonun sıfırdan tekrar başladığı
-// bir "flaş" oluşuyordu — sürekli mount edip sadece opacity'yi
-// değiştirmek bu boşluğu ortadan kaldırıyor.
-export default function PageLoader({ label = 'Yükleniyor...', fullScreen = false, overlay = false, show }) {
+// overlay: tam ekranı kaplayan beyaz perde olarak gösterir. Bu perde hiç
+// unmount edilmez (bkz. App.jsx) — görünürlüğü `show` prop'una göre opacity
+// transition'ıyla kontrol edilir. Art arda hızlı gelen navigasyonlarda
+// overlay tam kapanıp yeniden mount olsaydı, arada gerçek içeriğin 1 kare
+// görünüp ardından animasyonun sıfırdan tekrar başladığı bir "flaş"
+// oluşuyordu — sürekli mount edip sadece opacity'yi değiştirmek bu
+// boşluğu ortadan kaldırıyor.
+export default function PageLoader({ label = 'Yükleniyor...', fullScreen = false, overlay = false, show = true }) {
   const ringSize = fullScreen ? 'w-24 h-24' : 'w-14 h-14'
   const logoSize = fullScreen ? 'w-12 h-12' : 'w-7 h-7'
 
@@ -25,14 +23,6 @@ export default function PageLoader({ label = 'Yükleniyor...', fullScreen = fals
   )
 
   if (!overlay) return spinner
-
-  if (show === undefined) {
-    return (
-      <div className="backdrop-enter fixed inset-0 z-[100] bg-white flex items-center justify-center pointer-events-none">
-        {spinner}
-      </div>
-    )
-  }
 
   return (
     <div
