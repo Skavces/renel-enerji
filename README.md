@@ -177,8 +177,6 @@ Uploaded files (project/blog media) live in the `uploads` volume — back up the
 
 ## Admin Panel
 
-Accessible at `/rnl-panel`, protected by JWT authentication. (`/admin` is a decoy honeypot route that logs the requester's IP.)
-
 | | |
 | --- | --- |
 | ![Dashboard](docs/screenshots/panel-dashboard.jpg) | ![Projects management](docs/screenshots/panel-projeler.jpg) |
