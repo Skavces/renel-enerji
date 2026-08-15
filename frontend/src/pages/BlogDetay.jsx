@@ -3,7 +3,7 @@ import { Link, useParams, useNavigate } from 'react-router-dom'
 import { Calendar, ArrowLeft } from 'lucide-react'
 import DOMPurify from 'dompurify'
 import PageHeader from '../components/PageHeader'
-import PageLoader from '../components/PageLoader'
+import { BlogDetaySkeleton } from '../components/Skeletons'
 import LoadError from '../components/LoadError'
 import SEO from '../components/SEO'
 import { fetchPostBySlug } from '../api/blog.js'
@@ -37,7 +37,14 @@ export default function BlogDetay() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug])
 
-  if (loading) return <PageLoader label="" fullScreen overlay />
+  if (loading) {
+    return (
+      <>
+        <PageHeader title="Blog" parent={{ to: '/blog', label: 'Blog' }} />
+        <BlogDetaySkeleton />
+      </>
+    )
+  }
 
   if (error) {
     return (

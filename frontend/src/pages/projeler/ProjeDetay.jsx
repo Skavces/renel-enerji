@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, CheckCircle2, X, Play, Zap } from 'lucide-react'
 import PageHeader from '../../components/PageHeader'
-import PageLoader from '../../components/PageLoader'
+import { ProjeDetaySkeleton } from '../../components/Skeletons'
 import LoadError from '../../components/LoadError'
 import { fetchProjectBySlug, mediaUrl } from '../../api/projects'
 import SEO from '../../components/SEO'
@@ -33,7 +33,12 @@ export default function ProjeDetay() {
   }, [slug])
 
   if (loading) {
-    return <PageLoader label="" fullScreen overlay />
+    return (
+      <>
+        <PageHeader title="Proje Detayı" parent={{ label: 'Projelerimiz', to: '/projelerimiz' }} />
+        <ProjeDetaySkeleton />
+      </>
+    )
   }
 
   if (error && error.status !== 404) {

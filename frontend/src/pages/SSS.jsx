@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ChevronDown, ArrowRight } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
-import PageLoader from '../components/PageLoader'
+import { SSSSkeleton } from '../components/Skeletons'
 import LoadError from '../components/LoadError'
 import SEO from '../components/SEO'
 import { fetchFaqs } from '../api/faq.js'
@@ -85,7 +85,7 @@ export default function SSS() {
       <section className="py-16 bg-gray-50">
         <div className="max-w-3xl mx-auto px-6">
           {loading ? (
-            <PageLoader label="" fullScreen overlay />
+            <SSSSkeleton />
           ) : error ? (
             <LoadError message="Sorular yüklenemedi. Bağlantınızı kontrol edip tekrar deneyin." onRetry={load} />
           ) : faqs.length === 0 ? (

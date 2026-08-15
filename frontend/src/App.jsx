@@ -53,6 +53,7 @@ function ProtectedRoute({ children }) {
   return children
 }
 
+const OVERLAY_SHOW_DELAY_MS = 120
 const OVERLAY_MIN_MS = 250
 const OVERLAY_MAX_MS = 6000
 
@@ -60,12 +61,20 @@ const OVERLAY_MAX_MS = 6000
 // arkasında bekletiyor (startTransition) — yani pathname değişimini izlemek
 // chunk büyük/yavaşsa animasyonu saniyelerce geç tetikliyor. Bunun yerine
 // tıklamanın kendisini dinleyip animasyonu anında gösteriyoruz; pathname
-// gerçekten değiştiğinde (= hedef sayfa hazır) kapatıyoruz. Flaş görünmemesi
-// için en az OVERLAY_MIN_MS gösteriliyor; pathname hiç değişmezse (harici
-// link, aynı sayfa vs.) OVERLAY_MAX_MS sonunda güvenlik amaçlı kapanıyor.
+// gerçekten değiştiğinde (= hedef sayfa hazır) kapatıyoruz.
+//
+// Chunk zaten indirilmişse (aynı sayfaya ikinci ziyaret) geçiş birkaç ms
+// içinde bitiyor — overlay'i o zaman göstermek gereksiz bir flaş yaratır.
+// Bu yüzden overlay tıklamada değil, OVERLAY_SHOW_DELAY_MS sonra gösteriliyor;
+// geçiş bu süre içinde zaten bitmişse gösterme hiç tetiklenmiyor. Gerçekten
+// gösterildiyse flaş görünmemesi için en az OVERLAY_MIN_MS ekranda kalıyor.
+// pathname hiç değişmezse (harici link, aynı sayfa vs.) OVERLAY_MAX_MS
+// sonunda güvenlik amaçlı kapanıyor.
 function usePageTransitionOverlay(pathname) {
   const [visible, setVisible] = useState(false)
   const shownAtRef = useRef(0)
+  const isShowingRef = useRef(false)
+  const showTimerRef = useRef(null)
   const hideTimerRef = useRef(null)
   const maxTimerRef = useRef(null)
   // window.location.pathname, history.pushState ile TIKLAMA ANINDA değişiyor
@@ -88,11 +97,16 @@ function usePageTransitionOverlay(pathname) {
       if (url.origin !== window.location.origin) return
       if (url.pathname === pathnameRef.current) return
 
+      clearTimeout(showTimerRef.current)
       clearTimeout(hideTimerRef.current)
       clearTimeout(maxTimerRef.current)
-      shownAtRef.current = performance.now()
-      setVisible(true)
-      maxTimerRef.current = setTimeout(() => setVisible(false), OVERLAY_MAX_MS)
+      isShowingRef.current = false
+      showTimerRef.current = setTimeout(() => {
+        isShowingRef.current = true
+        shownAtRef.current = performance.now()
+        setVisible(true)
+      }, OVERLAY_SHOW_DELAY_MS)
+      maxTimerRef.current = setTimeout(() => setVisible(false), OVERLAY_SHOW_DELAY_MS + OVERLAY_MAX_MS)
     }
     document.addEventListener('click', handleClick)
     return () => document.removeEventListener('click', handleClick)
@@ -106,16 +120,23 @@ function usePageTransitionOverlay(pathname) {
       return
     }
     clearTimeout(maxTimerRef.current)
+    clearTimeout(showTimerRef.current)
+    if (!isShowingRef.current) return
     const remaining = OVERLAY_MIN_MS - (performance.now() - shownAtRef.current)
     if (remaining > 0) {
-      hideTimerRef.current = setTimeout(() => setVisible(false), remaining)
+      hideTimerRef.current = setTimeout(() => {
+        isShowingRef.current = false
+        setVisible(false)
+      }, remaining)
     } else {
+      isShowingRef.current = false
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setVisible(false)
     }
   }, [pathname])
 
   useEffect(() => () => {
+    clearTimeout(showTimerRef.current)
     clearTimeout(hideTimerRef.current)
     clearTimeout(maxTimerRef.current)
   }, [])
