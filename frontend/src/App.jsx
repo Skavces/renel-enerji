@@ -177,7 +177,7 @@ function PublicLayout() {
   return (
     <>
       <ScrollToTop />
-      {showRouteOverlay && <PageLoader label="" fullScreen overlay />}
+      <PageLoader label="" fullScreen overlay show={showRouteOverlay} />
       <Navbar />
       <main>
         <Suspense fallback={<PageLoader fullScreen />}>

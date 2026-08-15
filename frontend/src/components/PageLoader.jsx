@@ -2,7 +2,14 @@
 // yüklenirken kullanılan tek tip yükleme göstergesi.
 // overlay: tam ekranı kaplayan beyaz perde olarak gösterir — navigasyon
 // geçişi ve sayfa içi veri yüklemesi birebir aynı görünümü kullanır.
-export default function PageLoader({ label = 'Yükleniyor...', fullScreen = false, overlay = false }) {
+// show: verildiğinde overlay hiç unmount edilmez, görünürlük opacity
+// transition'ıyla kontrol edilir (bkz. App.jsx). Art arda hızlı gelen
+// navigasyonlarda (örn. bir linke tıklayıp 250ms içinde başka birine
+// tıklamak) overlay tam kapanıp yeniden mount olursa, arada gerçek
+// içeriğin 1 kare görünüp ardından animasyonun sıfırdan tekrar başladığı
+// bir "flaş" oluşuyordu — sürekli mount edip sadece opacity'yi
+// değiştirmek bu boşluğu ortadan kaldırıyor.
+export default function PageLoader({ label = 'Yükleniyor...', fullScreen = false, overlay = false, show }) {
   const ringSize = fullScreen ? 'w-24 h-24' : 'w-14 h-14'
   const logoSize = fullScreen ? 'w-12 h-12' : 'w-7 h-7'
 
@@ -19,8 +26,19 @@ export default function PageLoader({ label = 'Yükleniyor...', fullScreen = fals
 
   if (!overlay) return spinner
 
+  if (show === undefined) {
+    return (
+      <div className="backdrop-enter fixed inset-0 z-[100] bg-white flex items-center justify-center pointer-events-none">
+        {spinner}
+      </div>
+    )
+  }
+
   return (
-    <div className="backdrop-enter fixed inset-0 z-[100] bg-white flex items-center justify-center pointer-events-none">
+    <div
+      className={`fixed inset-0 z-[100] bg-white flex items-center justify-center pointer-events-none transition-opacity duration-200 ease-out ${show ? 'opacity-100' : 'opacity-0'}`}
+      aria-hidden={!show}
+    >
       {spinner}
     </div>
   )
