@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { fetchReferences } from '../api/references'
 import { API } from '../api/config.js'
-import PageLoader from './PageLoader'
+import { ReferencesSkeleton } from './Skeletons'
 import LoadError from './LoadError'
 
 export default function References() {
@@ -20,9 +20,7 @@ export default function References() {
     load()
   }, [])
 
-  if (loading) return <PageLoader label="" fullScreen overlay />
-  if (error) return <LoadError message="Referanslar yüklenemedi. Bağlantınızı kontrol edip tekrar deneyin." onRetry={load} />
-  if (refs.length === 0) return null
+  if (!loading && !error && refs.length === 0) return null
 
   return (
     <section id="referanslar" className="py-24 bg-gray-50">
@@ -39,30 +37,36 @@ export default function References() {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {refs.map((r) => (
-            <div
-              key={r.id}
-              className="bg-white rounded-2xl border border-gray-100 hover:shadow-md hover:border-[#448834]/20 transition-all duration-200 p-5 flex flex-col items-center gap-3"
-            >
-              <div className="w-full h-44 flex items-center justify-center">
-                {r.logo ? (
-                  <img
-                    src={`${API}${r.logo}`}
-                    alt={r.name}
-                    className="max-h-40 max-w-full object-contain" loading="lazy" />
-                ) : (
-                  <div className="w-12 h-12 rounded-full bg-[#448834]/10 flex items-center justify-center">
-                    <span className="text-[#448834] font-bold text-lg">
-                      {r.name.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                )}
+        {loading ? (
+          <ReferencesSkeleton />
+        ) : error ? (
+          <LoadError message="Referanslar yüklenemedi. Bağlantınızı kontrol edip tekrar deneyin." onRetry={load} />
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {refs.map((r) => (
+              <div
+                key={r.id}
+                className="bg-white rounded-2xl border border-gray-100 hover:shadow-md hover:border-[#448834]/20 transition-all duration-200 p-5 flex flex-col items-center gap-3"
+              >
+                <div className="w-full h-44 flex items-center justify-center">
+                  {r.logo ? (
+                    <img
+                      src={`${API}${r.logo}`}
+                      alt={r.name}
+                      className="max-h-40 max-w-full object-contain" loading="lazy" />
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-[#448834]/10 flex items-center justify-center">
+                      <span className="text-[#448834] font-bold text-lg">
+                        {r.name.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <p className="text-xs font-semibold text-gray-700 text-center leading-tight">{r.name}</p>
               </div>
-              <p className="text-xs font-semibold text-gray-700 text-center leading-tight">{r.name}</p>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   )

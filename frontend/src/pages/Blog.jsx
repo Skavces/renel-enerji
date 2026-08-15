@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Calendar, ArrowRight } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
-import PageLoader from '../components/PageLoader'
+import { BlogSkeleton } from '../components/Skeletons'
 import LoadError from '../components/LoadError'
 import SEO from '../components/SEO'
 import { fetchPosts } from '../api/blog.js'
@@ -67,7 +67,7 @@ export default function Blog() {
       <section className="py-16 bg-gray-50">
         <div className="max-w-5xl mx-auto px-6">
           {loading ? (
-            <PageLoader label="" fullScreen overlay />
+            <BlogSkeleton />
           ) : error ? (
             <LoadError message="Blog yazıları yüklenemedi. Bağlantınızı kontrol edip tekrar deneyin." onRetry={load} />
           ) : posts.length === 0 ? (

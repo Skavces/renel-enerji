@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, MapPin, Zap, Calendar } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
-import PageLoader from '../components/PageLoader'
+import { ProjelerimizSkeleton } from '../components/Skeletons'
 import LoadError from '../components/LoadError'
 import { fetchProjects, mediaUrl } from '../api/projects'
 import SEO from '../components/SEO'
@@ -95,7 +95,7 @@ export default function Projelerimiz() {
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-6">
           {loading ? (
-            <PageLoader label="" fullScreen overlay />
+            <ProjelerimizSkeleton />
           ) : error ? (
             <LoadError message="Projeler yüklenemedi. Bağlantınızı kontrol edip tekrar deneyin." onRetry={load} />
           ) : projects.length === 0 ? (
