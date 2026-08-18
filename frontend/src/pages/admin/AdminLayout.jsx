@@ -17,7 +17,9 @@ import {
   X,
 } from 'lucide-react'
 import { useAdminAuth } from '../../contexts/AdminAuthContext'
+import { usePageTransitionOverlay } from '../../hooks/usePageTransitionOverlay'
 import Logo from '../../components/Logo'
+import PageLoader from '../../components/PageLoader'
 
 const NAV = [
   { to: '/rnl-panel', label: 'Ana Sayfa', icon: LayoutDashboard, match: (p) => p === '/rnl-panel' },
@@ -36,6 +38,7 @@ export default function AdminLayout() {
   const { logout } = useAdminAuth()
   const navigate = useNavigate()
   const { pathname } = useLocation()
+  const showRouteOverlay = usePageTransitionOverlay(pathname)
   const [mobileOpen, setMobileOpen] = useState(false)
 
   // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -48,6 +51,7 @@ export default function AdminLayout() {
 
   return (
     <div className="flex flex-col lg:flex-row h-screen overflow-hidden bg-gray-50">
+      <PageLoader label="" fullScreen overlay show={showRouteOverlay} />
       {/* Sidebar — masaüstü */}
       <aside className="hidden lg:flex flex-col w-64 shrink-0 h-screen bg-white border-r border-gray-200">
         <Link to="/rnl-panel" className="flex items-center px-6 py-6 shrink-0">
