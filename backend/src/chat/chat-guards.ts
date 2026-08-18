@@ -57,9 +57,13 @@ const COMMON_ENGLISH_WORDS = new Set([
 ])
 
 // Model kelimeyi Türkçe kelimeye bitişik de üretebiliyor ("içinmonthly");
-// 5+ harfli İngilizce kelimeler önek/sonek olarak da aranır (kısa kelimelerde
-// yanlış pozitif riski yüksek olduğundan onlar yalnızca tam eşleşmeyle bakılır)
-const LONG_ENGLISH_WORDS = [...COMMON_ENGLISH_WORDS].filter(w => w.length >= 5)
+// 4+ harfli İngilizce kelimeler önek/sonek olarak da aranır (3 harf ve altı
+// yalnızca tam eşleşmeyle bakılır — "on", "her", "has" gibi Türkçe eş
+// yazılışlıların yanlış pozitif riski taşıması nedeniyle).
+// 4 harfli kök eşiği bilinçli: "need" tam eşleşse de çekimli hali "needed"
+// eşleşmiyordu ve canlıda kullanıcıya sızdı (2026-08-17) — köküyle aynı sızıntı
+// riskini taşıyan çekim/türetim ekleri de bu şekilde yakalanır.
+const LONG_ENGLISH_WORDS = [...COMMON_ENGLISH_WORDS].filter(w => w.length >= 4)
 
 // nonLatinLetterRatio farklı alfabeleri yakalar ama Latin alfabeli sızıntıları
 // ("monthly", "tentang" vb.) göremez; bu kontrol o boşluğu kapatır.
