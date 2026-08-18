@@ -39,6 +39,10 @@ describe('hasForeignWordLeak', () => {
     expect(hasForeignWordLeak('Bilgi almak içinmonthly elektrik faturanız nedir?')).toBe(true)
   })
 
+  it('catches inflected forms of short listed words (canlıda görülen sızıntı, 2026-08-17)', () => {
+    expect(hasForeignWordLeak('Çatı tipi güneş enerjisi sistemi için needed bilgi, aylık elektrik faturanız nedir?')).toBe(true)
+  })
+
   it('catches words with q/w/x letters', () => {
     expect(hasForeignWordLeak('Sistem kurulumu için planladığınız yer tentang wattage nedir?')).toBe(true)
     expect(hasForeignWordLeak('Fiyat quotation için bilgi verin.')).toBe(true)
