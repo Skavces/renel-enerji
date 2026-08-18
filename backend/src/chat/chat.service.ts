@@ -99,7 +99,7 @@ export class ChatService {
   // çağrısıyla yakalar. Judge erişilemez/anlaşılmaz ise fail-open — bütçe sayacıyla
   // aynı felsefe: dil saflığı uğruna chatbot susturulmaz.
   // consumeDailyBudget bilinçli olarak ÇAĞRILMAZ: her judge zaten bütçelenmiş bir
-  // üretim çağrısına 1:1 bağlıdır, toplam Groq kullanımı bütçe×2 ile sınırlıdır.
+  // üretim çağrısına 1:1 bağlıdır, toplam Groq kullanımı bütçe×MAX_CHAT_ATTEMPTS ile sınırlıdır.
   private async isTurkishByJudge(text: string): Promise<boolean> {
     const { res, data } = await this.groq.call(this.groq.getKeys('chat'), {
       model: GROQ_FALLBACK_MODEL,
@@ -133,22 +133,29 @@ export class ChatService {
     return !(await this.isTurkishByJudge(text))
   }
 
+  // Kullanıcıya göstermeden en fazla bu kadar üretim denenir; hepsi sızarsa sabit
+  // mesaja düşülür. 2026-08-17'de canlıda 2 denemenin (ilk + tek retry) ikisi de
+  // sızdırıp kullanıcıyı sabit hata mesajıyla baş başa bıraktığı görüldü — üçüncü
+  // deneme, ekstra Groq bütçesi karşılığında bu sert düşüşü nadirleştirir.
+  private static readonly MAX_CHAT_ATTEMPTS = 3
+
   async chat(messages: ChatMessage[]): Promise<string> {
     try {
-      let reply = await this.callGroq(SYSTEM_PROMPT, messages, 400)
-      // İç içe yapı bilinçli: temiz yanıt tek judge çağrısıyla geçsin (ardışık iki
-      // if aynı temiz yanıtı iki kez judge'a götürürdü)
-      if (await this.isLeaky(reply)) {
-        // Kullanıcıya göstermeden tek sefer yeniden üret; kör tekrar aynı sızıntıyı
-        // yeniden üretebildiğinden retry'a düzeltici talimat eklenir
-        this.logger.warn(`Yabancı dil sızıntısı, yanıt yeniden üretiliyor: "${reply.slice(0, 120)}"`)
-        reply = await this.callGroq(`${SYSTEM_PROMPT}\n\n${RETRY_NUDGE}`, messages, 400)
-        if (await this.isLeaky(reply)) {
-          this.logger.warn(`Yeniden denemede de sızıntı, sabit mesaja düşürüldü: "${reply.slice(0, 120)}"`)
-          return 'Üzgünüm, yanıt oluşturulurken bir sorun yaşandı. Sorunuzu tekrar yazar mısınız?'
-        }
+      for (let attempt = 1; attempt <= ChatService.MAX_CHAT_ATTEMPTS; attempt++) {
+        // İlk deneme düz sistem promptuyla, sonrakiler düzeltici talimatla yapılır
+        // (kör tekrar aynı sızıntıyı yeniden üretebiliyor)
+        const systemPrompt = attempt === 1 ? SYSTEM_PROMPT : `${SYSTEM_PROMPT}\n\n${RETRY_NUDGE}`
+        const reply = await this.callGroq(systemPrompt, messages, 400)
+        if (!(await this.isLeaky(reply))) return reply
+
+        const isLastAttempt = attempt === ChatService.MAX_CHAT_ATTEMPTS
+        this.logger.warn(
+          isLastAttempt
+            ? `${attempt}. denemede de sızıntı, sabit mesaja düşürüldü: "${reply.slice(0, 120)}"`
+            : `Yabancı dil sızıntısı (deneme ${attempt}/${ChatService.MAX_CHAT_ATTEMPTS}), yanıt yeniden üretiliyor: "${reply.slice(0, 120)}"`,
+        )
       }
-      return reply
+      return 'Üzgünüm, yanıt oluşturulurken bir sorun yaşandı. Sorunuzu tekrar yazar mısınız?'
     } catch (err) {
       // Bütçe dolduğunda hata yerine normal cevap gibi sabit mesaj dön;
       // frontend'de WhatsApp butonu görünür kalır
