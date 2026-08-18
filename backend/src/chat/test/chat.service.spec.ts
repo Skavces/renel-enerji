@@ -79,20 +79,34 @@ describe('ChatService — non-Turkish output guard', () => {
     expect(systemOf(1)).toContain(RETRY_NUDGE)
   })
 
-  it('falls back to fixed Turkish message when the retry also leaks', async () => {
+  it('regenerates a second time when the retry also leaks, then returns the clean third attempt', async () => {
+    const { service, call, judgeCallCount } = makeService(
+      'Çatı GES için monthly elektrik faturanız nedir?',
+      'Kurulum yeriniz about bir konut çatısı mı?',
+      'Kurulum yeriniz konut çatısı mı?',
+    )
+    await expect(service.chat(MESSAGES)).resolves.toBe('Kurulum yeriniz konut çatısı mı?')
+    // ilk iki yanıt deterministik kirli (judge atlanır), üçüncüde judge çağrılır
+    expect(call).toHaveBeenCalledTimes(4)
+    expect(judgeCallCount()).toBe(1)
+  })
+
+  it('falls back to fixed Turkish message when all attempts leak', async () => {
     const { service, call, judgeCallCount } = makeService(
       'Bilgi almak içinmonthly elektrik faturanız nedir?',
       'Kurulum yeriniz about bir konut çatısı mı?',
+      'Fiyat için cost bilgisi paylaşır mısınız?',
     )
     const reply = await service.chat(MESSAGES)
     expect(reply).toBe('Üzgünüm, yanıt oluşturulurken bir sorun yaşandı. Sorunuzu tekrar yazar mısınız?')
-    // iki yanıt da deterministik kirli: judge hiç çağrılmaz
-    expect(call).toHaveBeenCalledTimes(2)
+    // üç yanıt da deterministik kirli: judge hiç çağrılmaz
+    expect(call).toHaveBeenCalledTimes(3)
     expect(judgeCallCount()).toBe(0)
   })
 
-  it('replaces non-Latin chat reply with fixed Turkish message after retry', async () => {
+  it('replaces non-Latin chat reply with fixed Turkish message after all retries', async () => {
     const { service } = makeService(
+      'Солнечная энергия очень выгодна для вашего дома',
       'Солнечная энергия очень выгодна для вашего дома',
       'Солнечная энергия очень выгодна для вашего дома',
     )
@@ -120,12 +134,13 @@ describe('ChatService — LLM dil denetçisi (judge)', () => {
     expect(call).toHaveBeenCalledTimes(4)
   })
 
-  it('falls back to the fixed message when the judge rejects both attempts', async () => {
-    const { service, call, setJudgeVerdicts } = makeService('İlk yanıt', 'İkinci yanıt')
-    setJudgeVerdicts('HAYIR', 'HAYIR')
+  it('falls back to the fixed message when the judge rejects all attempts', async () => {
+    const { service, call, setJudgeVerdicts } = makeService('İlk yanıt', 'İkinci yanıt', 'Üçüncü yanıt')
+    setJudgeVerdicts('HAYIR', 'HAYIR', 'HAYIR')
     const reply = await service.chat(MESSAGES)
     expect(reply).toBe('Üzgünüm, yanıt oluşturulurken bir sorun yaşandı. Sorunuzu tekrar yazar mısınız?')
-    expect(call).toHaveBeenCalledTimes(4)
+    // üç üretim + üç judge
+    expect(call).toHaveBeenCalledTimes(6)
   })
 
   it('fails open when the judge is unreachable', async () => {
