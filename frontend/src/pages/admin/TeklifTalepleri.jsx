@@ -127,7 +127,7 @@ export default function TeklifTalepleri() {
   const [toDay, setToDay] = useState('')
 
   function handleFetchError(err) {
-    if (err.message.includes('401') || err.message.includes('Unauthorized')) {
+    if (err.status === 401) {
       logout()
       navigate('/rnl-panel/login')
     }

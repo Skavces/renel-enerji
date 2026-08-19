@@ -16,7 +16,7 @@ export default function AdminDashboard() {
     Promise.all([fetchAllProjects(), fetchAllReferences(), fetchLogs().catch(() => null)])
       .then(([p, r, l]) => { setProjects(p); setRefs(r); setLogStats(l?.stats ?? null) })
       .catch((err) => {
-        if (err.message.includes('401') || err.message.includes('Unauthorized')) {
+        if (err.status === 401) {
           logout()
           navigate('/rnl-panel/login')
         }
