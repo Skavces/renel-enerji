@@ -97,7 +97,7 @@ export default function BlogAdmin() {
     fetchAllBlogPosts()
       .then(setPosts)
       .catch((err) => {
-        if (err.message.includes('401') || err.message.includes('Unauthorized')) {
+        if (err.status === 401) {
           logout()
           navigate('/rnl-panel/login')
         }
