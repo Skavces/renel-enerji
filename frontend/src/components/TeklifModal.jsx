@@ -4,6 +4,9 @@ import TeklifForm from './TeklifForm'
 
 export default function TeklifModal({ closing, onClose }) {
   const firstInputRef = useRef(null)
+  const successTimerRef = useRef(null)
+
+  useEffect(() => () => clearTimeout(successTimerRef.current), [])
 
   useEffect(() => {
     const handler = e => { if (e.key === 'Escape') onClose() }
@@ -45,7 +48,7 @@ export default function TeklifModal({ closing, onClose }) {
         </div>
 
         <div ref={firstInputRef} className="px-5 py-5 overflow-y-auto">
-          <TeklifForm onSuccess={() => setTimeout(onClose, 3500)} />
+          <TeklifForm onSuccess={() => { successTimerRef.current = setTimeout(onClose, 3500) }} />
         </div>
       </div>
     </div>

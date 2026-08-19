@@ -33,6 +33,7 @@ export default function TeklifChatbot({ onClose, closing, messages: initialMessa
   const [selectedStar, setSelectedStar] = useState(0)
   const messagesRef = useRef(null)
   const inputRef = useRef(null)
+  const closeTimerRef = useRef(null)
 
   function saveMessages(next) {
     setMessages(next)
@@ -61,6 +62,8 @@ export default function TeklifChatbot({ onClose, closing, messages: initialMessa
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  useEffect(() => () => clearTimeout(closeTimerRef.current), [])
 
   async function send(text) {
     const trimmed = text.trim()
@@ -123,7 +126,7 @@ export default function TeklifChatbot({ onClose, closing, messages: initialMessa
     setRatingView('thanks')
     sessionStorage.setItem(RATED_KEY, '1')
     submitChatRating(star, sessionId).catch(() => {})
-    setTimeout(onClose, 1200)
+    closeTimerRef.current = setTimeout(onClose, 1200)
   }
 
   return (
