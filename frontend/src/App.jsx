@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
-import { useEffect, lazy, Suspense, useState } from 'react'
+import { useEffect, lazy, Suspense, useState, useRef } from 'react'
 import { Bot, Zap } from 'lucide-react'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
@@ -54,11 +54,6 @@ function ProtectedRoute({ children }) {
   return children
 }
 
-function openChat(setChatOpen, setChatPrefill) {
-  setChatPrefill('')
-  setChatOpen(true)
-}
-
 function PublicLayout() {
   const location = useLocation()
   const showRouteOverlay = usePageTransitionOverlay(location.pathname)
@@ -71,18 +66,33 @@ function PublicLayout() {
 
   const [teklifOpen, setTeklifOpen] = useState(false)
   const [teklifClosing, setTeklifClosing] = useState(false)
+  const closeChatTimerRef = useRef(null)
+  const closeTeklifTimerRef = useRef(null)
+
+  function openChat(prefill = '') {
+    clearTimeout(closeChatTimerRef.current)
+    setChatClosing(false)
+    setChatPrefill(prefill)
+    setChatOpen(true)
+  }
 
   function handleCloseChat() {
     setChatClosing(true)
-    setTimeout(() => {
+    closeChatTimerRef.current = setTimeout(() => {
       setChatOpen(false)
       setChatClosing(false)
     }, 220)
   }
 
+  function openTeklif() {
+    clearTimeout(closeTeklifTimerRef.current)
+    setTeklifClosing(false)
+    setTeklifOpen(true)
+  }
+
   function handleCloseTeklif() {
     setTeklifClosing(true)
-    setTimeout(() => {
+    closeTeklifTimerRef.current = setTimeout(() => {
       setTeklifOpen(false)
       setTeklifClosing(false)
     }, 220)
@@ -90,19 +100,15 @@ function PublicLayout() {
 
   // Sayfa içi CTA'lar (örn. tasarruf hesaplayıcı) chatbot'u bu event ile açar
   useEffect(() => {
-    const open = e => {
-      setChatPrefill(e.detail?.prefill || '')
-      setChatOpen(true)
-    }
+    const open = e => openChat(e.detail?.prefill || '')
     window.addEventListener('open-chat', open)
     return () => window.removeEventListener('open-chat', open)
   }, [])
 
   // Sayfa içi CTA'lar (örn. hizmet detay sayfaları) teklif modalını bu event ile açar
   useEffect(() => {
-    const open = () => setTeklifOpen(true)
-    window.addEventListener('open-teklif', open)
-    return () => window.removeEventListener('open-teklif', open)
+    window.addEventListener('open-teklif', openTeklif)
+    return () => window.removeEventListener('open-teklif', openTeklif)
   }, [])
 
   return (
@@ -133,7 +139,7 @@ function PublicLayout() {
       </main>
       <Footer />
       <button
-        onClick={() => setTeklifOpen(true)}
+        onClick={() => openTeklif()}
         className="fixed bottom-20 right-6 z-50 flex items-center gap-2.5 bg-[#448834] hover:bg-[#357228] text-white font-semibold text-sm px-5 py-3 rounded-full shadow-lg shadow-black/15 transition-all hover:scale-105"
       >
         <Zap size={18} />
@@ -141,7 +147,7 @@ function PublicLayout() {
       </button>
       <div className="ai-button-ring fixed bottom-6 right-6 z-50 rounded-full p-0.5">
         <button
-          onClick={() => openChat(setChatOpen, setChatPrefill)}
+          onClick={() => openChat()}
           className="flex items-center gap-2.5 bg-[#357228] hover:bg-[#2d6124] text-white font-semibold text-sm px-5 py-3 rounded-full shadow-lg shadow-black/15 transition-all hover:scale-105"
         >
           <Bot size={18} />
