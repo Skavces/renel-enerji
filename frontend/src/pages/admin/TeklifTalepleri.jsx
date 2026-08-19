@@ -142,10 +142,12 @@ export default function TeklifTalepleri() {
   }
 
   useEffect(() => {
+    let ignore = false
     fetchQuoteRequests(query())
-      .then(setData)
-      .catch(handleFetchError)
-      .finally(() => setLoading(false))
+      .then(data => { if (!ignore) setData(data) })
+      .catch(err => { if (!ignore) handleFetchError(err) })
+      .finally(() => { if (!ignore) setLoading(false) })
+    return () => { ignore = true }
   }, [page, status, fromDay, toDay]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function changeStatus(next) {

@@ -166,7 +166,9 @@ function FunnelSection() {
   const [funnel, setFunnel] = useState(null)
 
   useEffect(() => {
-    fetchChatFunnel(days).then(setFunnel).catch(() => {})
+    let ignore = false
+    fetchChatFunnel(days).then(data => { if (!ignore) setFunnel(data) }).catch(() => {})
+    return () => { ignore = true }
   }, [days])
 
   const steps = [
@@ -350,10 +352,12 @@ export default function ChatDegerlendirme() {
   }
 
   useEffect(() => {
+    let ignore = false
     fetchChatLeads(leadQuery())
-      .then(setLeadData)
-      .catch(handleFetchError)
-      .finally(() => setLoading(false))
+      .then(data => { if (!ignore) setLeadData(data) })
+      .catch(err => { if (!ignore) handleFetchError(err) })
+      .finally(() => { if (!ignore) setLoading(false) })
+    return () => { ignore = true }
   }, [leadPage, leadStatus, leadFromDay, leadToDay]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function changeLeadStatus(next) {
@@ -368,7 +372,11 @@ export default function ChatDegerlendirme() {
   }
 
   useEffect(() => {
-    fetchChatRatings(ratingPage).then(setRatingData).catch(handleFetchError)
+    let ignore = false
+    fetchChatRatings(ratingPage)
+      .then(data => { if (!ignore) setRatingData(data) })
+      .catch(err => { if (!ignore) handleFetchError(err) })
+    return () => { ignore = true }
   }, [ratingPage]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleDeleteLead(id) {
