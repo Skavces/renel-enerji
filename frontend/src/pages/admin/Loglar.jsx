@@ -115,16 +115,19 @@ export default function Loglar() {
   const [toDay, setToDay] = useState('')
 
   useEffect(() => {
+    let ignore = false
     setLoading(true)
     fetchLogs({ level: level === 'all' ? undefined : level, page, ...dayRangeToIso(fromDay, toDay) })
-      .then(setData)
+      .then(data => { if (!ignore) setData(data) })
       .catch((err) => {
+        if (ignore) return
         if (err.status === 401) {
           logout()
           navigate('/rnl-panel/login')
         }
       })
-      .finally(() => setLoading(false))
+      .finally(() => { if (!ignore) setLoading(false) })
+    return () => { ignore = true }
   }, [level, page, fromDay, toDay]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function changeLevel(next) {
