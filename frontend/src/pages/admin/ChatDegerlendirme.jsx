@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { Star, ChevronDown, ChevronRight, MessageCircle, Bot, Users, Send, Clock, TrendingUp, Trash2 } from 'lucide-react'
 import { fetchChatRatings, fetchChatLeads, fetchChatFunnel, deleteChatLead, deleteChatRating } from '../../api/admin'
 import { dayRangeToIso } from '../../lib/date'
+import { applyPagedResult } from '../../lib/adminPaging'
+import { useLatestFetch } from '../../hooks/useLatestFetch'
 import { useAdminAuth } from '../../contexts/AdminAuthContext'
 import AdminPager from '../../components/AdminPager'
 import AdminDateRange from '../../components/AdminDateRange'
@@ -335,6 +337,16 @@ export default function ChatDegerlendirme() {
   const [leadFromDay, setLeadFromDay] = useState('') // YYYY-MM-DD, boş = filtre yok
   const [leadToDay, setLeadToDay] = useState('')
   const [ratingPage, setRatingPage] = useState(1)
+  // Silme sonrası listeyi yeniden çekmek için: sayı arttırmak effect'i
+  // yeniden tetikler, effect ise her zaman GÜNCEL leadStatus/leadPage'i okur.
+  // (Silme handler'ının kendi fetch'ini atması yerine bu yaklaşım tercih
+  // edildi: handler'daki bir fetch, `await deleteChatLead` sonrası closure'da
+  // BAYAT bir filtre değeriyle dispatch edilebiliyor ve araya giren bir
+  // filtre değişikliğinin güncel verisini ezebiliyordu.)
+  const [leadRefreshTick, setLeadRefreshTick] = useState(0)
+  const [ratingRefreshTick, setRatingRefreshTick] = useState(0)
+  const leadFetch = useLatestFetch()
+  const ratingFetch = useLatestFetch()
 
   function handleFetchError(err) {
     if (err.status === 401) {
@@ -352,13 +364,23 @@ export default function ChatDegerlendirme() {
   }
 
   useEffect(() => {
-    let ignore = false
+    const seq = leadFetch.next()
     fetchChatLeads(leadQuery())
-      .then(data => { if (!ignore) setLeadData(data) })
-      .catch(err => { if (!ignore) handleFetchError(err) })
-      .finally(() => { if (!ignore) setLoading(false) })
-    return () => { ignore = true }
-  }, [leadPage, leadStatus, leadFromDay, leadToDay]) // eslint-disable-line react-hooks/exhaustive-deps
+      .then(result => {
+        if (!leadFetch.isCurrent(seq)) return
+        // Sayfa artık aralık dışıysa (silme sonrası veya filtre daraltınca)
+        // son geçerli sayfaya dön — aksi halde pager kendini gizler ve admin
+        // mahsur kalır.
+        applyPagedResult(result.leads, result, setLeadPage, setLeadData)
+      })
+      .catch(err => { if (leadFetch.isCurrent(seq)) handleFetchError(err) })
+      .finally(() => {
+        if (!leadFetch.isCurrent(seq)) return
+        setLoading(false)
+        setDeletingId(null) // refreshTick bir silmeden geldiyse, buton ancak taze veri gelince tekrar etkinleşir
+      })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [leadPage, leadStatus, leadFromDay, leadToDay, leadRefreshTick])
 
   function changeLeadStatus(next) {
     setLeadStatus(next)
@@ -372,22 +394,25 @@ export default function ChatDegerlendirme() {
   }
 
   useEffect(() => {
-    let ignore = false
+    const seq = ratingFetch.next()
     fetchChatRatings(ratingPage)
-      .then(data => { if (!ignore) setRatingData(data) })
-      .catch(err => { if (!ignore) handleFetchError(err) })
-    return () => { ignore = true }
-  }, [ratingPage]) // eslint-disable-line react-hooks/exhaustive-deps
+      .then(result => {
+        if (!ratingFetch.isCurrent(seq)) return
+        applyPagedResult(result.ratings, result, setRatingPage, setRatingData)
+      })
+      .catch(err => { if (ratingFetch.isCurrent(seq)) handleFetchError(err) })
+      .finally(() => { if (ratingFetch.isCurrent(seq)) setDeletingId(null) })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ratingPage, ratingRefreshTick])
 
   async function handleDeleteLead(id) {
     if (!confirm('Bu talebi silmek istediğinize emin misiniz?')) return
     setDeletingId(id)
     try {
       await deleteChatLead(id)
-      setLeadData(await fetchChatLeads(leadQuery()))
+      setLeadRefreshTick(t => t + 1) // deletingId, tetiklenen refetch effect'te temizlenir
     } catch (err) {
       alert('Silinemedi: ' + err.message)
-    } finally {
       setDeletingId(null)
     }
   }
@@ -397,10 +422,9 @@ export default function ChatDegerlendirme() {
     setDeletingId(id)
     try {
       await deleteChatRating(id)
-      setRatingData(await fetchChatRatings(ratingPage))
+      setRatingRefreshTick(t => t + 1) // deletingId, tetiklenen refetch effect'te temizlenir
     } catch (err) {
       alert('Silinemedi: ' + err.message)
-    } finally {
       setDeletingId(null)
     }
   }

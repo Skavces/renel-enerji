@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { ChevronDown, Clock, Inbox, MessageCircle, Phone, PhoneCall, Trash2, Trophy, XCircle } from 'lucide-react'
 import { fetchQuoteRequests, updateQuoteStatus, deleteQuoteRequest } from '../../api/admin'
 import { dayRangeToIso } from '../../lib/date'
+import { applyPagedResult } from '../../lib/adminPaging'
+import { useLatestFetch } from '../../hooks/useLatestFetch'
 import { useAdminAuth } from '../../contexts/AdminAuthContext'
 import AdminPager from '../../components/AdminPager'
 import AdminDateRange from '../../components/AdminDateRange'
@@ -125,6 +127,14 @@ export default function TeklifTalepleri() {
   const [status, setStatus] = useState('all')
   const [fromDay, setFromDay] = useState('')
   const [toDay, setToDay] = useState('')
+  // Silme/durum-güncelleme hatası sonrası listeyi yeniden çekmek için: sayı
+  // arttırmak effect'i yeniden tetikler, effect ise her zaman GÜNCEL
+  // status/page/tarih filtresini okur. (Handler'ın kendi fetch'ini atması
+  // yerine bu yaklaşım tercih edildi: handler'daki bir fetch, `await`
+  // sonrası closure'da BAYAT bir filtre değeriyle dispatch edilebiliyor ve
+  // araya giren bir filtre değişikliğinin güncel verisini ezebiliyordu.)
+  const [refreshTick, setRefreshTick] = useState(0)
+  const dataFetch = useLatestFetch()
 
   function handleFetchError(err) {
     if (err.status === 401) {
@@ -142,13 +152,20 @@ export default function TeklifTalepleri() {
   }
 
   useEffect(() => {
-    let ignore = false
+    const seq = dataFetch.next()
     fetchQuoteRequests(query())
-      .then(data => { if (!ignore) setData(data) })
-      .catch(err => { if (!ignore) handleFetchError(err) })
-      .finally(() => { if (!ignore) setLoading(false) })
-    return () => { ignore = true }
-  }, [page, status, fromDay, toDay]) // eslint-disable-line react-hooks/exhaustive-deps
+      .then(result => {
+        if (!dataFetch.isCurrent(seq)) return
+        applyPagedResult(result.requests, result, setPage, setData)
+      })
+      .catch(err => { if (dataFetch.isCurrent(seq)) handleFetchError(err) })
+      .finally(() => {
+        if (!dataFetch.isCurrent(seq)) return
+        setLoading(false)
+        setDeletingId(null) // refreshTick bir silmeden geldiyse, buton ancak taze veri gelince tekrar etkinleşir
+      })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, status, fromDay, toDay, refreshTick])
 
   function changeStatus(next) {
     setStatus(next)
@@ -171,7 +188,7 @@ export default function TeklifTalepleri() {
       await updateQuoteStatus(id, nextStatus)
     } catch (err) {
       alert('Durum güncellenemedi: ' + err.message)
-      fetchQuoteRequests(query()).then(setData).catch(handleFetchError)
+      setRefreshTick(t => t + 1)
     }
   }
 
@@ -180,10 +197,9 @@ export default function TeklifTalepleri() {
     setDeletingId(id)
     try {
       await deleteQuoteRequest(id)
-      setData(await fetchQuoteRequests(query()))
+      setRefreshTick(t => t + 1) // deletingId, tetiklenen refetch effect'te temizlenir
     } catch (err) {
       alert('Silinemedi: ' + err.message)
-    } finally {
       setDeletingId(null)
     }
   }
