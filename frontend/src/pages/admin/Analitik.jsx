@@ -5,6 +5,8 @@ import {
 } from 'recharts'
 
 import { API } from '../../api/config.js'
+import AdminStatCard from '../../components/AdminStatCard'
+import AdminTabs from '../../components/AdminTabs'
 const UMAMI_URL = import.meta.env.VITE_UMAMI_URL || 'http://localhost:3002'
 
 
@@ -143,19 +145,12 @@ export default function Analitik() {
           <p className="text-sm text-gray-400 mt-1">Site ziyaretçi istatistikleri</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <div className="flex bg-gray-100 rounded-xl p-1 gap-0.5">
-            {RANGES.map((r, i) => (
-              <button
-                key={r.label}
-                onClick={() => setRangeIdx(i)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                  rangeIdx === i ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                {r.label}
-              </button>
-            ))}
-          </div>
+          <AdminTabs
+            items={RANGES.map((r, i) => ({ id: i, label: r.label }))}
+            value={rangeIdx}
+            onChange={setRangeIdx}
+            size="xs"
+          />
           <button
             onClick={() => load(rangeIdx)}
             disabled={loading}
@@ -190,13 +185,7 @@ export default function Analitik() {
               { label: 'Oturum', value: stats?.visits?.value ?? stats?.visits ?? 0, icon: MousePointer },
               { label: 'Ort. Süre', value: (() => { const t = stats?.totaltime?.value ?? stats?.totaltime ?? 0; const v = stats?.visits?.value ?? stats?.visits ?? 1; return t ? `${Math.round(t / 60 / v)}dk` : '0dk' })(), icon: Clock },
             ].map((s) => (
-              <div key={s.label} className="bg-white rounded-2xl border border-gray-100 p-5">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-medium text-gray-400 uppercase tracking-widest">{s.label}</span>
-                  <s.icon size={14} className="text-gray-300" />
-                </div>
-                <p className="text-3xl font-bold text-gray-900 font-['Rajdhani']">{s.value}</p>
-              </div>
+              <AdminStatCard key={s.label} label={s.label} value={s.value} icon={s.icon} />
             ))}
           </div>
 

@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChevronDown, Clock, Inbox, MessageCircle, Phone, PhoneCall, Trash2, Trophy, XCircle } from 'lucide-react'
 import { fetchQuoteRequests, updateQuoteStatus, deleteQuoteRequest } from '../../api/admin'
-import { dayRangeToIso } from '../../lib/date'
+import { dayRangeToIso, formatDateTime } from '../../lib/date'
 import { applyPagedResult } from '../../lib/adminPaging'
 import { useLatestFetch } from '../../hooks/useLatestFetch'
 import { useAdminAuth } from '../../contexts/AdminAuthContext'
 import AdminPager from '../../components/AdminPager'
 import AdminDateRange from '../../components/AdminDateRange'
+import AdminStatCard from '../../components/AdminStatCard'
+import AdminTabs from '../../components/AdminTabs'
 
 const SERVICE_LABELS = {
   'cati-ges': 'Çatı Tipi GES',
@@ -31,30 +33,11 @@ const STATUS_TABS = [
   { id: 'lost', label: 'Kaybedildi' },
 ]
 
-function formatDate(value) {
-  return new Date(value).toLocaleString('tr-TR', {
-    day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
-  })
-}
-
 function formatPhone(phone) {
   // "905543796004" -> "0554 379 60 04"
   if (!phone || phone.length !== 12) return phone
   const local = '0' + phone.slice(2)
   return `${local.slice(0, 4)} ${local.slice(4, 7)} ${local.slice(7, 9)} ${local.slice(9, 11)}`
-}
-
-function StatCard({ label, value, icon }) {
-  const Icon = icon
-  return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-4">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-medium text-gray-400 uppercase tracking-widest">{label}</span>
-        <Icon size={13} className="text-gray-300" />
-      </div>
-      <p className="text-2xl font-bold text-gray-900 font-['Rajdhani']">{value}</p>
-    </div>
-  )
 }
 
 function RequestRow({ request, onStatusChange, onDelete, deleting }) {
@@ -86,7 +69,7 @@ function RequestRow({ request, onStatusChange, onDelete, deleting }) {
               <span className="whitespace-pre-wrap">{request.message}</span>
             </p>
           )}
-          <p className="text-xs text-gray-400 mt-2">{formatDate(request.createdAt)}</p>
+          <p className="text-xs text-gray-400 mt-2">{formatDateTime(request.createdAt)}</p>
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
@@ -230,27 +213,15 @@ export default function TeklifTalepleri() {
       ) : (
         <>
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
-            <StatCard label="Toplam" value={stats.total} icon={Inbox} />
-            <StatCard label="Yeni" value={stats.new} icon={Clock} />
-            <StatCard label="İletişimde" value={stats.contacted} icon={PhoneCall} />
-            <StatCard label="Kazanıldı" value={stats.won} icon={Trophy} />
-            <StatCard label="Kaybedildi" value={stats.lost} icon={XCircle} />
+            <AdminStatCard label="Toplam" value={stats.total} icon={Inbox} dense />
+            <AdminStatCard label="Yeni" value={stats.new} icon={Clock} dense />
+            <AdminStatCard label="İletişimde" value={stats.contacted} icon={PhoneCall} dense />
+            <AdminStatCard label="Kazanıldı" value={stats.won} icon={Trophy} dense />
+            <AdminStatCard label="Kaybedildi" value={stats.lost} icon={XCircle} dense />
           </div>
 
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-            <div className="flex bg-gray-100 rounded-xl p-1 gap-0.5 flex-wrap">
-              {STATUS_TABS.map(t => (
-                <button
-                  key={t.id}
-                  onClick={() => changeStatus(t.id)}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
-                    status === t.id ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  {t.label}
-                </button>
-              ))}
-            </div>
+            <AdminTabs items={STATUS_TABS} value={status} onChange={changeStatus} size="sm" wrap />
             <AdminDateRange from={fromDay} to={toDay} onChange={changeDates} />
           </div>
 

@@ -20,3 +20,11 @@ export function formatDate(dateStr: string): string {
     year: 'numeric',
   })
 }
+
+// Admin listelerinde kayıt zaman damgası göstermek için: formatDate'ten
+// farklı olarak saat/dakika içerir ve ayı kısaltır.
+export function formatDateTime(value: string): string {
+  return new Date(value).toLocaleString('tr-TR', {
+    day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
+  })
+}

@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Star, ChevronDown, ChevronRight, MessageCircle, Bot, Users, Send, Clock, TrendingUp, Trash2 } from 'lucide-react'
 import { fetchChatRatings, fetchChatLeads, fetchChatFunnel, deleteChatLead, deleteChatRating } from '../../api/admin'
-import { dayRangeToIso } from '../../lib/date'
+import { dayRangeToIso, formatDateTime } from '../../lib/date'
 import { applyPagedResult } from '../../lib/adminPaging'
 import { useLatestFetch } from '../../hooks/useLatestFetch'
 import { useAdminAuth } from '../../contexts/AdminAuthContext'
 import AdminPager from '../../components/AdminPager'
 import AdminDateRange from '../../components/AdminDateRange'
+import AdminStatCard from '../../components/AdminStatCard'
+import AdminTabs from '../../components/AdminTabs'
 
 function Stars({ value, size = 15 }) {
   return (
@@ -44,24 +46,6 @@ function Transcript({ conversation }) {
   )
 }
 
-function formatDate(value) {
-  return new Date(value).toLocaleString('tr-TR', {
-    day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
-  })
-}
-
-function StatCard(props) {
-  return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-5">
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-xs font-medium text-gray-400 uppercase tracking-widest">{props.label}</span>
-        <props.icon size={14} className="text-gray-300" />
-      </div>
-      <p className="text-3xl font-bold text-gray-900 font-['Rajdhani']">{props.value}</p>
-    </div>
-  )
-}
-
 function RatingRow({ rating, onDelete, deleting }) {
   const [expanded, setExpanded] = useState(false)
   const hasConversation = rating.conversation?.length > 0
@@ -81,7 +65,7 @@ function RatingRow({ rating, onDelete, deleting }) {
             </span>
           </div>
           <div className="flex items-center gap-2 sm:ml-auto">
-            <span className="text-xs text-gray-400">{formatDate(rating.createdAt)}</span>
+            <span className="text-xs text-gray-400">{formatDateTime(rating.createdAt)}</span>
             {hasConversation && (
               <ChevronDown
                 size={16}
@@ -134,7 +118,7 @@ function LeadRow({ lead, onDelete, deleting }) {
             {lead.rating != null && <Stars value={lead.rating} size={13} />}
           </div>
           <div className="flex items-center gap-2 sm:ml-auto">
-            <span className="text-xs text-gray-400">{formatDate(lead.updatedAt)}</span>
+            <span className="text-xs text-gray-400">{formatDateTime(lead.updatedAt)}</span>
             {hasConversation && (
               <ChevronDown
                 size={16}
@@ -186,19 +170,12 @@ function FunnelSection() {
           <TrendingUp size={13} className="text-gray-300" />
           <h3 className="font-semibold text-gray-700 text-sm">Dönüşüm Hunisi</h3>
         </div>
-        <div className="flex bg-gray-100 rounded-xl p-1 gap-0.5">
-          {[7, 30].map(d => (
-            <button
-              key={d}
-              onClick={() => setDays(d)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                days === d ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              {d} Gün
-            </button>
-          ))}
-        </div>
+        <AdminTabs
+          items={[{ id: 7, label: '7 Gün' }, { id: 30, label: '30 Gün' }]}
+          value={days}
+          onChange={setDays}
+          size="xs"
+        />
       </div>
       <div className="flex items-center">
         {steps.map((step, i) => (
@@ -236,28 +213,20 @@ function LeadsTab({ leadData, onDeleteLead, deletingId, onPageChange, status, fr
   return (
     <>
       <div className="grid grid-cols-3 gap-4 mb-6">
-        <StatCard label="Toplam Talep" value={stats.total} icon={Users} />
-        <StatCard label="WhatsApp'a Geçen" value={stats.whatsapp} icon={Send} />
-        <StatCard label="Kaçan (Geçmeyen)" value={stats.active} icon={Clock} />
+        <AdminStatCard label="Toplam Talep" value={stats.total} icon={Users} />
+        <AdminStatCard label="WhatsApp'a Geçen" value={stats.whatsapp} icon={Send} />
+        <AdminStatCard label="Kaçan (Geçmeyen)" value={stats.active} icon={Clock} />
       </div>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-        <div className="flex bg-gray-100 rounded-xl p-1 gap-0.5">
-          {[
+        <AdminTabs
+          items={[
             { id: 'all', label: 'Tümü' },
             { id: 'active', label: 'Geçmeyen' },
             { id: 'whatsapp', label: "WhatsApp'a Geçen" },
-          ].map(t => (
-            <button
-              key={t.id}
-              onClick={() => onStatusChange(t.id)}
-              className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${
-                status === t.id ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
+          ]}
+          value={status}
+          onChange={onStatusChange}
+        />
         <AdminDateRange from={fromDay} to={toDay} onChange={onDatesChange} />
       </div>
       {leads.length === 0 ? (
@@ -329,7 +298,11 @@ export default function ChatDegerlendirme() {
   const navigate = useNavigate()
   const [leadData, setLeadData] = useState(null)
   const [ratingData, setRatingData] = useState(null)
-  const [loading, setLoading] = useState(true)
+  // Başlıktaki iki sayaç ve sekme boş-durumu ikisi de doğru veriye muhtaç,
+  // bu yüzden ilk yükleme her iki fetch bitene kadar bekler.
+  const [leadsLoading, setLeadsLoading] = useState(true)
+  const [ratingsLoading, setRatingsLoading] = useState(true)
+  const loading = leadsLoading || ratingsLoading
   const [tab, setTab] = useState('leads') // 'leads' | 'ratings'
   const [deletingId, setDeletingId] = useState(null)
   const [leadPage, setLeadPage] = useState(1)
@@ -376,7 +349,7 @@ export default function ChatDegerlendirme() {
       .catch(err => { if (leadFetch.isCurrent(seq)) handleFetchError(err) })
       .finally(() => {
         if (!leadFetch.isCurrent(seq)) return
-        setLoading(false)
+        setLeadsLoading(false)
         setDeletingId(null) // refreshTick bir silmeden geldiyse, buton ancak taze veri gelince tekrar etkinleşir
       })
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -401,7 +374,11 @@ export default function ChatDegerlendirme() {
         applyPagedResult(result.ratings, result, setRatingPage, setRatingData)
       })
       .catch(err => { if (ratingFetch.isCurrent(seq)) handleFetchError(err) })
-      .finally(() => { if (ratingFetch.isCurrent(seq)) setDeletingId(null) })
+      .finally(() => {
+        if (!ratingFetch.isCurrent(seq)) return
+        setRatingsLoading(false)
+        setDeletingId(null)
+      })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ratingPage, ratingRefreshTick])
 
@@ -446,22 +423,14 @@ export default function ChatDegerlendirme() {
             {leadData?.stats?.total ?? 0} talep · {ratingData?.stats?.total ?? 0} değerlendirme
           </p>
         </div>
-        <div className="flex bg-gray-100 rounded-xl p-1 gap-0.5">
-          {[
+        <AdminTabs
+          items={[
             { id: 'leads', label: 'Potansiyel Talepler' },
             { id: 'ratings', label: 'Değerlendirmeler' },
-          ].map(t => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${
-                tab === t.id ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
+          ]}
+          value={tab}
+          onChange={setTab}
+        />
       </div>
 
       <FunnelSection />
