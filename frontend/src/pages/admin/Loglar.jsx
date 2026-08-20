@@ -2,21 +2,17 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ScrollText, AlertCircle, AlertTriangle, ChevronDown, Copy, Check } from 'lucide-react'
 import { fetchLogs } from '../../api/admin'
-import { dayRangeToIso } from '../../lib/date'
+import { dayRangeToIso, formatDateTime } from '../../lib/date'
 import { useAdminAuth } from '../../contexts/AdminAuthContext'
 import AdminPager from '../../components/AdminPager'
 import AdminDateRange from '../../components/AdminDateRange'
-
-function formatDate(value) {
-  return new Date(value).toLocaleString('tr-TR', {
-    day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
-  })
-}
+import AdminStatCard from '../../components/AdminStatCard'
+import AdminTabs from '../../components/AdminTabs'
 
 function logToText(log) {
   const level = log.level === 'error' ? 'HATA' : 'UYARI'
   const context = log.context ? ` [${log.context}]` : ''
-  return `${formatDate(log.createdAt)} [${level}]${context} ${log.message}`
+  return `${formatDateTime(log.createdAt)} [${level}]${context} ${log.message}`
 }
 
 function CopyButton({ getText, title, className = '', children }) {
@@ -37,18 +33,6 @@ function CopyButton({ getText, title, className = '', children }) {
       {copied ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
       {children && <span>{copied ? 'Kopyalandı' : children}</span>}
     </button>
-  )
-}
-
-function StatCard(props) {
-  return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-5">
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-xs font-medium text-gray-400 uppercase tracking-widest">{props.label}</span>
-        <props.icon size={14} className="text-gray-300" />
-      </div>
-      <p className="text-3xl font-bold text-gray-900 font-['Rajdhani']">{props.value}</p>
-    </div>
   )
 }
 
@@ -80,7 +64,7 @@ function LogRow({ log }) {
           </span>
         </button>
         <div className="flex items-center gap-2 sm:ml-auto shrink-0">
-          <span className="text-xs text-gray-400">{formatDate(log.createdAt)}</span>
+          <span className="text-xs text-gray-400">{formatDateTime(log.createdAt)}</span>
           <CopyButton
             getText={() => logToText(log)}
             title="Bu kaydı kopyala"
@@ -172,30 +156,22 @@ export default function Loglar() {
               Kopyala
             </CopyButton>
           )}
-          <div className="flex bg-gray-100 rounded-xl p-1 gap-0.5">
-            {[
+          <AdminTabs
+            items={[
               { id: 'all', label: 'Tümü' },
               { id: 'error', label: 'Hata' },
               { id: 'warn', label: 'Uyarı' },
-            ].map(t => (
-              <button
-                key={t.id}
-                onClick={() => changeLevel(t.id)}
-                className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${
-                  level === t.id ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
+            ]}
+            value={level}
+            onChange={changeLevel}
+          />
         </div>
       </div>
 
       <div className="grid grid-cols-3 gap-4 mb-6">
-        <StatCard label="Toplam Kayıt" value={stats.total} icon={ScrollText} />
-        <StatCard label="Son 24s Hata" value={stats.errors24h} icon={AlertCircle} />
-        <StatCard label="Son 24s Uyarı" value={stats.warns24h} icon={AlertTriangle} />
+        <AdminStatCard label="Toplam Kayıt" value={stats.total} icon={ScrollText} />
+        <AdminStatCard label="Son 24s Hata" value={stats.errors24h} icon={AlertCircle} />
+        <AdminStatCard label="Son 24s Uyarı" value={stats.warns24h} icon={AlertTriangle} />
       </div>
 
       {logs.length === 0 ? (
