@@ -15,11 +15,16 @@ jest.mock('sharp', () => jest.fn().mockReturnValue({ webp: jest.fn().mockReturnT
 jest.mock('fs/promises', () => ({ ...jest.requireActual('fs/promises'), rm: jest.fn() }))
 jest.mock('fs', () => ({ ...jest.requireActual('fs'), createWriteStream: jest.fn() }))
 jest.mock('stream/promises', () => ({ pipeline: jest.fn().mockResolvedValue(undefined) }))
+jest.mock('../../upload/upload.utils', () => ({
+  ...jest.requireActual('../../upload/upload.utils'),
+  assertMagicBytes: jest.fn().mockResolvedValue('video/mp4'),
+}))
 
 import { createWriteStream } from 'fs'
 import { rm } from 'fs/promises'
 import { pipeline } from 'stream/promises'
 import sharp from 'sharp'
+import { assertMagicBytes } from '../../upload/upload.utils'
 import { MediaType } from '../entities/project-media.entity'
 
 // 1x1 şeffaf piksel — gerçek PNG magic byte'ları; assertMagicBytesFromBuffer
@@ -29,11 +34,15 @@ const REAL_PNG = Buffer.from(
   'base64',
 )
 
+// Allow-list'ten geçen tek gerçek Meta CDN host'u — testlerdeki tüm medya
+// URL'leri artık bu host'ta olmalı, aksi halde SSRF guard'ı reddeder
+const IG_HOST = 'https://scontent.cdninstagram.com'
+
 const mockPost = (id: string, caption: string): InstagramPost => ({
   id,
   caption,
   media_type: 'IMAGE',
-  media_url: 'https://example.com/image.jpg',
+  media_url: `${IG_HOST}/image.jpg`,
   thumbnail_url: null,
 })
 
@@ -147,6 +156,14 @@ function makeService(overrides: {
 const mockFetch = jest.fn()
 global.fetch = mockFetch
 
+// fetchAllowedMedia (SSRF guard'ı) her yanıtta status/headers okuyup redirect
+// hop'larını kontrol ediyor — medya indirme mock'ları bu alanları içermeli.
+const mediaResponse = <T extends Record<string, unknown>>(fields: T) => ({
+  status: 200,
+  headers: new Headers(),
+  ...fields,
+})
+
 describe('InstagramImportService', () => {
   beforeEach(() => jest.clearAllMocks())
 
@@ -166,10 +183,9 @@ describe('InstagramImportService', () => {
         text: () => Promise.resolve(''),
       })
       // Image download mock
-      mockFetch.mockResolvedValue({
-        ok: true,
-        arrayBuffer: () => Promise.resolve(Buffer.from('fake-image')),
-      })
+      mockFetch.mockResolvedValue(
+        mediaResponse({ ok: true, arrayBuffer: () => Promise.resolve(Buffer.from('fake-image')) }),
+      )
 
       await service.syncInstagram()
 
@@ -213,10 +229,9 @@ describe('InstagramImportService', () => {
         json: () => Promise.resolve({ data: posts }),
         text: () => Promise.resolve(''),
       })
-      mockFetch.mockResolvedValue({
-        ok: true,
-        arrayBuffer: () => Promise.resolve(Buffer.from('fake-image')),
-      })
+      mockFetch.mockResolvedValue(
+        mediaResponse({ ok: true, arrayBuffer: () => Promise.resolve(Buffer.from('fake-image')) }),
+      )
 
       const result = await service.syncInstagram()
 
@@ -231,10 +246,7 @@ describe('InstagramImportService', () => {
       const post = mockPost('new-id', 'Yeni proje #proje')
       const { service, projectRepo } = makeService()
 
-      mockFetch.mockResolvedValue({
-        ok: true,
-        arrayBuffer: () => Promise.resolve(Buffer.from('fake')),
-      })
+      mockFetch.mockResolvedValue(mediaResponse({ ok: true, arrayBuffer: () => Promise.resolve(Buffer.from('fake')) }))
 
       await privates(service).createProjectFromInstagram(
         { name: 'Test', location: 'İzmir', kw: 5, date: '2024', description: 'desc', specs: [], highlights: [], statBoxes: [] },
@@ -273,10 +285,7 @@ describe('InstagramImportService', () => {
       const post = mockPost('pub-id', 'Yeni proje #proje')
       const { service, projectRepo, transactionSaves, cache } = makeService()
 
-      mockFetch.mockResolvedValue({
-        ok: true,
-        arrayBuffer: () => Promise.resolve(REAL_PNG),
-      })
+      mockFetch.mockResolvedValue(mediaResponse({ ok: true, arrayBuffer: () => Promise.resolve(REAL_PNG) }))
 
       const result = await privates(service).createProjectFromInstagram(parsed, post, true)
 
@@ -292,7 +301,7 @@ describe('InstagramImportService', () => {
       const post = mockPost('fail-id', 'Yeni proje #proje')
       const { service, projectRepo } = makeService()
 
-      mockFetch.mockResolvedValue({ ok: false })
+      mockFetch.mockResolvedValue(mediaResponse({ ok: false }))
 
       const result = await privates(service).createProjectFromInstagram(parsed, post, true)
 
@@ -304,10 +313,7 @@ describe('InstagramImportService', () => {
       const post = mockPost('manual-id', 'Yeni proje #proje')
       const { service, projectRepo } = makeService()
 
-      mockFetch.mockResolvedValue({
-        ok: true,
-        arrayBuffer: () => Promise.resolve(Buffer.from('fake')),
-      })
+      mockFetch.mockResolvedValue(mediaResponse({ ok: true, arrayBuffer: () => Promise.resolve(Buffer.from('fake')) }))
 
       const result = await privates(service).createProjectFromInstagram(parsed, post, false)
 
@@ -330,7 +336,7 @@ describe('InstagramImportService', () => {
     const videoPost: InstagramPost = {
       id: 'video-id',
       media_type: 'VIDEO',
-      media_url: 'https://example.com/video.mp4',
+      media_url: `${IG_HOST}/video.mp4`,
       thumbnail_url: null,
     }
     const emptyWebStream = () => new ReadableStream({ start: c => c.close() })
@@ -338,7 +344,7 @@ describe('InstagramImportService', () => {
     it('streams videos to disk without buffering them in memory', async () => {
       const { service, mediaService } = makeService()
       const arrayBuffer = jest.fn()
-      mockFetch.mockResolvedValue({ ok: true, body: emptyWebStream(), arrayBuffer })
+      mockFetch.mockResolvedValue(mediaResponse({ ok: true, body: emptyWebStream(), arrayBuffer }))
 
       await privates(service).importInstagramImages({ id: 'p1', slug: 'test-proje' }, videoPost)
 
@@ -356,7 +362,7 @@ describe('InstagramImportService', () => {
     it('removes the partial file and skips the media when streaming fails', async () => {
       const { service, mediaService } = makeService()
       ;(pipeline as jest.Mock).mockRejectedValueOnce(new Error('network reset'))
-      mockFetch.mockResolvedValue({ ok: true, body: emptyWebStream() })
+      mockFetch.mockResolvedValue(mediaResponse({ ok: true, body: emptyWebStream() }))
 
       await privates(service).importInstagramImages({ id: 'p1', slug: 'test-proje' }, videoPost)
 
@@ -373,7 +379,7 @@ describe('InstagramImportService', () => {
         maxInFlight = Math.max(maxInFlight, inFlight)
         await new Promise(r => setTimeout(r, 5))
         inFlight--
-        return { ok: true, arrayBuffer: () => Promise.resolve(Buffer.from('img')) }
+        return mediaResponse({ ok: true, arrayBuffer: () => Promise.resolve(Buffer.from('img')) })
       })
 
       const carousel: InstagramPost = {
@@ -381,9 +387,9 @@ describe('InstagramImportService', () => {
         media_type: 'CAROUSEL_ALBUM',
         children: {
           data: [
-            { id: 'c1', media_type: 'IMAGE', media_url: 'https://example.com/1.jpg' },
-            { id: 'c2', media_type: 'IMAGE', media_url: 'https://example.com/2.jpg' },
-            { id: 'c3', media_type: 'IMAGE', media_url: 'https://example.com/3.jpg' },
+            { id: 'c1', media_type: 'IMAGE', media_url: `${IG_HOST}/1.jpg` },
+            { id: 'c2', media_type: 'IMAGE', media_url: `${IG_HOST}/2.jpg` },
+            { id: 'c3', media_type: 'IMAGE', media_url: `${IG_HOST}/3.jpg` },
           ],
         },
       }
@@ -398,16 +404,15 @@ describe('InstagramImportService', () => {
     const imagePost: InstagramPost = {
       id: 'image-id',
       media_type: 'IMAGE',
-      media_url: 'https://example.com/image.jpg',
+      media_url: `${IG_HOST}/image.jpg`,
       thumbnail_url: null,
     }
 
     it('reddedilen bir buffer için sharp\'ı hiç çağırmaz, medyayı kaydetmez', async () => {
       const { service, mediaService } = makeService()
-      mockFetch.mockResolvedValue({
-        ok: true,
-        arrayBuffer: () => Promise.resolve(Buffer.from('bu bir görsel değil')),
-      })
+      mockFetch.mockResolvedValue(
+        mediaResponse({ ok: true, arrayBuffer: () => Promise.resolve(Buffer.from('bu bir görsel değil')) }),
+      )
 
       const imported = await privates(service).importInstagramImages(
         { id: 'p1', slug: 'test-proje' },
@@ -421,10 +426,7 @@ describe('InstagramImportService', () => {
 
     it('gerçek bir görsel buffer\'ını sharp\'a geçirir', async () => {
       const { service, mediaService } = makeService()
-      mockFetch.mockResolvedValue({
-        ok: true,
-        arrayBuffer: () => Promise.resolve(REAL_PNG),
-      })
+      mockFetch.mockResolvedValue(mediaResponse({ ok: true, arrayBuffer: () => Promise.resolve(REAL_PNG) }))
 
       const imported = await privates(service).importInstagramImages(
         { id: 'p1', slug: 'test-proje' },

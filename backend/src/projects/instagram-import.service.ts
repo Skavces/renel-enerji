@@ -15,15 +15,28 @@ import { MediaService } from './media.service'
 import { InstagramParseService } from './instagram-parse.service'
 import { InstagramTokenService } from '../instagram-token/instagram-token.service'
 import { fetchWithTimeout } from '../common/fetch-with-timeout'
+import { fetchAllowedMedia } from '../common/media-fetch'
 import { PublicCacheService } from '../common/public-cache.service'
 import { errorMessage, isUniqueViolation } from '../common/errors'
 import { UPLOADS_DIR } from '../upload/uploaded-files'
-import { ALLOWED_IMAGE_MIMES, assertMagicBytesFromBuffer } from '../upload/upload.utils'
+import { ALLOWED_IMAGE_MIMES, assertMagicBytes, assertMagicBytesFromBuffer } from '../upload/upload.utils'
 import type { InstagramMediaListResponse, InstagramPost, ParsedProject } from './instagram-types'
 
 const INSTAGRAM_API_VERSION = 'v21.0'
 const INSTAGRAM_MEDIA_FIELDS =
   'id,caption,media_url,thumbnail_url,media_type,timestamp,children{id,media_url,media_type,thumbnail_url}'
+const MAX_VIDEO_BYTES = 100 * 1024 * 1024
+
+// Video akışı diske yazılırken RAM'e alınmadan sayılır — sınır aşılırsa
+// pipeline'ı throw ile keser (disk doldurma koruması)
+async function* limitBytes(source: AsyncIterable<Buffer>, maxBytes: number): AsyncGenerator<Buffer> {
+  let total = 0
+  for await (const chunk of source) {
+    total += chunk.length
+    if (total > maxBytes) throw new Error(`Video boyutu sınırı aşıldı (${maxBytes} bayt)`)
+    yield chunk
+  }
+}
 
 @Injectable()
 export class InstagramImportService {
@@ -230,7 +243,7 @@ export class InstagramImportService {
     let imported = 0
     for (const item of items) {
       try {
-        const r = await fetchWithTimeout(item.url, undefined, 30000)
+        const r = await fetchAllowedMedia(item.url, 30000)
         if (!r.ok) continue
 
         if (item.type === MediaType.VIDEO) {
@@ -242,9 +255,14 @@ export class InstagramImportService {
             // undici'nin body tipi lib.dom ReadableStream'i; Node'un stream/web
             // tipiyle yapısal olarak aynı ama nominal olarak farklı — cast şart
             await pipeline(
-              Readable.fromWeb(r.body as unknown as import('stream/web').ReadableStream<Uint8Array>),
+              limitBytes(
+                Readable.fromWeb(r.body as unknown as import('stream/web').ReadableStream<Uint8Array>),
+                MAX_VIDEO_BYTES,
+              ),
               createWriteStream(filePath),
             )
+            // İçerik hiç kontrol edilmeden herkese açık /uploads/ altına yazılmasın
+            await assertMagicBytes(filePath, ['video/mp4'])
           } catch (err) {
             await rm(filePath, { force: true })
             throw err
