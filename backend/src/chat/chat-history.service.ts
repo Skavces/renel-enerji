@@ -10,6 +10,25 @@ const HISTORY_TTL_SECONDS = 60 * 60
 // Eski istemci kontratındaki ArrayMaxSize(20) ile aynı üst sınır
 export const HISTORY_MAX_MESSAGES = 20
 
+// Assistant yanıtı max_tokens:400 ile sınırlı (~1.6k karakter), kullanıcı mesajı
+// DTO'da MaxLength(1000) — 4000 bolca pay bırakır, meşru mesajı asla elemez
+const MAX_CONTENT_LENGTH = 4000
+
+// Redis'ten okunan geçmiş yalnızca dizi olup olmadığı kontrol edilip cast
+// edilmesin diye eleman-seviyesi şekil doğrulaması. 'system' rolünü kabul
+// etmemesi kritik: chat.service.ts prompt'u [{role:'system',...}, ...history]
+// şeklinde kuruyor, doğrulamasız bir history 'system' mesajı Groq'a ikinci
+// bir sistem talimatı gibi geçebilirdi.
+function isChatMessage(value: unknown): value is ChatMessage {
+  if (typeof value !== 'object' || value === null) return false
+  const { role, content } = value as Record<string, unknown>
+  return (
+    (role === 'user' || role === 'assistant') &&
+    typeof content === 'string' &&
+    content.length <= MAX_CONTENT_LENGTH
+  )
+}
+
 // Konuşma geçmişi sunucuda tutulur: istemci yalnızca yeni kullanıcı mesajını
 // gönderir, sahte assistant mesajıyla modelin yönlendirilmesi imkânsızlaşır.
 // Redis hatalarında fail-open: geçmiş kaybolur ama chatbot cevap vermeye devam eder.
@@ -24,7 +43,11 @@ export class ChatHistoryService {
       const raw = await this.redis.get(KEY_PREFIX + sessionId)
       if (!raw) return []
       const parsed: unknown = JSON.parse(raw)
-      return Array.isArray(parsed) ? (parsed as ChatMessage[]) : []
+      if (!Array.isArray(parsed) || !parsed.every(isChatMessage)) {
+        this.logger.warn(`Chat geçmişi bozuk şekilli, sıfırlandı (${sessionId})`)
+        return []
+      }
+      return parsed.slice(-HISTORY_MAX_MESSAGES)
     } catch (err) {
       this.logger.warn(
         `Chat geçmişi okunamadı (${sessionId}): ${err instanceof Error ? err.message : err}`,
