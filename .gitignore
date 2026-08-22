@@ -22,6 +22,9 @@ dist-ssr
 # User uploads (runtime files, not versioned)
 backend/uploads/
 
+# Redis dump files (local runtime artifact)
+*.rdb
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -37,3 +40,4 @@ backend/uploads/
 
 # Local review/todo scratch notes (not versioned)
 YAPILACAKLAR-*.txt
+*-tarama-*.txt
