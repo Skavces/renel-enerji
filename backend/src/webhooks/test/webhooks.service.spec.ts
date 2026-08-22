@@ -1,6 +1,7 @@
 import { ConfigService } from '@nestjs/config'
 import { WebhooksService } from '../webhooks.service'
 import { InstagramImportService } from '../../projects/instagram-import.service'
+import type { InstagramWebhookBody } from '../../projects/instagram-types'
 
 function makeService() {
   const config = { get: jest.fn() } as unknown as ConfigService
@@ -62,9 +63,56 @@ describe('WebhooksService.handleInstagramEvent', () => {
     const { service, syncInstagramByMediaId } = makeService()
     syncInstagramByMediaId.mockRejectedValueOnce(new Error('graph api down'))
 
-    service.handleInstagramEvent(feedEvent('bozuk', 'saglam'))
+    service.handleInstagramEvent(feedEvent('111', '222'))
     await flush()
     expect(syncInstagramByMediaId).toHaveBeenCalledTimes(2)
-    expect(syncInstagramByMediaId).toHaveBeenLastCalledWith('saglam')
+    expect(syncInstagramByMediaId).toHaveBeenLastCalledWith('222')
+  })
+
+  it('skips a non-numeric media id but keeps processing the rest', async () => {
+    const { service, syncInstagramByMediaId } = makeService()
+
+    service.handleInstagramEvent(feedEvent('abc123', '42'))
+    await flush()
+
+    expect(syncInstagramByMediaId).toHaveBeenCalledTimes(1)
+    expect(syncInstagramByMediaId).toHaveBeenCalledWith('42')
+  })
+
+  it('processes normally when the payload has extra known fields (entry id/time)', async () => {
+    const { service, syncInstagramByMediaId } = makeService()
+
+    // entry.id/entry.time gerçek Meta payload'ında hep var ama InstagramWebhookBody
+    // arayüzü kasıtlı olarak yalnızca kullanılan alanları modelliyor (instagram-types.ts) —
+    // cast burada o kasıtlı daralmayı test amaçlı aşmak için.
+    const withExtraFields = {
+      object: 'instagram',
+      entry: [
+        {
+          id: '17841400008460056',
+          time: 1520383571,
+          changes: [{ field: 'feed', value: { verb: 'add', media: { id: '42' } } }],
+        },
+      ],
+    } as unknown as InstagramWebhookBody
+
+    service.handleInstagramEvent(withExtraFields)
+    await flush()
+
+    expect(syncInstagramByMediaId).toHaveBeenCalledWith('42')
+  })
+
+  it('does not throw and skips the entry when a nested field has the wrong shape', async () => {
+    const { service, syncInstagramByMediaId } = makeService()
+
+    const malformed = {
+      object: 'instagram',
+      entry: [{ changes: [{ field: 'feed', value: 'weird string' }] }],
+    } as unknown as InstagramWebhookBody
+
+    expect(() => service.handleInstagramEvent(malformed)).not.toThrow()
+    await flush()
+
+    expect(syncInstagramByMediaId).not.toHaveBeenCalled()
   })
 })
