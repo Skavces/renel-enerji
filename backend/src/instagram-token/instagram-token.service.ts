@@ -6,6 +6,8 @@ import { ConfigService } from '@nestjs/config'
 import { AppSetting } from './app-setting.entity'
 import { fetchWithTimeout } from '../common/fetch-with-timeout'
 import { EncryptionService } from '../common/encryption.service'
+import { redactSecretValue, redactUrlSecrets } from '../common/redact'
+import { errorMessage } from '../common/errors'
 
 const TOKEN_KEY = 'instagram_access_token'
 const REFRESHED_AT_KEY = 'instagram_token_refreshed_at'
@@ -54,7 +56,10 @@ export class InstagramTokenService implements OnModuleInit {
 
       const res = await fetchWithTimeout(url)
       if (!res.ok) {
-        this.logger.error(`Token yenileme başarısız (${res.status}): ${await res.text()}`)
+        // Meta'nın hata gövdesi bazı durumlarda sunulan token'ı yankılayabilir;
+        // sorgu-parametre deseninin yakalayamayacağı bu çıplak değeri de sök.
+        const body = redactSecretValue(await res.text(), currentToken)
+        this.logger.error(`Token yenileme başarısız (${res.status}): ${redactUrlSecrets(body)}`)
         return
       }
 
@@ -75,7 +80,12 @@ export class InstagramTokenService implements OnModuleInit {
       const expiresInDays = Math.round((data.expires_in ?? 0) / 86400)
       this.logger.log(`Instagram access token yenilendi — ${expiresInDays} gün geçerli`)
     } catch (err) {
-      this.logger.error('Token yenileme hatası', err)
+      // errorMessage ile daralt: undici'nin ham hata nesnesi (cause zincirinde
+      // istek URL'i taşıyabilir) doğrudan loglanmasın. DbLogger.stringify
+      // yalnızca DB kopyasını korur, ConsoleLogger stderr'e ham mesajı basar —
+      // bu yüzden redaksiyon burada, çağrı yerinde yapılıyor.
+      const message = redactUrlSecrets(redactSecretValue(errorMessage(err), currentToken))
+      this.logger.error(`Token yenileme hatası: ${message}`)
     }
   }
 

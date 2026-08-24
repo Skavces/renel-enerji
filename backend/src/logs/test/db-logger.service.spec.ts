@@ -39,4 +39,14 @@ describe('DbLogger', () => {
     logger.error({ code: 42 }, 'ChatService')
     expect(logs.record).toHaveBeenCalledWith('error', '{"code":42}', 'ChatService')
   })
+
+  it('DB kopyasında sorgu-parametre biçimindeki sırları maskeler', () => {
+    const { logger, logs } = makeLogger()
+    logger.error('Token yenileme başarısız: ?access_token=IGQWReallyLiveToken', 'InstagramTokenService')
+    expect(logs.record).toHaveBeenCalledWith(
+      'error',
+      'Token yenileme başarısız: ?access_token=[REDACTED]',
+      'InstagramTokenService',
+    )
+  })
 })

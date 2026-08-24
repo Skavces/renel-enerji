@@ -1,5 +1,5 @@
 import * as Sentry from '@sentry/nestjs'
-import { redactSentryEvent } from './common/redact'
+import { redactSentryEvent, redactSpanSecrets } from './common/redact'
 
 if (process.env.SENTRY_DSN) {
   Sentry.init({
@@ -12,5 +12,9 @@ if (process.env.SENTRY_DSN) {
     sendDefaultPii: false,
     beforeSend: redactSentryEvent,
     beforeSendTransaction: redactSentryEvent,
+    // nativeNodeFetchIntegration (varsayılan açık) her giden fetch'i span'e
+    // çevirirken URL'i temizlemeden yazıyor — redactSentryEvent bunu kapsamaz
+    // (yalnızca event.request'e bakar), bu yüzden ayrı bir hook gerekiyor.
+    beforeSendSpan: redactSpanSecrets,
   })
 }

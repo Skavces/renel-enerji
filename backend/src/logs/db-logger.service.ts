@@ -1,5 +1,6 @@
 import { ConsoleLogger, Injectable } from '@nestjs/common'
 import { LogsService } from './logs.service'
+import { redactUrlSecrets } from '../common/redact'
 
 // Uygulama genelinde Logger.error/warn çağrılarını veritabanına kopyalayan logger.
 // main.ts'te app.useLogger(app.get(DbLogger)) ile devreye girer; admin panel Loglar sayfası okur.
@@ -25,7 +26,11 @@ export class DbLogger extends ConsoleLogger {
     return typeof last === 'string' && !last.includes('\n') ? last : undefined
   }
 
+  // Savunma derinliği: çağrı yeri sır redaksiyonunu unutsa bile, error/warn'ın
+  // veritabanına yazıldığı tek darboğaz burası — sorgu-parametre biçimindeki
+  // sırlar burada da maskelenir.
   private stringify(message: unknown): string {
-    return typeof message === 'string' ? message : JSON.stringify(message)
+    const text = typeof message === 'string' ? message : JSON.stringify(message)
+    return redactUrlSecrets(text)
   }
 }
