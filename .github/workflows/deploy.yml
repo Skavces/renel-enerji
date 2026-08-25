@@ -71,6 +71,14 @@ jobs:
         working-directory: backend
         run: npm run build
 
+      - name: Kişisel isim sızıntısı kontrolü
+        run: |
+          if grep -rniI --exclude-dir=node_modules --exclude-dir=dist \
+             "mertcan y" frontend/src backend/src; then
+            echo "::error::Müşteri adı kaynak koda geri girmiş"
+            exit 1
+          fi
+
       - name: Frontend testleri ve build
         working-directory: frontend
         run: |

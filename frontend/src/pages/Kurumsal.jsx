@@ -73,11 +73,6 @@ export default function Kurumsal() {
         postalCode: '45500',
         addressCountry: 'TR',
       },
-      founder: {
-        '@type': 'Person',
-        name: 'Mertcan Yılmaz',
-        jobTitle: 'Elektrik-Elektronik Mühendisi',
-      },
       knowsAbout: ['Güneş Enerjisi Sistemleri', 'GES Kurulumu', 'Tarımsal Sulama GES', 'Off-Grid Sistemler', 'EV Şarj İstasyonu'],
     },
   }
@@ -155,12 +150,12 @@ export default function Kurumsal() {
             {/* Founder */}
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-full bg-[#448834] flex items-center justify-center shrink-0">
-                <span className="text-white font-bold text-sm">MY</span>
+                <img src="/renel-logo.svg" alt="RenEl" className="w-8 h-8" loading="lazy" />
               </div>
               <div>
-                <p className="font-bold text-gray-900 text-sm">Mertcan Yılmaz</p>
+                <p className="font-bold text-gray-900 text-sm">Kurucu Mühendis</p>
                 <p className="text-[#448834] font-medium text-xs">Elektrik - Elektronik Mühendisi</p>
-                <p className="text-gray-400 text-xs">RenEl Enerji Mühendislik Kurucusu</p>
+                <p className="text-gray-400 text-xs">RenEl Enerji Mühendislik</p>
               </div>
             </div>
           </div>

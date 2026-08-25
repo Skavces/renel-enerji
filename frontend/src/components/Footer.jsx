@@ -97,7 +97,7 @@ export default function Footer() {
             </ul>
 
             <div className="mt-6">
-              <p className="text-[#f5ce31] font-semibold text-sm mb-1">Mertcan Yılmaz</p>
+              <p className="text-[#f5ce31] font-semibold text-sm mb-1">RenEl Enerji Mühendislik</p>
               <p className="text-xs">Elektrik - Elektronik Mühendisi</p>
             </div>
           </div>
