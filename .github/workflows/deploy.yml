@@ -99,7 +99,8 @@ jobs:
           script: |
             set -e
             cd /home/deploy/renel-enerji
-            git pull
+            git fetch origin main
+            git reset --hard origin/main
             docker compose up -d --build
             docker image prune -f
 
