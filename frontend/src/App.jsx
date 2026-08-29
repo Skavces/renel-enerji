@@ -69,6 +69,13 @@ function PublicLayout() {
   const closeChatTimerRef = useRef(null)
   const closeTeklifTimerRef = useRef(null)
 
+  // Mobilde yüzen butonlar açılışta tam metinli görünüp kısa süre sonra ikona küçülür
+  const [fabExpanded, setFabExpanded] = useState(true)
+  useEffect(() => {
+    const timer = setTimeout(() => setFabExpanded(false), 3000)
+    return () => clearTimeout(timer)
+  }, [])
+
   function openChat(prefill = '') {
     clearTimeout(closeChatTimerRef.current)
     setChatClosing(false)
@@ -141,19 +148,19 @@ function PublicLayout() {
       <button
         onClick={() => openTeklif()}
         aria-label="Ücretsiz Teklif Al"
-        className="fixed bottom-24 sm:bottom-20 right-6 z-50 flex items-center gap-2.5 bg-[#448834] hover:bg-[#357228] text-white font-semibold text-sm p-4 sm:px-5 sm:py-3 rounded-full shadow-lg shadow-black/15 transition-all hover:scale-105"
+        className={`fab ${fabExpanded ? 'fab-expanded' : ''} fixed bottom-20 right-6 z-50 flex items-center bg-[#448834] hover:bg-[#357228] text-white font-semibold text-sm rounded-full shadow-lg shadow-black/15 transition-all hover:scale-105`}
       >
-        <Zap size={18} />
-        <span className="hidden sm:inline">Ücretsiz Teklif Al</span>
+        <Zap size={18} className="shrink-0" />
+        <span className="fab-label">Ücretsiz Teklif Al</span>
       </button>
       <div className="ai-button-ring fixed bottom-6 right-6 z-50 rounded-full p-0.5">
         <button
           onClick={() => openChat()}
           aria-label="Size Nasıl Yardımcı Olabiliriz?"
-          className="flex items-center gap-2.5 bg-[#357228] hover:bg-[#2d6124] text-white font-semibold text-sm p-4 sm:px-5 sm:py-3 rounded-full shadow-lg shadow-black/15 transition-all hover:scale-105"
+          className={`fab ${fabExpanded ? 'fab-expanded' : ''} flex items-center bg-[#357228] hover:bg-[#2d6124] text-white font-semibold text-sm rounded-full shadow-lg shadow-black/15 transition-all hover:scale-105`}
         >
-          <Bot size={18} />
-          <span className="hidden sm:inline">Size Nasıl Yardımcı Olabiliriz?</span>
+          <Bot size={18} className="shrink-0" />
+          <span className="fab-label">Size Nasıl Yardımcı Olabiliriz?</span>
         </button>
       </div>
       {chatOpen && (

@@ -165,6 +165,48 @@
 .backdrop-enter  { animation: backdrop-in  0.42s ease both; }
 .backdrop-exit   { animation: backdrop-out 0.22s ease-in both; }
 
+.fab {
+  height: 2.75rem;
+  padding-inline: 1.25rem;
+}
+.fab-label {
+  white-space: nowrap;
+  margin-inline-start: 0.625rem;
+}
+@media (max-width: 639px) {
+  .fab {
+    padding-inline: 0.8125rem;
+    /* "all" keeps the hover:scale-105 / hover:bg-* transitions from the
+       transition-all utility alive — Tailwind v4 utilities live in a CSS
+       layer, so this unlayered rule would otherwise silently replace them. */
+    transition: all 150ms ease, padding-inline 0.45s cubic-bezier(0.22,1,0.36,1);
+  }
+  .fab-expanded {
+    padding-inline: 1.25rem;
+  }
+  .fab-label {
+    display: inline-block;
+    overflow: hidden;
+    max-width: 0;
+    opacity: 0;
+    margin-inline-start: 0;
+    transition: max-width 0.45s cubic-bezier(0.22,1,0.36,1),
+                opacity 0.25s ease,
+                margin-inline-start 0.45s cubic-bezier(0.22,1,0.36,1);
+  }
+  .fab-expanded .fab-label {
+    max-width: 18rem;
+    opacity: 1;
+    margin-inline-start: 0.625rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fab,
+  .fab-label {
+    transition: none;
+  }
+}
+
 .scrollbar-none {
   scrollbar-width: none;
   -ms-overflow-style: none;
