@@ -41,3 +41,6 @@ backend/uploads/
 # Local review/todo scratch notes (not versioned)
 YAPILACAKLAR-*.txt
 *-tarama-*.txt
+fiyat-listesi-taslak-*.txt
+AGENTS.md
+guvenlik-raporu-*.md
