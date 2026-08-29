@@ -140,18 +140,20 @@ function PublicLayout() {
       <Footer />
       <button
         onClick={() => openTeklif()}
-        className="fixed bottom-20 right-6 z-50 flex items-center gap-2.5 bg-[#448834] hover:bg-[#357228] text-white font-semibold text-sm px-5 py-3 rounded-full shadow-lg shadow-black/15 transition-all hover:scale-105"
+        aria-label="Ücretsiz Teklif Al"
+        className="fixed bottom-24 sm:bottom-20 right-6 z-50 flex items-center gap-2.5 bg-[#448834] hover:bg-[#357228] text-white font-semibold text-sm p-4 sm:px-5 sm:py-3 rounded-full shadow-lg shadow-black/15 transition-all hover:scale-105"
       >
         <Zap size={18} />
-        Ücretsiz Teklif Al
+        <span className="hidden sm:inline">Ücretsiz Teklif Al</span>
       </button>
       <div className="ai-button-ring fixed bottom-6 right-6 z-50 rounded-full p-0.5">
         <button
           onClick={() => openChat()}
-          className="flex items-center gap-2.5 bg-[#357228] hover:bg-[#2d6124] text-white font-semibold text-sm px-5 py-3 rounded-full shadow-lg shadow-black/15 transition-all hover:scale-105"
+          aria-label="Size Nasıl Yardımcı Olabiliriz?"
+          className="flex items-center gap-2.5 bg-[#357228] hover:bg-[#2d6124] text-white font-semibold text-sm p-4 sm:px-5 sm:py-3 rounded-full shadow-lg shadow-black/15 transition-all hover:scale-105"
         >
           <Bot size={18} />
-          Size Nasıl Yardımcı Olabiliriz?
+          <span className="hidden sm:inline">Size Nasıl Yardımcı Olabiliriz?</span>
         </button>
       </div>
       {chatOpen && (
