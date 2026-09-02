@@ -19,7 +19,7 @@ Corporate website and admin panel for **RenEl Enerji**, a solar energy solutions
 | -------------- | --------------------------------------------------------------- |
 | Frontend       | React 19, Vite 8, Tailwind CSS 4                                |
 | Backend        | NestJS, TypeORM, PostgreSQL, Redis                              |
-| AI / Chatbot   | Groq                                                            |
+| AI / Chatbot   | OpenRouter (behind a provider-agnostic LLM client)              |
 | Analytics      | Umami                                                           |
 | Logs           | In-panel log viewer (backend errors/warnings, 30-day retention) |
 | Error Tracking | Sentry (optional)                                               |
@@ -53,7 +53,7 @@ renel-enerji/
 │       ├── sitemap/         # Dynamic sitemap generation
 │       ├── weather/         # Weather integration
 │       ├── upload/          # File upload
-│       ├── groq/            # Groq AI client (chatbot + Instagram parsing)
+│       ├── llm/             # LLM client (chatbot + Instagram parsing; OpenRouter today)
 │       ├── instagram-token/ # Instagram Graph API token refresh
 │       ├── logs/            # DB-backed error/warning logs (admin panel viewer)
 │       ├── webhooks/        # Instagram webhook receiver
@@ -115,7 +115,7 @@ UMAMI_PASS=            # Umami password
 UMAMI_APP_SECRET=      # Umami app secret
 ```
 
-Optional integrations (Groq chatbot, Instagram import, OpenWeather, Sentry) are documented with setup notes in `backend/.env.example` — leave them blank to disable.
+Optional integrations (LLM chatbot, Instagram import, OpenWeather, Sentry) are documented with setup notes in `backend/.env.example` — leave them blank to disable.
 
 ## Testing
 

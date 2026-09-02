@@ -177,7 +177,7 @@ describe('InstagramParseService.parseInstagram — LLM çıktısı şema doğrul
     it('LLM anahtarı yoksa açıklayıcı hata atar', async () => {
       const llm = { call: jest.fn(), getKeys: jest.fn().mockReturnValue([]) }
       const service = new InstagramParseService(llm as unknown as LlmService)
-      await expect(service.parseInstagram('x')).rejects.toThrow(/GROQ_PARSE_KEYS/)
+      await expect(service.parseInstagram('x')).rejects.toThrow(/LLM_PARSE_KEYS/)
     })
 
     it('LLM API hata dönerse durum kodunu bildirir', async () => {

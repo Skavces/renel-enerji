@@ -33,13 +33,13 @@ process.env.INSTAGRAM_WEBHOOK_VERIFY_TOKEN = 'e2e-webhook-verify-token'
 process.env.UMAMI_PASS = 'e2e-umami-pass'
 process.env.UMAMI_USER = 'admin'
 
-// Groq'a gerçek istek atılmaz (testler injection-reject ve DTO yollarını kullanır);
+// LLM'e gerçek istek atılmaz (testler injection-reject ve DTO yollarını kullanır);
 // Joi boot kontrolünü geçmek için dummy key yeterli
-process.env.GROQ_CHAT_KEYS = 'e2e-groq-dummy-key'
-process.env.GROQ_PARSE_KEYS = 'e2e-groq-dummy-key'
-process.env.GROQ_API_KEY = ''
-process.env.GROQ_API_KEY_2 = ''
-process.env.GROQ_API_KEY_3 = ''
+process.env.LLM_CHAT_KEYS = 'e2e-llm-dummy-key'
+process.env.LLM_PARSE_KEYS = 'e2e-llm-dummy-key'
+process.env.LLM_API_KEY = ''
+process.env.LLM_API_KEY_2 = ''
+process.env.LLM_API_KEY_3 = ''
 
 // Boot'ta veya cron'da dış servis çağrısı tetikleyebilecek her şey kapalı
 process.env.INSTAGRAM_ACCESS_TOKEN = ''

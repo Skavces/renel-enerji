@@ -38,7 +38,7 @@ export class InstagramParseService {
 
   async parseInstagram(text: string): Promise<ParsedProject> {
     const keys = this.llm.getKeys('parse')
-    if (!keys.length) throw new InternalServerErrorException('GROQ_PARSE_KEYS / GROQ_API_KEY tanımlı değil')
+    if (!keys.length) throw new InternalServerErrorException('LLM_PARSE_KEYS / LLM_API_KEY tanımlı değil')
 
     const { res, data } = await this.llm.call(keys, {
       model: LLM_MODEL,
