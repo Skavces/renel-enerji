@@ -373,6 +373,33 @@ describe('ChatService — fiyat çıkarımı (pricing)', () => {
     await expect(service.chat(PRICE_MESSAGE)).resolves.toContain('210.000 - 340.000 TL')
   })
 
+  it('skips the pricing extraction call entirely when the price-intent window has no extractable number/hint (canlıda görülen ~17s gecikme, 2026-09-02)', async () => {
+    const { service, call } = makePricingService({ genReplies: ['Yaklaşık kaç kW düşünüyorsunuz?'] })
+    const conversation = [
+      { role: 'user' as const, content: 'bağ evi için fiyat bilgisi alabilir miyim' },
+      { role: 'assistant' as const, content: 'İhtiyacınız olan gücü (kW) belirtir misiniz?' },
+      { role: 'user' as const, content: 'aydınlatma ve buzdolabı çalıştıracağım' },
+    ]
+    const reply = await service.chat(conversation)
+    expect(reply).toBe('Yaklaşık kaç kW düşünüyorsunuz?')
+    // extraction hiç çağrılmaz (hint yok); yalnızca üretim + judge
+    expect(call).toHaveBeenCalledTimes(2)
+  })
+
+  it('still calls extraction when the only hint is an EV charger type word rather than a digit', async () => {
+    const { service, call } = makePricingService({
+      pricingContent: JSON.stringify({ kategori: 'ev_sarj', sarjTipi: 'ac_trifaze_11_22' }),
+    })
+    const conversation = [
+      { role: 'user' as const, content: 'ev şarj istasyonu fiyatı ne kadar' },
+      { role: 'assistant' as const, content: 'Monofaze mi trifaze mi düşünüyorsunuz?' },
+      { role: 'user' as const, content: 'trifaze olsun' },
+    ]
+    const reply = await service.chat(conversation)
+    expect(reply).toContain("WhatsApp'tan Teklif Al")
+    expect(call).toHaveBeenCalledTimes(1)
+  })
+
   it('skips extraction and falls straight to the budget-exceeded message when the daily budget is already spent', async () => {
     const { service, call, incr } = makePricingService({ pricingContent: 'unused' })
     incr.mockResolvedValue(1001) // varsayılan limit 1000

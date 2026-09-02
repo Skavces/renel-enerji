@@ -34,6 +34,7 @@ export default function TeklifChatbot({ onClose, closing, messages: initialMessa
   const messagesRef = useRef(null)
   const inputRef = useRef(null)
   const closeTimerRef = useRef(null)
+  const pendingRatingRef = useRef(false)
 
   function saveMessages(next) {
     setMessages(next)
@@ -65,6 +66,20 @@ export default function TeklifChatbot({ onClose, closing, messages: initialMessa
 
   useEffect(() => () => clearTimeout(closeTimerRef.current), [])
 
+  // WhatsApp'a geçiş görüşmenin doğal sonu — kullanıcı sekmeye GERÇEKTEN
+  // döndüğünde değerlendirme sor (handleWhatsapp içinde hemen göstermek,
+  // yeni sekme henüz açılmadan overlay'in öne geçmesine sebep oluyordu)
+  useEffect(() => {
+    function onVisibility() {
+      if (document.visibilityState === 'visible' && pendingRatingRef.current) {
+        pendingRatingRef.current = false
+        if (!sessionStorage.getItem(RATED_KEY)) setRatingView('rate')
+      }
+    }
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => document.removeEventListener('visibilitychange', onVisibility)
+  }, [])
+
   async function send(text) {
     const trimmed = text.trim()
     if (!trimmed || loading) return
@@ -92,16 +107,28 @@ export default function TeklifChatbot({ onClose, closing, messages: initialMessa
   }
 
   async function handleWhatsapp() {
+    // Pencere `await`'ten SONRA açılırsa tarayıcı bunu kullanıcı eylemine bağlı
+    // saymayıp sessizce engelleyebiliyor (canlıda görüldü: ilk tıklama WhatsApp'ı
+    // hiç açmıyordu). Boş pencereyi tıklamaya senkron tepki olarak hemen açıp
+    // özet hazır olunca yönlendiriyoruz; win.opener = null, noopener ile aynı
+    // güvenliği sağlarken pencere referansını (location'ı sonradan değiştirebilmek
+    // için) elimizde tutuyor.
+    const win = window.open('', '_blank')
+    if (win) win.opener = null
+
     setSummaryLoading(true)
     try {
       const { text } = await generateWhatsappSummary(sessionId)
-      window.open(waLink(text), '_blank', 'noopener,noreferrer')
+      const url = waLink(text)
+      if (win) win.location.href = url
+      else window.open(url, '_blank', 'noopener,noreferrer')
     } catch {
-      window.open(`https://wa.me/${WA_NUMBER}`, '_blank', 'noopener,noreferrer')
+      const url = `https://wa.me/${WA_NUMBER}`
+      if (win) win.location.href = url
+      else window.open(url, '_blank', 'noopener,noreferrer')
     } finally {
       setSummaryLoading(false)
-      // WhatsApp'a geçiş görüşmenin doğal sonu — sekmeye dönünce değerlendirme sor
-      if (!sessionStorage.getItem(RATED_KEY)) setRatingView('rate')
+      pendingRatingRef.current = true
     }
   }
 

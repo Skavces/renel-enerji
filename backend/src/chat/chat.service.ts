@@ -49,6 +49,13 @@ export class LlmBudgetExceededError extends Error {
 // aynısı). Tek turla değil, son 12 mesajlık pencereyle kontrol edilir — bkz. chat().
 const PRICE_INTENT_PATTERN = /fiyat|ücret|maliyet|kaça|ne kadar|tutar|bütçe/i
 
+// İkinci ön-kapı: extractPricingIntent hiçbir sayısal alanı (fatura/HP/kW) ya
+// da EV şarj tipini metinden çıkaramayacaksa çağrı baştan atlanır. Canlıda
+// görüldü (2026-09-02): müşteri sayı vermeden yalnızca cihaz sayınca ("aydınlatma
+// ve buzdolabı") çıkarım zaten hiçbir şey bulamıyor, ama free-tier modelde bu
+// boşa giden çağrı tek başına ~7-9 saniye ekliyordu.
+const EXTRACTABLE_HINT_PATTERN = /\d|monofaze|trifaze|tek faz|üç faz|3 faz|ticari/i
+
 @Injectable()
 export class ChatService {
   private readonly logger = new Logger(ChatService.name)
@@ -214,13 +221,17 @@ export class ChatService {
       // pencere) bakılır: fiyat genelde bir turda sorulup girdi (fatura/HP/kW)
       // sonraki turda salt rakam olarak geliyor — o turda "fiyat" kelimesi hiç
       // geçmeyebilir (canlıda görüldü, 2026-09-02).
-      const priceAsked = messages
-        .slice(-12)
-        .some(m => m.role === 'user' && PRICE_INTENT_PATTERN.test(m.content))
+      const priceWindow = messages.slice(-12)
+      const priceAsked = priceWindow.some(m => m.role === 'user' && PRICE_INTENT_PATTERN.test(m.content))
       if (priceAsked) {
-        const intent = await this.extractPricingIntent(messages)
-        const quote = intent && resolveQuote(intent)
-        if (quote) return formatQuoteMessage(quote)
+        const hasExtractableHint = priceWindow.some(
+          m => m.role === 'user' && EXTRACTABLE_HINT_PATTERN.test(m.content),
+        )
+        if (hasExtractableHint) {
+          const intent = await this.extractPricingIntent(messages)
+          const quote = intent && resolveQuote(intent)
+          if (quote) return formatQuoteMessage(quote)
+        }
       }
 
       const allowedAmounts = extractTlAmounts(
