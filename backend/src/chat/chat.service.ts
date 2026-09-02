@@ -5,33 +5,49 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
+import { plainToInstance } from 'class-transformer'
+import { validate } from 'class-validator'
 import Redis from 'ioredis'
-import { GroqService, GROQ_MODEL, GROQ_FALLBACK_MODEL } from '../groq/groq.service'
+import { LlmService, LLM_MODEL, LLM_FALLBACK_MODEL } from '../llm/llm.service'
 import { REDIS_CLIENT } from '../redis/redis.module'
-import { hasNonLatinLeak, isContaminated, sanitizeContent } from './chat-guards'
-import { JUDGE_SYSTEM_PROMPT, judgeUserMessage, RETRY_NUDGE, SUMMARY_PROMPT, SYSTEM_PROMPT } from './chat-prompts'
+import { extractTlAmounts, hasNonLatinLeak, hasPriceLeak, isContaminated, sanitizeContent } from './chat-guards'
+import {
+  JUDGE_SYSTEM_PROMPT,
+  judgeUserMessage,
+  PRICING_EXTRACTION_PROMPT,
+  RETRY_NUDGE,
+  SUMMARY_PROMPT,
+  SYSTEM_PROMPT,
+} from './chat-prompts'
+import { PricingExtractionDto } from './pricing/pricing-extraction.dto'
+import { EvSarjTipi, formatQuoteMessage, PricingCategory, PricingInput, resolveQuote } from './pricing/ges-pricing'
 
 export interface ChatMessage {
   role: 'user' | 'assistant'
   content: string
 }
 
-// Günlük Groq bütçesi: kötüye kullanım kotayı bitirip gerçek müşterinin
+// Günlük LLM bütçesi: kötüye kullanım kotayı bitirip gerçek müşterinin
 // chatbot'unu susturmasın diye chatbot yoluna devre kesici konur.
-// Instagram parse tarafı bu bütçeden BAĞIMSIZDIR (GroqService'i ayrıca kullanır).
+// Instagram parse tarafı bu bütçeden BAĞIMSIZDIR (LlmService'i ayrıca kullanır).
 const DEFAULT_DAILY_LIMIT = 1000
-const BUDGET_KEY_PREFIX = 'groq:daily:'
+const BUDGET_KEY_PREFIX = 'llm:daily:'
 const BUDGET_KEY_TTL_SECONDS = 48 * 60 * 60
 
 export const BUDGET_EXCEEDED_MESSAGE =
   'Şu anda yoğunluk nedeniyle yanıt veremiyorum. Aşağıdaki "WhatsApp\'tan Teklif Al" ' +
   'butonuna basarak talebinizi doğrudan bize iletebilirsiniz.'
 
-export class GroqBudgetExceededError extends Error {
+export class LlmBudgetExceededError extends Error {
   constructor() {
-    super('Groq günlük bütçesi aşıldı')
+    super('LLM günlük bütçesi aşıldı')
   }
 }
+
+// Ucuz ön-kapı: yalnızca fiyat sorulan konuşmalarda çıkarım çağrısı yapılır
+// (bütçe ve gecikme koruması — isContaminated önce, judge sonra felsefesinin
+// aynısı). Tek turla değil, son 12 mesajlık pencereyle kontrol edilir — bkz. chat().
+const PRICE_INTENT_PATTERN = /fiyat|ücret|maliyet|kaça|ne kadar|tutar|bütçe/i
 
 @Injectable()
 export class ChatService {
@@ -39,14 +55,14 @@ export class ChatService {
 
   constructor(
     private config: ConfigService,
-    private groq: GroqService,
+    private llm: LlmService,
     @Inject(REDIS_CLIENT) private redis: Redis,
   ) {}
 
   // true → istek bütçeye sığdı; false → günlük limit doldu.
   // Redis erişilemezse fail-open: chatbot bütçe yüzünden hiç susmasın.
   private async consumeDailyBudget(): Promise<boolean> {
-    const limit = Number(this.config.get<string>('GROQ_DAILY_LIMIT') ?? DEFAULT_DAILY_LIMIT)
+    const limit = Number(this.config.get<string>('LLM_DAILY_LIMIT') ?? DEFAULT_DAILY_LIMIT)
     if (!Number.isFinite(limit) || limit <= 0) return true
 
     try {
@@ -55,7 +71,7 @@ export class ChatService {
       if (count === 1) await this.redis.expire(key, BUDGET_KEY_TTL_SECONDS)
       if (count > limit) {
         // Log seline dönmesin: yalnızca eşiğin aşıldığı ilk istekte error bas
-        if (count === limit + 1) this.logger.error(`Groq günlük bütçesi aşıldı (limit: ${limit})`)
+        if (count === limit + 1) this.logger.error(`LLM günlük bütçesi aşıldı (limit: ${limit})`)
         return false
       }
       return true
@@ -67,19 +83,19 @@ export class ChatService {
     }
   }
 
-  private async callGroq(systemPrompt: string, messages: ChatMessage[], maxTokens = 400): Promise<string> {
-    const keys = this.groq.getKeys('chat')
+  private async callLlm(systemPrompt: string, messages: ChatMessage[], maxTokens = 400): Promise<string> {
+    const keys = this.llm.getKeys('chat')
     if (!keys.length) {
-      this.logger.error('GROQ_CHAT_KEYS / GROQ_API_KEY tanımlı değil')
+      this.logger.error('LLM_CHAT_KEYS / LLM_API_KEY tanımlı değil')
       throw new ServiceUnavailableException('Chatbot şu anda kullanılamıyor')
     }
 
     if (!(await this.consumeDailyBudget())) {
-      throw new GroqBudgetExceededError()
+      throw new LlmBudgetExceededError()
     }
 
-    const { res, data } = await this.groq.call(keys, {
-      model: GROQ_MODEL,
+    const { res, data } = await this.llm.call(keys, {
+      model: LLM_MODEL,
       messages: [{ role: 'system', content: systemPrompt }, ...messages.slice(-12)],
       max_tokens: maxTokens,
       temperature: 0.3,
@@ -87,7 +103,7 @@ export class ChatService {
 
     const content = data?.choices?.[0]?.message?.content
     if (!res?.ok || typeof content !== 'string' || !content.trim()) {
-      this.logger.error(`Groq yanıtı kullanılamadı (durum: ${res?.status ?? 'ağ hatası'})`)
+      this.logger.error(`LLM yanıtı kullanılamadı (durum: ${res?.status ?? 'ağ hatası'})`)
       throw new ServiceUnavailableException('Yanıt alınamadı, lütfen tekrar deneyin')
     }
     // Cevap geçmişe geri döneceği için modeli de sanitize et; ayraç vb. kalıntılar
@@ -99,10 +115,10 @@ export class ChatService {
   // çağrısıyla yakalar. Judge erişilemez/anlaşılmaz ise fail-open — bütçe sayacıyla
   // aynı felsefe: dil saflığı uğruna chatbot susturulmaz.
   // consumeDailyBudget bilinçli olarak ÇAĞRILMAZ: her judge zaten bütçelenmiş bir
-  // üretim çağrısına 1:1 bağlıdır, toplam Groq kullanımı bütçe×MAX_CHAT_ATTEMPTS ile sınırlıdır.
+  // üretim çağrısına 1:1 bağlıdır, toplam LLM kullanımı bütçe×MAX_CHAT_ATTEMPTS ile sınırlıdır.
   private async isTurkishByJudge(text: string): Promise<boolean> {
-    const { res, data } = await this.groq.call(this.groq.getKeys('chat'), {
-      model: GROQ_FALLBACK_MODEL,
+    const { res, data } = await this.llm.call(this.llm.getKeys('chat'), {
+      model: LLM_FALLBACK_MODEL,
       messages: [
         { role: 'system', content: JUDGE_SYSTEM_PROMPT },
         { role: 'user', content: judgeUserMessage(text) },
@@ -127,26 +143,96 @@ export class ChatService {
     return true
   }
 
-  // Deterministik guard'lar (ucuz) önce; onlar temiz derse son söz judge'ın
-  private async isLeaky(text: string): Promise<boolean> {
+  // Deterministik guard'lar (ucuz) önce; onlar temiz derse son söz judge'ın.
+  // allowedAmounts: kullanıcının kendi mesajlarında geçen TL tutarları (ör.
+  // faturasını tekrarlaması) hasPriceLeak'te sızıntı sayılmaz.
+  private async isLeaky(text: string, allowedAmounts: readonly number[]): Promise<boolean> {
     if (isContaminated(text)) return true
+    if (hasPriceLeak(text, allowedAmounts)) return true
     return !(await this.isTurkishByJudge(text))
+  }
+
+  // Fiyat sorulan turlarda kategori + tek girdiyi (fatura/HP/kW/şarj tipi) çıkarır.
+  // Rakamı ASLA üretmez — o iş resolveQuote'ta. Her hata yolunda (anahtar yok /
+  // bütçe dolu / non-ok / JSON yok / bozuk JSON / kategori "yok") null döner ve
+  // çağıran normal LLM akışına düşer (fail-open, judge'daki felsefenin aynısı).
+  //
+  // Bütçe notu: bu çağrı consumeDailyBudget()'i TÜKETİR (deterministik yolda
+  // üretim çağrısı yapılmadığından günlük bütçenin tek kapısı budur). Bütçe
+  // zaten dolmuşsa null döner, çağıran normal üretime düşer ve callLlm'taki
+  // ikinci consumeDailyBudget çağrısı da dolu bulup BUDGET_EXCEEDED_MESSAGE'a düşürür.
+  private async extractPricingIntent(messages: ChatMessage[]): Promise<PricingInput | null> {
+    const keys = this.llm.getKeys('chat')
+    if (!keys.length) return null
+    if (!(await this.consumeDailyBudget())) return null
+
+    const { res, data } = await this.llm.call(keys, {
+      model: LLM_MODEL,
+      messages: [{ role: 'system', content: PRICING_EXTRACTION_PROMPT }, ...messages.slice(-12)],
+      max_tokens: 150,
+      temperature: 0,
+    })
+
+    const content = data?.choices?.[0]?.message?.content
+    if (!res?.ok || typeof content !== 'string') return null
+
+    const jsonMatch = content.match(/\{[\s\S]*\}/)
+    if (!jsonMatch) return null
+
+    let raw: unknown
+    try {
+      raw = JSON.parse(jsonMatch[0])
+    } catch {
+      return null
+    }
+
+    const dto = plainToInstance(PricingExtractionDto, raw)
+    const errors = await validate(dto, { whitelist: true })
+    if (errors.length) {
+      for (const err of errors) Reflect.deleteProperty(dto, err.property)
+    }
+    if (!dto.kategori || dto.kategori === 'yok') return null
+
+    return {
+      kategori: dto.kategori as PricingCategory,
+      aylikFatura: dto.aylikFatura,
+      pompaHp: dto.pompaHp,
+      kw: dto.kw,
+      sarjTipi: dto.sarjTipi as EvSarjTipi | undefined,
+    }
   }
 
   // Kullanıcıya göstermeden en fazla bu kadar üretim denenir; hepsi sızarsa sabit
   // mesaja düşülür. 2026-08-17'de canlıda 2 denemenin (ilk + tek retry) ikisi de
   // sızdırıp kullanıcıyı sabit hata mesajıyla baş başa bıraktığı görüldü — üçüncü
-  // deneme, ekstra Groq bütçesi karşılığında bu sert düşüşü nadirleştirir.
+  // deneme, ekstra LLM bütçesi karşılığında bu sert düşüşü nadirleştirir.
   private static readonly MAX_CHAT_ATTEMPTS = 3
 
   async chat(messages: ChatMessage[]): Promise<string> {
     try {
+      // Son mesaja değil, son 12 mesajlık pencereye (callLlm'a gidenle aynı
+      // pencere) bakılır: fiyat genelde bir turda sorulup girdi (fatura/HP/kW)
+      // sonraki turda salt rakam olarak geliyor — o turda "fiyat" kelimesi hiç
+      // geçmeyebilir (canlıda görüldü, 2026-09-02).
+      const priceAsked = messages
+        .slice(-12)
+        .some(m => m.role === 'user' && PRICE_INTENT_PATTERN.test(m.content))
+      if (priceAsked) {
+        const intent = await this.extractPricingIntent(messages)
+        const quote = intent && resolveQuote(intent)
+        if (quote) return formatQuoteMessage(quote)
+      }
+
+      const allowedAmounts = extractTlAmounts(
+        messages.filter(m => m.role === 'user').map(m => m.content).join(' '),
+      )
+
       for (let attempt = 1; attempt <= ChatService.MAX_CHAT_ATTEMPTS; attempt++) {
         // İlk deneme düz sistem promptuyla, sonrakiler düzeltici talimatla yapılır
         // (kör tekrar aynı sızıntıyı yeniden üretebiliyor)
         const systemPrompt = attempt === 1 ? SYSTEM_PROMPT : `${SYSTEM_PROMPT}\n\n${RETRY_NUDGE}`
-        const reply = await this.callGroq(systemPrompt, messages, 400)
-        if (!(await this.isLeaky(reply))) return reply
+        const reply = await this.callLlm(systemPrompt, messages, 400)
+        if (!(await this.isLeaky(reply, allowedAmounts))) return reply
 
         const isLastAttempt = attempt === ChatService.MAX_CHAT_ATTEMPTS
         this.logger.warn(
@@ -159,7 +245,7 @@ export class ChatService {
     } catch (err) {
       // Bütçe dolduğunda hata yerine normal cevap gibi sabit mesaj dön;
       // frontend'de WhatsApp butonu görünür kalır
-      if (err instanceof GroqBudgetExceededError) return BUDGET_EXCEEDED_MESSAGE
+      if (err instanceof LlmBudgetExceededError) return BUDGET_EXCEEDED_MESSAGE
       throw err
     }
   }
@@ -167,10 +253,10 @@ export class ChatService {
   async generateSummary(messages: ChatMessage[]): Promise<string> {
     let text: string
     try {
-      text = await this.callGroq(SUMMARY_PROMPT, messages, 300)
+      text = await this.callLlm(SUMMARY_PROMPT, messages, 300)
     } catch (err) {
       // Frontend 503'te düz wa.me linkine düşüyor; bütçe aşımında da aynı yol
-      if (err instanceof GroqBudgetExceededError) {
+      if (err instanceof LlmBudgetExceededError) {
         throw new ServiceUnavailableException('Özet oluşturulamadı')
       }
       throw err

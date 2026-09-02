@@ -3,7 +3,7 @@ import { Type } from 'class-transformer'
 import { StatBoxDto } from './create-project.dto'
 import type { ParsedProject } from '../instagram-types'
 
-// Groq parse çıktısının şeması. Instagram importu projeyi manager.save ile
+// LLM parse çıktısının şeması. Instagram importu projeyi manager.save ile
 // yazdığından CreateProjectDto'nun ValidationPipe'ı bu yolda HİÇ çalışmıyor;
 // manuel girişe uygulanan garantilerin LLM girişine de uygulanması için
 // instagram-parse.service bu DTO'yu elle validate eder.

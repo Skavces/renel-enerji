@@ -1,6 +1,6 @@
 import { InternalServerErrorException } from '@nestjs/common'
 import { InstagramParseService } from '../instagram-parse.service'
-import { GroqService } from '../../groq/groq.service'
+import { LlmService } from '../../llm/llm.service'
 
 // B.1 regresyonu: parseInstagram `JSON.parse(...) as ParsedProject` ile bitiyordu.
 // `as` bir İDDİA olduğundan model ne döndürürse döndürsün doğrudan DB'ye gidiyordu
@@ -18,8 +18,8 @@ function makeService(content: string): { service: InstagramParseService; call: j
     res: { ok: true, status: 200 },
     data: { choices: [{ message: { content } }] },
   })
-  const groq = { call, getKeys: jest.fn().mockReturnValue(['key1']) }
-  return { service: new InstagramParseService(groq as unknown as GroqService), call }
+  const llm = { call, getKeys: jest.fn().mockReturnValue(['key1']) }
+  return { service: new InstagramParseService(llm as unknown as LlmService), call }
 }
 
 // Şemaya uyan tam gövde; testler bunun üzerine tek alan ezerek çalışır
@@ -174,18 +174,18 @@ describe('InstagramParseService.parseInstagram — LLM çıktısı şema doğrul
   })
 
   describe('mevcut hata yolları korunur', () => {
-    it('Groq anahtarı yoksa açıklayıcı hata atar', async () => {
-      const groq = { call: jest.fn(), getKeys: jest.fn().mockReturnValue([]) }
-      const service = new InstagramParseService(groq as unknown as GroqService)
+    it('LLM anahtarı yoksa açıklayıcı hata atar', async () => {
+      const llm = { call: jest.fn(), getKeys: jest.fn().mockReturnValue([]) }
+      const service = new InstagramParseService(llm as unknown as LlmService)
       await expect(service.parseInstagram('x')).rejects.toThrow(/GROQ_PARSE_KEYS/)
     })
 
-    it('Groq API hata dönerse durum kodunu bildirir', async () => {
-      const groq = {
+    it('LLM API hata dönerse durum kodunu bildirir', async () => {
+      const llm = {
         call: jest.fn().mockResolvedValue({ res: { ok: false, status: 429 }, data: null }),
         getKeys: jest.fn().mockReturnValue(['key1']),
       }
-      const service = new InstagramParseService(groq as unknown as GroqService)
+      const service = new InstagramParseService(llm as unknown as LlmService)
       await expect(service.parseInstagram('x')).rejects.toThrow(/429/)
     })
 

@@ -89,6 +89,32 @@ export function hasNonLatinLeak(text: string): boolean {
   return nonLatinLetterRatio(text) > NON_LATIN_THRESHOLD
 }
 
+// Yatırım ölçeğinde bir TL tutarı uydurmuş mu diye bakar: fiyat sorularında LLM
+// artık hiç rakam üretmemeli (bkz. chat-prompts.ts "ASLA kendiliğinden fiyat...
+// verme"), rakam verirse bu deterministik guard yakalar. TL binlik ayraçlı
+// ("250.000") veya çıplak 4+ haneli ("250000") tutarları eşler; küçük ondalık
+// değerler ("7,4 kW", "10 HP") kasıtlı olarak eşleşmez.
+const TL_AMOUNT_PATTERN = /\b\d{1,3}(?:\.\d{3})+\b|\b\d{4,}\b/g
+const PRICE_LEAK_THRESHOLD = 50_000
+
+function parseTlAmount(raw: string): number {
+  return Number(raw.replace(/\./g, ''))
+}
+
+// Metindeki TL tutarlarını (yukarıdaki desenle) sayıya çevirip döner. Kullanıcının
+// kendi mesajlarında geçen tutarları (ör. "faturam 3.200 TL") "izinli" sayıp
+// hasPriceLeak'e vermek için kullanılır — kendi rakamını tekrarlamak sızıntı değildir.
+export function extractTlAmounts(text: string): number[] {
+  return (text.match(TL_AMOUNT_PATTERN) ?? []).map(parseTlAmount)
+}
+
+// allowedAmounts dışında, eşik üstü herhangi bir TL tutarı geçiyorsa true döner.
+export function hasPriceLeak(text: string, allowedAmounts: readonly number[]): boolean {
+  return extractTlAmounts(text).some(
+    amount => amount >= PRICE_LEAK_THRESHOLD && !allowedAmounts.includes(amount),
+  )
+}
+
 export function sanitizeContent(text: string): string {
   return text
     // null bytes and non-printable control chars (keep newline/tab)

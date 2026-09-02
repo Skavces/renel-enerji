@@ -17,7 +17,7 @@ const MAX_CONTENT_LENGTH = 4000
 // Redis'ten okunan geçmiş yalnızca dizi olup olmadığı kontrol edilip cast
 // edilmesin diye eleman-seviyesi şekil doğrulaması. 'system' rolünü kabul
 // etmemesi kritik: chat.service.ts prompt'u [{role:'system',...}, ...history]
-// şeklinde kuruyor, doğrulamasız bir history 'system' mesajı Groq'a ikinci
+// şeklinde kuruyor, doğrulamasız bir history 'system' mesajı LLM'e ikinci
 // bir sistem talimatı gibi geçebilirdi.
 function isChatMessage(value: unknown): value is ChatMessage {
   if (typeof value !== 'object' || value === null) return false

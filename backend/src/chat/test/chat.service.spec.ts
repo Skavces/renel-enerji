@@ -1,10 +1,10 @@
 import { ServiceUnavailableException } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { BUDGET_EXCEEDED_MESSAGE, ChatService } from '../chat.service'
-import { JUDGE_SYSTEM_PROMPT, judgeUserMessage, RETRY_NUDGE } from '../chat-prompts'
-import { GroqService } from '../../groq/groq.service'
+import { JUDGE_SYSTEM_PROMPT, judgeUserMessage, PRICING_EXTRACTION_PROMPT, RETRY_NUDGE } from '../chat-prompts'
+import { LlmService } from '../../llm/llm.service'
 
-type GroqPayload = { messages: { role: string; content: string }[] } & Record<string, unknown>
+type LlmPayload = { messages: { role: string; content: string }[] } & Record<string, unknown>
 
 interface TestService {
   service: ChatService
@@ -20,10 +20,10 @@ function makeService(...replies: string[]): TestService {
   const genQueue = [...replies]
   const judgeQueue: (string | null)[] = []
 
-  const isJudgePayload = (payload: GroqPayload): boolean =>
+  const isJudgePayload = (payload: LlmPayload): boolean =>
     payload.messages[0]?.content === JUDGE_SYSTEM_PROMPT
 
-  const call = jest.fn((_keys: string[], payload: GroqPayload) => {
+  const call = jest.fn((_keys: string[], payload: LlmPayload) => {
     if (isJudgePayload(payload)) {
       const verdict = judgeQueue.length ? judgeQueue.shift() : 'EVET'
       if (verdict == null) return Promise.resolve({ res: null, data: null })
@@ -38,17 +38,17 @@ function makeService(...replies: string[]): TestService {
     })
   })
 
-  const groq = { call, getKeys: jest.fn().mockReturnValue(['key1']) }
+  const llm = { call, getKeys: jest.fn().mockReturnValue(['key1']) }
   return {
     service: new ChatService(
       config as unknown as ConfigService,
-      groq as unknown as GroqService,
+      llm as unknown as LlmService,
       // Varsayılan: bütçe sayacı hep izin verir; bütçe testleri withRedis ile ezer
       { incr: jest.fn().mockResolvedValue(1), expire: jest.fn() } as unknown as import('ioredis').Redis,
     ),
     call,
     judgeCallCount: () =>
-      call.mock.calls.filter(args => isJudgePayload(args[1] as GroqPayload)).length,
+      call.mock.calls.filter(args => isJudgePayload(args[1] as LlmPayload)).length,
     setJudgeVerdicts: (...verdicts: (string | null)[]) => judgeQueue.push(...verdicts),
   }
 }
@@ -56,7 +56,7 @@ function makeService(...replies: string[]): TestService {
 const MESSAGES = [{ role: 'user' as const, content: 'merhaba' }]
 
 describe('ChatService — non-Turkish output guard', () => {
-  it('returns Groq reply unchanged when Turkish', async () => {
+  it('returns LLM reply unchanged when Turkish', async () => {
     const { service, call, judgeCallCount } = makeService('Çatı GES için aylık faturanız nedir?')
     await expect(service.chat(MESSAGES)).resolves.toBe('Çatı GES için aylık faturanız nedir?')
     // temiz yol: 1 üretim + 1 judge
@@ -74,7 +74,7 @@ describe('ChatService — non-Turkish output guard', () => {
     expect(call).toHaveBeenCalledTimes(3)
     expect(judgeCallCount()).toBe(1)
     // ilk üretim nudge'sız, retry düzeltici talimatla yapılır
-    const systemOf = (i: number) => (call.mock.calls[i][1] as GroqPayload).messages[0].content
+    const systemOf = (i: number) => (call.mock.calls[i][1] as LlmPayload).messages[0].content
     expect(systemOf(0)).not.toContain(RETRY_NUDGE)
     expect(systemOf(1)).toContain(RETRY_NUDGE)
   })
@@ -159,9 +159,9 @@ describe('ChatService — LLM dil denetçisi (judge)', () => {
     const { service, call } = makeService('Çatı GES için aylık faturanız nedir?')
     await service.chat(MESSAGES)
     const judgeCall = call.mock.calls.find(
-      args => (args[1] as GroqPayload).messages[0]?.content === JUDGE_SYSTEM_PROMPT,
+      args => (args[1] as LlmPayload).messages[0]?.content === JUDGE_SYSTEM_PROMPT,
     )
-    expect((judgeCall?.[1] as GroqPayload).messages[1].content).toBe(
+    expect((judgeCall?.[1] as LlmPayload).messages[1].content).toBe(
       judgeUserMessage('Çatı GES için aylık faturanız nedir?'),
     )
   })
@@ -191,7 +191,7 @@ describe('ChatService — LLM dil denetçisi (judge)', () => {
   })
 })
 
-describe('ChatService — Groq günlük bütçe devre kesici', () => {
+describe('ChatService — LLM günlük bütçe devre kesici', () => {
   function withRedis(
     service: ChatService,
     incrResult: number | Error,
@@ -205,7 +205,7 @@ describe('ChatService — Groq günlük bütçe devre kesici', () => {
     return redis
   }
 
-  it('returns the fixed message without calling Groq when the daily budget is exceeded', async () => {
+  it('returns the fixed message without calling LLM when the daily budget is exceeded', async () => {
     const { service, call } = makeService('kullanılmayacak yanıt')
     withRedis(service, 1001) // varsayılan limit 1000
 
@@ -218,7 +218,7 @@ describe('ChatService — Groq günlük bütçe devre kesici', () => {
     const redis = withRedis(service, 1)
 
     await expect(service.chat(MESSAGES)).resolves.toBe('Çatı GES için aylık faturanız nedir?')
-    expect(redis.incr).toHaveBeenCalledWith(expect.stringMatching(/^groq:daily:\d{4}-\d{2}-\d{2}$/))
+    expect(redis.incr).toHaveBeenCalledWith(expect.stringMatching(/^llm:daily:\d{4}-\d{2}-\d{2}$/))
     expect(redis.expire).toHaveBeenCalledTimes(1)
     // judge bütçe sayacını TÜKETMEZ: 1 üretim + 1 judge'a rağmen incr 1 kez çağrılır
     expect(judgeCallCount()).toBe(1)
@@ -237,6 +237,146 @@ describe('ChatService — Groq günlük bütçe devre kesici', () => {
     withRedis(service, 1001)
 
     await expect(service.generateSummary(MESSAGES)).rejects.toThrow(ServiceUnavailableException)
+    expect(call).not.toHaveBeenCalled()
+  })
+})
+
+describe('ChatService — fiyat çıkarımı (pricing)', () => {
+  function makePricingService(options: {
+    genReplies?: string[]
+    // undefined = extraction hiç çağrılmayacağı testlerde kullanılmaz; null = ağ hatası
+    pricingContent?: string | null
+    judgeVerdict?: string
+  }): { service: ChatService; call: jest.Mock; incr: jest.Mock } {
+    const genQueue = [...(options.genReplies ?? [])]
+    const isPricingPayload = (payload: LlmPayload): boolean =>
+      payload.messages[0]?.content === PRICING_EXTRACTION_PROMPT
+    const isJudgePayload = (payload: LlmPayload): boolean =>
+      payload.messages[0]?.content === JUDGE_SYSTEM_PROMPT
+
+    const call = jest.fn((_keys: string[], payload: LlmPayload) => {
+      if (isPricingPayload(payload)) {
+        if (options.pricingContent === null) return Promise.resolve({ res: null, data: null })
+        return Promise.resolve({
+          res: { ok: true, status: 200 },
+          data: { choices: [{ message: { content: options.pricingContent } }] },
+        })
+      }
+      if (isJudgePayload(payload)) {
+        return Promise.resolve({
+          res: { ok: true, status: 200 },
+          data: { choices: [{ message: { content: options.judgeVerdict ?? 'EVET' } }] },
+        })
+      }
+      return Promise.resolve({
+        res: { ok: true, status: 200 },
+        data: { choices: [{ message: { content: genQueue.shift() } }] },
+      })
+    })
+
+    const llm = { call, getKeys: jest.fn().mockReturnValue(['key1']) }
+    const config = { get: () => undefined }
+    const incr = jest.fn().mockResolvedValue(1)
+    return {
+      service: new ChatService(
+        config as unknown as ConfigService,
+        llm as unknown as LlmService,
+        { incr, expire: jest.fn() } as unknown as import('ioredis').Redis,
+      ),
+      call,
+      incr,
+    }
+  }
+
+  const PRICE_MESSAGE = [{ role: 'user' as const, content: 'çatı ges için fiyat ne kadar, faturam 3200 TL' }]
+  const NON_PRICE_MESSAGE = [{ role: 'user' as const, content: 'merhaba, bilgi almak istiyorum' }]
+
+  it('does not call pricing extraction when the user did not ask about price', async () => {
+    const { service, call } = makePricingService({ genReplies: ['Kurulum yeriniz neresi?'] })
+    await service.chat(NON_PRICE_MESSAGE)
+    // yalnızca üretim + judge; pricing extraction hiç çağrılmaz
+    expect(call).toHaveBeenCalledTimes(2)
+  })
+
+  it('detects price intent from an earlier turn even when the latest reply is just a bare number (canlıda görülen boşluk, 2026-09-02)', async () => {
+    const { service, call } = makePricingService({
+      pricingContent: JSON.stringify({ kategori: 'cati_konut', aylikFatura: 3200 }),
+    })
+    const conversation = [
+      { role: 'user' as const, content: 'çatı ges yaptırmak istiyorum, fiyatı ne kadar tutar' },
+      { role: 'assistant' as const, content: 'Aylık elektrik faturanız ne kadar?' },
+      { role: 'user' as const, content: '3200 TL civarı' },
+    ]
+    const reply = await service.chat(conversation)
+    expect(reply).toContain('200.000 - 330.000 TL')
+    expect(call).toHaveBeenCalledTimes(1)
+  })
+
+  it('returns the deterministic quote and skips generation entirely when extraction resolves', async () => {
+    const { service, call } = makePricingService({
+      pricingContent: JSON.stringify({ kategori: 'cati_konut', aylikFatura: 3200 }),
+    })
+    const reply = await service.chat(PRICE_MESSAGE)
+    expect(reply).toContain('200.000 - 330.000 TL')
+    expect(reply).toContain("WhatsApp'tan Teklif Al")
+    // yalnızca 1 çağrı: pricing extraction; üretim/judge hiç çağrılmaz
+    expect(call).toHaveBeenCalledTimes(1)
+  })
+
+  it('falls back to the normal LLM flow when the category is "yok"', async () => {
+    const { service, call } = makePricingService({
+      pricingContent: JSON.stringify({ kategori: 'yok' }),
+      genReplies: ['Hangi tür GES ile ilgileniyorsunuz?'],
+    })
+    const reply = await service.chat(PRICE_MESSAGE)
+    expect(reply).toBe('Hangi tür GES ile ilgileniyorsunuz?')
+    // pricing extraction + üretim + judge
+    expect(call).toHaveBeenCalledTimes(3)
+  })
+
+  it('falls back to the normal LLM flow when the required field is missing (band unresolved)', async () => {
+    const { service } = makePricingService({
+      pricingContent: JSON.stringify({ kategori: 'cati_konut' }), // aylikFatura yok
+      genReplies: ['Aylık faturanız ne kadar?'],
+    })
+    await expect(service.chat(PRICE_MESSAGE)).resolves.toBe('Aylık faturanız ne kadar?')
+  })
+
+  it('falls back to the normal LLM flow when the extracted amount is out of every band', async () => {
+    const { service } = makePricingService({
+      pricingContent: JSON.stringify({ kategori: 'cati_konut', aylikFatura: 50_000 }),
+      genReplies: ['Bu tür sistemler için keşif gerekiyor.'],
+    })
+    await expect(service.chat(PRICE_MESSAGE)).resolves.toBe('Bu tür sistemler için keşif gerekiyor.')
+  })
+
+  it('falls back to the normal LLM flow when the extraction reply has no JSON object', async () => {
+    const { service } = makePricingService({
+      pricingContent: 'bozuk yanıt, JSON değil',
+      genReplies: ['Hangi tür GES ile ilgileniyorsunuz?'],
+    })
+    await expect(service.chat(PRICE_MESSAGE)).resolves.toBe('Hangi tür GES ile ilgileniyorsunuz?')
+  })
+
+  it('falls back to the normal LLM flow when the extraction call network-fails', async () => {
+    const { service } = makePricingService({
+      pricingContent: null,
+      genReplies: ['Hangi tür GES ile ilgileniyorsunuz?'],
+    })
+    await expect(service.chat(PRICE_MESSAGE)).resolves.toBe('Hangi tür GES ile ilgileniyorsunuz?')
+  })
+
+  it('drops an invalid field but keeps a resolvable quote from the remaining valid fields', async () => {
+    const { service } = makePricingService({
+      pricingContent: JSON.stringify({ kategori: 'tarimsal_sulama', pompaHp: 10, aylikFatura: 'onbin' }),
+    })
+    await expect(service.chat(PRICE_MESSAGE)).resolves.toContain('210.000 - 340.000 TL')
+  })
+
+  it('skips extraction and falls straight to the budget-exceeded message when the daily budget is already spent', async () => {
+    const { service, call, incr } = makePricingService({ pricingContent: 'unused' })
+    incr.mockResolvedValue(1001) // varsayılan limit 1000
+    await expect(service.chat(PRICE_MESSAGE)).resolves.toBe(BUDGET_EXCEEDED_MESSAGE)
     expect(call).not.toHaveBeenCalled()
   })
 })

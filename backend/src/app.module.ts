@@ -22,7 +22,7 @@ import { ChatModule } from './chat/chat.module'
 import { QuoteModule } from './quote/quote.module'
 import { WebhooksModule } from './webhooks/webhooks.module'
 import { InstagramTokenModule } from './instagram-token/instagram-token.module'
-import { GroqModule } from './groq/groq.module'
+import { LlmModule } from './llm/llm.module'
 import { WeatherModule } from './weather/weather.module'
 import { LogsModule } from './logs/logs.module'
 import { HealthController } from './health.controller'
@@ -58,7 +58,7 @@ import { HealthController } from './health.controller'
         ADMIN_USERNAME: Joi.string().empty('').default('admin'),
         UMAMI_USER: Joi.string().empty('').default('admin'),
         INSTAGRAM_HASHTAG: Joi.string().empty('').default('#proje'),
-        GROQ_DAILY_LIMIT: Joi.number().integer().min(1).empty('').default(1000),
+        LLM_DAILY_LIMIT: Joi.number().integer().min(1).empty('').default(1000),
         // ── Opsiyonel (boşsa ilgili özellik devre dışı) ──
         // Virgüllü açık CORS origin listesi; boşsa FRONTEND_URL'den www türetilir
         CORS_ORIGINS: Joi.string().allow('').optional().custom((value: string, helpers) => {
@@ -76,21 +76,21 @@ import { HealthController } from './health.controller'
         OPENWEATHER_API_KEY: Joi.string().allow('').optional(),
         INSTAGRAM_ACCESS_TOKEN: Joi.string().allow('').optional(),
         INSTAGRAM_USER_ID: Joi.string().allow('').optional(),
-        GROQ_API_KEY: Joi.string().allow('').optional(),
-        GROQ_API_KEY_2: Joi.string().allow('').optional(),
-        GROQ_API_KEY_3: Joi.string().allow('').optional(),
-        GROQ_CHAT_KEYS: Joi.string().allow('').optional(),
-        GROQ_PARSE_KEYS: Joi.string().allow('').optional(),
+        LLM_API_KEY: Joi.string().allow('').optional(),
+        LLM_API_KEY_2: Joi.string().allow('').optional(),
+        LLM_API_KEY_3: Joi.string().allow('').optional(),
+        LLM_CHAT_KEYS: Joi.string().allow('').optional(),
+        LLM_PARSE_KEYS: Joi.string().allow('').optional(),
         SENTRY_DSN: Joi.string().allow('').optional(),
       }).custom((env: Record<string, string | undefined>, helpers) => {
         // Chatbot canlı sitenin parçası: yeni liste ya da eski key'lerden en az
-        // biri boot anında mevcut olmalı (GroqService.getKeys ile aynı öncelik)
+        // biri boot anında mevcut olmalı (LlmService.getKeys ile aynı öncelik)
         const has = (v?: string) => typeof v === 'string' && v.trim() !== ''
-        if (!has(env.GROQ_CHAT_KEYS) && !has(env.GROQ_API_KEY_3) && !has(env.GROQ_API_KEY)) {
-          return helpers.message({ custom: 'GROQ_CHAT_KEYS veya GROQ_API_KEY(_3) tanımlı olmalı' })
+        if (!has(env.LLM_CHAT_KEYS) && !has(env.LLM_API_KEY_3) && !has(env.LLM_API_KEY)) {
+          return helpers.message({ custom: 'LLM_CHAT_KEYS veya LLM_API_KEY(_3) tanımlı olmalı' })
         }
-        if (!has(env.GROQ_PARSE_KEYS) && !has(env.GROQ_API_KEY)) {
-          return helpers.message({ custom: 'GROQ_PARSE_KEYS veya GROQ_API_KEY tanımlı olmalı' })
+        if (!has(env.LLM_PARSE_KEYS) && !has(env.LLM_API_KEY)) {
+          return helpers.message({ custom: 'LLM_PARSE_KEYS veya LLM_API_KEY tanımlı olmalı' })
         }
         return env
       }),
@@ -135,7 +135,7 @@ import { HealthController } from './health.controller'
     QuoteModule,
     WebhooksModule,
     InstagramTokenModule,
-    GroqModule,
+    LlmModule,
     WeatherModule,
     LogsModule,
   ],

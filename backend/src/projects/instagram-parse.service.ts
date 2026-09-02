@@ -1,7 +1,7 @@
 import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common'
 import { plainToInstance } from 'class-transformer'
 import { validate } from 'class-validator'
-import { GroqService, GROQ_MODEL } from '../groq/groq.service'
+import { LlmService, LLM_MODEL } from '../llm/llm.service'
 import { ParsedProjectDto } from './dto/parsed-project.dto'
 import { errorMessage } from '../common/errors'
 import type { ParsedProject } from './instagram-types'
@@ -34,14 +34,14 @@ Kurallar:
 export class InstagramParseService {
   private readonly logger = new Logger(InstagramParseService.name)
 
-  constructor(private groq: GroqService) {}
+  constructor(private llm: LlmService) {}
 
   async parseInstagram(text: string): Promise<ParsedProject> {
-    const keys = this.groq.getKeys('parse')
+    const keys = this.llm.getKeys('parse')
     if (!keys.length) throw new InternalServerErrorException('GROQ_PARSE_KEYS / GROQ_API_KEY tanımlı değil')
 
-    const { res, data } = await this.groq.call(keys, {
-      model: GROQ_MODEL,
+    const { res, data } = await this.llm.call(keys, {
+      model: LLM_MODEL,
       messages: [
         { role: 'system', content: PARSE_PROMPT },
         { role: 'user', content: text },
@@ -49,11 +49,11 @@ export class InstagramParseService {
       temperature: 0,
     })
 
-    if (!res?.ok) throw new InternalServerErrorException(`Groq API hatası: ${res?.status ?? 'ağ hatası'}`)
+    if (!res?.ok) throw new InternalServerErrorException(`LLM API hatası: ${res?.status ?? 'ağ hatası'}`)
 
     const content = data?.choices?.[0]?.message?.content ?? ''
     const jsonMatch = content.match(/\{[\s\S]*\}/)
-    if (!jsonMatch) throw new InternalServerErrorException('Groq geçersiz yanıt döndürdü')
+    if (!jsonMatch) throw new InternalServerErrorException('LLM geçersiz yanıt döndürdü')
 
     let raw: unknown
     try {

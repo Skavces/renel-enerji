@@ -18,7 +18,7 @@ export interface InstagramMediaListResponse {
   data?: InstagramPost[]
 }
 
-// Groq parse çıktısı (instagram-parse.service PARSE_PROMPT şeması).
+// LLM parse çıktısı (instagram-parse.service PARSE_PROMPT şeması).
 // Model alan atlayabildiği için hepsi opsiyonel; tüketen taraf default'lar.
 // Bu yalnızca tip sözleşmesi — ÇALIŞMA ZAMANI doğrulaması dto/parsed-project.dto.ts
 // içindeki ParsedProjectDto'da; ikisi birlikte güncellenmeli.
