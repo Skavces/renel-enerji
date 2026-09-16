@@ -12,14 +12,19 @@ import { fetchWithTimeout } from '../common/fetch-with-timeout'
 // (/api/v1/models listesinde artık yok, 5 gündür 404) — chatbot tamamen
 // çalışmıyordu. Ayrıca LLM_MODEL === LLM_FALLBACK_MODEL olduğu için call()'daki
 // "yedek modele düş" denemesi de aynı ölü modele gidiyordu, gerçek bir
-// yedeklilik hiç yoktu. Bu yüzden şimdi bilinçli olarak FARKLI sağlayıcılardan
-// iki model seçildi (biri kaldırılırsa diğerinin aynı anda gitme ihtimali
-// düşsün): birincil z-ai/glm-5.2:free, yedek google/gemma-4-31b-it:free.
-// Canlıda LlmHealthService günlük sağlık kontrolüyle doğrulanır. Farklı bir
-// model istenirse OpenRouter'ın /api/v1/models listesinden ":free" sonekli
-// adaylar canlı test edilip buradan değiştirilir.
-export const LLM_MODEL = 'z-ai/glm-5.2:free'
-export const LLM_FALLBACK_MODEL = 'google/gemma-4-31b-it:free'
+// yedeklilik hiç yoktu. İlk deneme olarak seçilen z-ai/glm-5.2:free ve
+// google/gemma-4-31b-it:free de canlıda sürekli 429 (rate limit) verdi —
+// gerçek anahtarla /api/v1/chat/completions'a canlı istek atılarak 7 aday
+// tarandı, yalnızca 4'ü 200 döndü. Bu yüzden FARKLI sağlayıcılardan, gerçekten
+// yanıt veren iki model seçildi: birincil nvidia/nemotron-3-super-120b-a12b:free
+// (büyük model, kapasite yeterli), yedek nex-agi/nex-n2.5-pro:free (liquid/
+// lfm-2.5-2.6b:free de 200 döndü ama 2.6B çok küçük, Türkçe/JSON kalitesi
+// riskli görüldüğü için tercih edilmedi). Canlıda LlmHealthService günlük
+// sağlık kontrolüyle doğrulanır. Farklı bir model istenirse OpenRouter'ın
+// /api/v1/models listesinden ":free" sonekli adaylar canlı test edilip
+// buradan değiştirilir.
+export const LLM_MODEL = 'nvidia/nemotron-3-super-120b-a12b:free'
+export const LLM_FALLBACK_MODEL = 'nex-agi/nex-n2.5-pro:free'
 export const LLM_API_URL = 'https://openrouter.ai/api/v1/chat/completions'
 
 const REQUEST_TIMEOUT_MS = 15000
