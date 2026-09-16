@@ -29,9 +29,12 @@ export const LLM_API_URL = 'https://openrouter.ai/api/v1/chat/completions'
 
 const REQUEST_TIMEOUT_MS = 15000
 
-// OpenAI-uyumlu chat completions cevabından kullanılan alanlar
+// OpenAI-uyumlu chat completions cevabından kullanılan alanlar. `error`:
+// OpenRouter, sağlayıcı (ör. Nvidia) aşırı yüklendiğinde HTTP 200 ile birlikte
+// gövdede hata döndürebiliyor (bkz. call()) — yalnızca res.ok'a bakmak bunu kaçırır.
 export interface LlmResponse {
   choices?: { message?: { content?: string } }[]
+  error?: { message?: string; code?: number | string }
 }
 
 // chat = müşteri chatbot'u, parse = Instagram gönderi analizi.
@@ -100,16 +103,24 @@ export class LlmService {
     ]
 
     let res: Response | null = null
+    let lastStatus: number | string = 'ağ hatası'
     for (const attempt of attempts) {
       if (attempt.delayMs) await sleep(attempt.delayMs)
       res = await this.request(attempt.key, { ...payload, model: attempt.model })
-      if (res?.ok) return { res, data: await res.json() }
+      if (res?.ok) {
+        const data: LlmResponse = await res.json()
+        if (!data.error) return { res, data }
+        lastStatus = `200 (gövdede hata: ${data.error.message ?? data.error.code ?? '?'})`
+        this.logger.warn(`LLM ${attempt.model} yanıtı: ${lastStatus}`)
+        continue
+      }
+      lastStatus = res?.status ?? 'ağ hatası'
       this.logger.warn(
         `LLM ${attempt.model} yanıtı: ${res ? res.status : 'ağ hatası/zaman aşımı'}`,
       )
     }
 
-    this.logger.error(`LLM tüm denemelerde başarısız (son durum: ${res?.status ?? 'ağ hatası'})`)
+    this.logger.error(`LLM tüm denemelerde başarısız (son durum: ${lastStatus})`)
     return { res, data: null }
   }
 
@@ -118,6 +129,8 @@ export class LlmService {
   // model değişimi bunu maskeler (bkz. llm-health.service.ts).
   async ping(key: string, model: string): Promise<boolean> {
     const res = await this.request(key, { model, messages: [{ role: 'user', content: 'ping' }], max_tokens: 5 })
-    return !!res?.ok
+    if (!res?.ok) return false
+    const data: LlmResponse = await res.json()
+    return !data.error
   }
 }

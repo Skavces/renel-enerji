@@ -90,7 +90,10 @@ export class ChatService {
     }
   }
 
-  private async callLlm(systemPrompt: string, messages: ChatMessage[], maxTokens = 400): Promise<string> {
+  // 180: SYSTEM_PROMPT zaten "2-3 cümleyi geçme" diyor (~40-90 token); free-tier
+  // modeller talimatı bazen görmezden gelip uzun cevap üretiyor, yüksek bir tavan
+  // (eskiden 400) bu durumda gecikmeyi gereksiz şişiriyordu (2026-09-16).
+  private async callLlm(systemPrompt: string, messages: ChatMessage[], maxTokens = 180): Promise<string> {
     const keys = this.llm.getKeys('chat')
     if (!keys.length) {
       this.logger.error('LLM_CHAT_KEYS / LLM_API_KEY tanımlı değil')
@@ -242,7 +245,7 @@ export class ChatService {
         // İlk deneme düz sistem promptuyla, sonrakiler düzeltici talimatla yapılır
         // (kör tekrar aynı sızıntıyı yeniden üretebiliyor)
         const systemPrompt = attempt === 1 ? SYSTEM_PROMPT : `${SYSTEM_PROMPT}\n\n${RETRY_NUDGE}`
-        const reply = await this.callLlm(systemPrompt, messages, 400)
+        const reply = await this.callLlm(systemPrompt, messages)
         if (!(await this.isLeaky(reply, allowedAmounts))) return reply
 
         const isLastAttempt = attempt === ChatService.MAX_CHAT_ATTEMPTS
