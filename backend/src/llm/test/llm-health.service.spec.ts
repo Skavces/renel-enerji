@@ -4,9 +4,7 @@ import { LlmService } from '../llm.service'
 
 // checkModelsAvailable() iki ping()'i Promise.all ile eş zamanlı başlatır ama
 // dizi elemanları soldan sağa senkron çağrılır, bu yüzden bir kuyruk çağrı
-// sırasına göre güvenle eşlenir. NOT: LLM_MODEL === LLM_FALLBACK_MODEL
-// (ikisi de minimax-m3:free) olduğundan model adına göre ayırt etmek yerine
-// çağrı sırasına göre (1. = ana, 2. = yedek) sonuç veriyoruz.
+// sırasına göre güvenle eşlenir (1. = ana, 2. = yedek).
 function makeService(results: [boolean, boolean], keys: string[] = ['key1']): {
   service: LlmHealthService
   ping: jest.Mock

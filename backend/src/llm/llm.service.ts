@@ -8,16 +8,18 @@ import { fetchWithTimeout } from '../common/fetch-with-timeout'
 // bağımsız kalır, bir daha sağlayıcı değiştirirsek yalnızca bu dosyadaki
 // URL/model/auth biçimi değişir, sınıf adı ve tüm çağıranlar aynı kalır.
 //
-// ŞU AN OpenRouter kullanılıyor (https://openrouter.ai), OpenAI-uyumlu
-// chat/completions endpoint'i. minimax/minimax-m3:free hem birincil hem yedek
-// model olarak seçildi (canlı karşılaştırmalı testte: doğru Türkçe, doğru
-// WhatsApp yönlendirme cümlesi, injection direnci, temiz JSON çıktısı — rakip
-// ücretsiz modellerin çoğu ya sık rate-limit'e takıldı ya da JSON istendiğinde
-// ham İngilizce reasoning metni döktü). Farklı bir model istenirse OpenRouter'ın
-// /api/v1/models listesinden ":free" sonekli adaylar canlı test edilip
-// buradan değiştirilir.
-export const LLM_MODEL = 'minimax/minimax-m3:free'
-export const LLM_FALLBACK_MODEL = 'minimax/minimax-m3:free'
+// 2026-09-16: minimax/minimax-m3:free OpenRouter'dan tamamen kaldırıldı
+// (/api/v1/models listesinde artık yok, 5 gündür 404) — chatbot tamamen
+// çalışmıyordu. Ayrıca LLM_MODEL === LLM_FALLBACK_MODEL olduğu için call()'daki
+// "yedek modele düş" denemesi de aynı ölü modele gidiyordu, gerçek bir
+// yedeklilik hiç yoktu. Bu yüzden şimdi bilinçli olarak FARKLI sağlayıcılardan
+// iki model seçildi (biri kaldırılırsa diğerinin aynı anda gitme ihtimali
+// düşsün): birincil z-ai/glm-5.2:free, yedek google/gemma-4-31b-it:free.
+// Canlıda LlmHealthService günlük sağlık kontrolüyle doğrulanır. Farklı bir
+// model istenirse OpenRouter'ın /api/v1/models listesinden ":free" sonekli
+// adaylar canlı test edilip buradan değiştirilir.
+export const LLM_MODEL = 'z-ai/glm-5.2:free'
+export const LLM_FALLBACK_MODEL = 'google/gemma-4-31b-it:free'
 export const LLM_API_URL = 'https://openrouter.ai/api/v1/chat/completions'
 
 const REQUEST_TIMEOUT_MS = 15000
