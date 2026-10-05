@@ -8,32 +8,39 @@ import { fetchWithTimeout } from '../common/fetch-with-timeout'
 // bağımsız kalır, bir daha sağlayıcı değiştirirsek yalnızca bu dosyadaki
 // URL/model/auth biçimi değişir, sınıf adı ve tüm çağıranlar aynı kalır.
 //
-// 2026-09-16: minimax/minimax-m3:free OpenRouter'dan tamamen kaldırıldı
-// (/api/v1/models listesinde artık yok, 5 gündür 404) — chatbot tamamen
-// çalışmıyordu. Ayrıca LLM_MODEL === LLM_FALLBACK_MODEL olduğu için call()'daki
-// "yedek modele düş" denemesi de aynı ölü modele gidiyordu, gerçek bir
-// yedeklilik hiç yoktu. İlk deneme olarak seçilen z-ai/glm-5.2:free ve
-// google/gemma-4-31b-it:free de canlıda sürekli 429 (rate limit) verdi —
-// gerçek anahtarla /api/v1/chat/completions'a canlı istek atılarak 7 aday
-// tarandı, yalnızca 4'ü 200 döndü. Bu yüzden FARKLI sağlayıcılardan, gerçekten
-// yanıt veren iki model seçildi: birincil nvidia/nemotron-3-super-120b-a12b:free
-// (büyük model, kapasite yeterli), yedek nex-agi/nex-n2.5-pro:free (liquid/
-// lfm-2.5-2.6b:free de 200 döndü ama 2.6B çok küçük, Türkçe/JSON kalitesi
-// riskli görüldüğü için tercih edilmedi). Canlıda LlmHealthService günlük
-// sağlık kontrolüyle doğrulanır. Farklı bir model istenirse OpenRouter'ın
-// /api/v1/models listesinden ":free" sonekli adaylar canlı test edilip
-// buradan değiştirilir.
-export const LLM_MODEL = 'nvidia/nemotron-3-super-120b-a12b:free'
-export const LLM_FALLBACK_MODEL = 'nex-agi/nex-n2.5-pro:free'
-export const LLM_API_URL = 'https://openrouter.ai/api/v1/chat/completions'
+// 2026-10-05: OpenRouter'ın ücretsiz modelleri güvenilmez çıktı: yedek model
+// (nex-agi/nex-n2.5-pro:free) listeden kalktı, birincil model (nemotron-3-super)
+// HTTP 200 ile boş içerik döndürmeye başladı ve chatbot tamamen çalışmaz oldu
+// (call() boş içeriği başarı sayıp yedeğe hiç düşmüyordu). Groq'a geri dönüldü
+// (OpenAI uyumlu, tek fark URL/model). 2026-09-02'de Groq'un kaldırdığı Llama
+// modelleri artık canlı listede de yok (Enterprise-only); canlı listede ve gerçek
+// anahtarla chat biçiminde doğrulanan modeller seçildi: birincil openai/gpt-oss-120b
+// (production katmanı), yedek ve dil denetçisi openai/gpt-oss-20b (ayrı rate limit
+// havuzu, ~0.4 sn). İkisi de reasoning modeli: reasoning_effort "low" verilmezse
+// token bütçesini düşünmeye harcayıp content'i boş bırakabilir (bkz. MODEL_PARAMS).
+// Farklı bir model istenirse GET https://api.groq.com/openai/v1/models listesinden
+// aday canlı denenip buradan değiştirilir.
+export const LLM_MODEL = 'openai/gpt-oss-120b'
+export const LLM_FALLBACK_MODEL = 'openai/gpt-oss-20b'
+export const LLM_API_URL = 'https://api.groq.com/openai/v1/chat/completions'
 
 const REQUEST_TIMEOUT_MS = 15000
 
+// Modele özgü ek istek parametreleri. gpt-oss reasoning modelidir; "low" olmadan
+// max_tokens'ı (chatbot'ta 180, judge'da küçük) düşünmeye harcayıp boş içerik döner.
+const MODEL_PARAMS: Record<string, Record<string, unknown>> = {
+  'openai/gpt-oss-120b': { reasoning_effort: 'low' },
+  'openai/gpt-oss-20b': { reasoning_effort: 'low' },
+}
+
 // OpenAI-uyumlu chat completions cevabından kullanılan alanlar. `error`:
-// OpenRouter, sağlayıcı (ör. Nvidia) aşırı yüklendiğinde HTTP 200 ile birlikte
+// Sağlayıcı (ör. OpenRouter'da Nvidia) aşırı yüklendiğinde HTTP 200 ile birlikte
 // gövdede hata döndürebiliyor (bkz. call()) — yalnızca res.ok'a bakmak bunu kaçırır.
 export interface LlmResponse {
-  choices?: { message?: { content?: string } }[]
+  choices?: {
+    message?: { content?: string | null; reasoning?: string | null }
+    finish_reason?: string | null
+  }[]
   error?: { message?: string; code?: number | string }
 }
 
@@ -83,12 +90,26 @@ export class LlmService {
       return await fetchWithTimeout(LLM_API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ ...payload, ...MODEL_PARAMS[(payload as { model?: string }).model ?? ''] }),
       }, REQUEST_TIMEOUT_MS)
     } catch (err) {
       this.logger.warn(`LLM isteği başarısız: ${err instanceof Error ? err.message : err}`)
       return null
     }
+  }
+
+  private static hasContent(data: LlmResponse): boolean {
+    const content = data.choices?.[0]?.message?.content
+    return typeof content === 'string' && content.trim().length > 0
+  }
+
+  // Boş yanıtın nedenini log'a taşır: finish_reason "length" + dolu reasoning,
+  // modelin token bütçesini düşünmeye harcadığını gösterir.
+  private static describeEmpty(data: LlmResponse): string {
+    const choice = data.choices?.[0]
+    if (!choice) return 'choices yok'
+    const reasoningLen = choice.message?.reasoning?.length ?? 0
+    return `finish_reason=${choice.finish_reason ?? '?'}, reasoning=${reasoningLen} karakter`
   }
 
   async call(
@@ -109,8 +130,15 @@ export class LlmService {
       res = await this.request(attempt.key, { ...payload, model: attempt.model })
       if (res?.ok) {
         const data: LlmResponse = await res.json()
-        if (!data.error) return { res, data }
-        lastStatus = `200 (gövdede hata: ${data.error.message ?? data.error.code ?? '?'})`
+        if (!data.error) {
+          // 200 + boş içerik de başarısızdır: reasoning modelleri token bütçesini
+          // düşünmeye harcayıp content'i boş bırakabiliyor. Bunu başarı sayarsak
+          // çağıran 503 verir ve yedek anahtar/model hiç denenmez.
+          if (LlmService.hasContent(data)) return { res, data }
+          lastStatus = `200 (boş içerik: ${LlmService.describeEmpty(data)})`
+        } else {
+          lastStatus = `200 (gövdede hata: ${data.error.message ?? data.error.code ?? '?'})`
+        }
         this.logger.warn(`LLM ${attempt.model} yanıtı: ${lastStatus}`)
         continue
       }
@@ -127,10 +155,17 @@ export class LlmService {
   // Tek deneme, fallback zinciri YOK (call()'un aksine). Sağlık kontrolü tam
   // olarak hangi modelin çalıştığını görmek istiyor; call()'daki otomatik
   // model değişimi bunu maskeler (bkz. llm-health.service.ts).
+  // Gerçek chat çağrısıyla aynı biçimde (max_tokens dahil) ve YALNIZCA dolu bir
+  // içerik döndüyse başarılı sayılır: eski "200 + hata yok" ölçütü, boş içerikle
+  // dönen reasoning modelini sağlıklı gösteriyordu.
   async ping(key: string, model: string): Promise<boolean> {
-    const res = await this.request(key, { model, messages: [{ role: 'user', content: 'ping' }], max_tokens: 5 })
+    const res = await this.request(key, {
+      model,
+      messages: [{ role: 'user', content: 'Merhaba, tek cümleyle cevap ver.' }],
+      max_tokens: 180,
+    })
     if (!res?.ok) return false
     const data: LlmResponse = await res.json()
-    return !data.error
+    return !data.error && LlmService.hasContent(data)
   }
 }

@@ -4,7 +4,7 @@ import { LlmService, LLM_MODEL, LLM_FALLBACK_MODEL } from './llm.service'
 
 // 2026-09-02: Groq, chatbot'un kullandığı iki modeli haber vermeden kaldırdı;
 // canlı chatbot muhtemelen haftalarca hiç fark edilmeden her mesaja hata
-// döndürdü. Sağlayıcı OpenRouter'a geçip sınıf adları genelleştirildikten
+// döndürdü. Sağlayıcı değişip (OpenRouter, sonra tekrar Groq) sınıf adları genelleştirildikten
 // sonra da bu günlük kontrol korundu: gerçek müşteri trafiği olmasa bile
 // modellerin hâlâ erişilebilir olduğunu düzenli test eder. Yalnızca sorun
 // varsa loglar (Loglar sayfası ERROR/WARN yakalar, bkz. DbLogger) — ikisi de

@@ -19,7 +19,7 @@ Corporate website and admin panel for **RenEl Enerji**, a solar energy solutions
 | -------------- | --------------------------------------------------------------- |
 | Frontend       | React 19, Vite 8, Tailwind CSS 4                                |
 | Backend        | NestJS, TypeORM, PostgreSQL, Redis                              |
-| AI / Chatbot   | OpenRouter (behind a provider-agnostic LLM client)              |
+| AI / Chatbot   | Groq (behind a provider-agnostic LLM client)                    |
 | Analytics      | Umami                                                           |
 | Logs           | In-panel log viewer (backend errors/warnings, 30-day retention) |
 | Error Tracking | Sentry (optional)                                               |
@@ -53,7 +53,7 @@ renel-enerji/
 │       ├── sitemap/         # Dynamic sitemap generation
 │       ├── weather/         # Weather integration
 │       ├── upload/          # File upload
-│       ├── llm/             # LLM client (chatbot + Instagram parsing; OpenRouter today)
+│       ├── llm/             # LLM client (chatbot + Instagram parsing; Groq today)
 │       ├── instagram-token/ # Instagram Graph API token refresh
 │       ├── logs/            # DB-backed error/warning logs (admin panel viewer)
 │       ├── webhooks/        # Instagram webhook receiver

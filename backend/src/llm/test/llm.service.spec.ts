@@ -18,6 +18,14 @@ function okResponse(content = 'cevap'): Response {
   } as unknown as Response
 }
 
+function emptyResponse(): Response {
+  return {
+    ok: true,
+    status: 200,
+    json: async () => ({ choices: [{ message: { content: null, reasoning: 'düşünüyorum...' }, finish_reason: 'length' }] }),
+  } as unknown as Response
+}
+
 function errResponse(status: number): Response {
   return { ok: false, status } as unknown as Response
 }
@@ -75,6 +83,40 @@ describe('LlmService', () => {
     expect(sentPayload(2)).toEqual({ model: LLM_FALLBACK_MODEL, key: 'key1' })
   })
 
+  it('treats a 200 with empty content as a failed attempt and moves down the chain', async () => {
+    mockFetch
+      .mockResolvedValueOnce(emptyResponse())
+      .mockResolvedValueOnce(emptyResponse())
+      .mockResolvedValueOnce(okResponse())
+
+    const { data } = await service.call(['key1', 'key2'], payload)
+    expect(data?.choices?.[0]?.message?.content).toBe('cevap')
+    expect(mockFetch).toHaveBeenCalledTimes(3)
+    expect(sentPayload(2)).toEqual({ model: LLM_FALLBACK_MODEL, key: 'key1' })
+  })
+
+  it('returns null data when every attempt comes back with empty content', async () => {
+    mockFetch.mockResolvedValue(emptyResponse())
+
+    const { data } = await service.call(['key1', 'key2'], payload)
+    expect(data).toBeNull()
+    expect(mockFetch).toHaveBeenCalledTimes(3)
+  })
+
+  it('sends reasoning_effort for gpt-oss models so reasoning cannot eat the token budget', async () => {
+    mockFetch.mockResolvedValueOnce(okResponse())
+    await service.call(['key1'], payload)
+    const body = JSON.parse(mockFetch.mock.calls[0][1]!.body as string)
+    expect(body.reasoning_effort).toBe('low')
+  })
+
+  it('does not add model params for unknown models', async () => {
+    mockFetch.mockResolvedValueOnce(okResponse())
+    await service.call(['key1'], { model: 'baska/model', messages: [] })
+    const body = JSON.parse(mockFetch.mock.calls[0][1]!.body as string)
+    expect(body).not.toHaveProperty('reasoning_effort')
+  })
+
   it('survives network errors/timeouts and keeps retrying', async () => {
     mockFetch
       .mockRejectedValueOnce(new Error('aborted'))
@@ -118,6 +160,11 @@ describe('LlmService.ping', () => {
     // call()'un aksine tek deneme, fallback zinciri yok
     expect(mockFetch).toHaveBeenCalledTimes(1)
     expect(sentPayload(0)).toEqual({ model: LLM_MODEL, key: 'key1' })
+  })
+
+  it('returns false when the model answers 200 but with empty content', async () => {
+    mockFetch.mockResolvedValueOnce(emptyResponse())
+    await expect(service.ping('key1', LLM_MODEL)).resolves.toBe(false)
   })
 
   it('returns false without retrying on a non-ok response (ör. 404 model_not_found)', async () => {

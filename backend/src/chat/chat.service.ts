@@ -133,7 +133,11 @@ export class ChatService {
         { role: 'system', content: JUDGE_SYSTEM_PROMPT },
         { role: 'user', content: judgeUserMessage(text) },
       ],
-      max_tokens: 8,
+      // 8 değil: judge modeli reasoning modeli; canlı denemede 64 token bile düşünmeye
+      // gidip EVET/HAYIR yerine boş içerik döndürdü (boş içerik call()'da yeniden
+      // deneme tetikler, her mesaja saniyeler ekler). Çıktı yine tek kelime; tavan
+      // yalnızca reasoning payı, kullanılmayan kısım için ücret/gecikme yok.
+      max_tokens: 256,
       temperature: 0,
     })
 
@@ -179,7 +183,7 @@ export class ChatService {
     const { res, data } = await this.llm.call(keys, {
       model: LLM_MODEL,
       messages: [{ role: 'system', content: PRICING_EXTRACTION_PROMPT }, ...messages.slice(-12)],
-      max_tokens: 150,
+      max_tokens: 300, // reasoning payı + JSON çıktısı
       temperature: 0,
     })
 
