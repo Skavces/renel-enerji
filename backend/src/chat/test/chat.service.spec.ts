@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config'
 import { BUDGET_EXCEEDED_MESSAGE, ChatService } from '../chat.service'
 import { JUDGE_SYSTEM_PROMPT, judgeUserMessage, PRICING_EXTRACTION_PROMPT, RETRY_NUDGE } from '../chat-prompts'
 import { LlmService } from '../../llm/llm.service'
+import { formatQuoteMessage, resolveQuote } from '../pricing/ges-pricing'
 
 type LlmPayload = { messages: { role: string; content: string }[] } & Record<string, unknown>
 
@@ -398,6 +399,70 @@ describe('ChatService — fiyat çıkarımı (pricing)', () => {
     const reply = await service.chat(conversation)
     expect(reply).toContain("WhatsApp'tan Teklif Al")
     expect(call).toHaveBeenCalledTimes(1)
+  })
+
+  describe('teklif sonrası konuşma (aynı teklif tekrar edilmez, 2026-10-05)', () => {
+    const quoteOf = (hp: number): string => {
+      const quote = resolveQuote({ kategori: 'tarimsal_sulama', pompaHp: hp })
+      if (!quote) throw new Error(`HP ${hp} için teklif çözülemedi`)
+      return formatQuoteMessage(quote)
+    }
+    const QUOTE_10HP = quoteOf(10)
+    const afterQuote = (userMessage: string) => [
+      { role: 'user' as const, content: 'pompam 10 HP, tahmini fiyat nedir?' },
+      { role: 'assistant' as const, content: QUOTE_10HP },
+      { role: 'user' as const, content: userMessage },
+    ]
+
+    it('does not repeat the quote for a follow-up that merely contains a price word ("ne kadar sürer")', async () => {
+      const { service, call } = makePricingService({ genReplies: ['Montaj genelde birkaç gün sürer.'] })
+      const reply = await service.chat(afterQuote('Montaj ne kadar sürer?'))
+      expect(reply).toBe('Montaj genelde birkaç gün sürer.')
+      // extraction hiç çağrılmaz (teklif sonrası rakam yok); yalnızca üretim + judge
+      expect(call).toHaveBeenCalledTimes(2)
+    })
+
+    it('does not repeat the quote for a message with no price content at all', async () => {
+      const { service, call } = makePricingService({ genReplies: ['Rica ederiz, iyi günler!'] })
+      const reply = await service.chat(afterQuote('Teşekkürler, iyi günler'))
+      expect(reply).toBe('Rica ederiz, iyi günler!')
+      expect(call).toHaveBeenCalledTimes(2)
+    })
+
+    it('falls back to the normal flow when extraction resolves to the identical quote again', async () => {
+      const { service, call } = makePricingService({
+        pricingContent: JSON.stringify({ kategori: 'tarimsal_sulama', pompaHp: 10 }),
+        genReplies: ['Garanti süresi 5 yıldır.'],
+      })
+      const reply = await service.chat(afterQuote('garanti 5 yıl mı?'))
+      expect(reply).toBe('Garanti süresi 5 yıldır.')
+      // extraction + üretim + judge
+      expect(call).toHaveBeenCalledTimes(3)
+    })
+
+    it('still returns a new quote when the customer gives a new number, even without a price word', async () => {
+      const { service } = makePricingService({
+        pricingContent: JSON.stringify({ kategori: 'tarimsal_sulama', pompaHp: 20 }),
+      })
+      const reply = await service.chat(afterQuote('peki 20 HP olsaydı?'))
+      expect(reply).toBe(quoteOf(20))
+      expect(reply).not.toBe(QUOTE_10HP)
+    })
+
+    it('ignores a quote that fell out of the 12-message window', async () => {
+      const { service, call } = makePricingService({ genReplies: ['Hangi konuda yardımcı olabilirim?'] })
+      const filler = Array.from({ length: 12 }, (_, i) => ({
+        role: i % 2 === 0 ? ('user' as const) : ('assistant' as const),
+        content: 'sohbet',
+      }))
+      const reply = await service.chat([
+        { role: 'user' as const, content: 'pompam 10 HP, tahmini fiyat nedir?' },
+        { role: 'assistant' as const, content: QUOTE_10HP },
+        ...filler,
+      ])
+      expect(reply).toBe('Hangi konuda yardımcı olabilirim?')
+      expect(call).toHaveBeenCalledTimes(2)
+    })
   })
 
   it('skips extraction and falls straight to the budget-exceeded message when the daily budget is already spent', async () => {

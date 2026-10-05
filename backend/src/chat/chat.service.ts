@@ -56,6 +56,15 @@ const PRICE_INTENT_PATTERN = /fiyat|ücret|maliyet|kaça|ne kadar|tutar|bütçe/
 // boşa giden çağrı tek başına ~7-9 saniye ekliyordu.
 const EXTRACTABLE_HINT_PATTERN = /\d|monofaze|trifaze|tek faz|üç faz|3 faz|ticari/i
 
+// Deterministik teklif cevabını (formatQuoteMessage) konuşma geçmişinde tanımak için.
+// Teklif sonrası fiyat kapısı yalnızca yeni mesajlara bakar, aksi halde pencerede
+// kalan eski fiyat sorusu her tura aynı teklifi tekrar döndürürdü.
+const QUOTE_MARKERS = ['tahmini yatırım', "WhatsApp'tan Teklif Al"]
+
+function isQuoteReply(m: ChatMessage): boolean {
+  return m.role === 'assistant' && QUOTE_MARKERS.every(marker => m.content.includes(marker))
+}
+
 @Injectable()
 export class ChatService {
   private readonly logger = new Logger(ChatService.name)
@@ -228,16 +237,26 @@ export class ChatService {
       // pencere) bakılır: fiyat genelde bir turda sorulup girdi (fatura/HP/kW)
       // sonraki turda salt rakam olarak geliyor — o turda "fiyat" kelimesi hiç
       // geçmeyebilir (canlıda görüldü, 2026-09-02).
+      //
+      // Pencerede daha önce bir teklif verilmişse yalnızca ondan SONRAKİ mesajlara
+      // bakılır: eski fiyat sorusu pencerede kaldığı sürece "montaj ne kadar sürer"
+      // ya da "teşekkürler" gibi alakasız mesajlara da aynı teklif dönüyordu
+      // (2026-10-05). Teklif sonrası fiyat kelimesi aranmaz (müşteri "peki 15 HP
+      // olsa?" diyebilir), yeni bir rakam/ipucu yeterli; aynı teklif tekrar
+      // çıkarsa gönderilmez ve normal LLM akışına düşülür.
       const priceWindow = messages.slice(-12)
-      const priceAsked = priceWindow.some(m => m.role === 'user' && PRICE_INTENT_PATTERN.test(m.content))
+      const lastQuoteIndex = priceWindow.map(isQuoteReply).lastIndexOf(true)
+      const previousQuote = lastQuoteIndex >= 0 ? priceWindow[lastQuoteIndex].content : null
+      const userTurns = priceWindow.slice(lastQuoteIndex + 1).filter(m => m.role === 'user')
+      const priceAsked =
+        previousQuote !== null || userTurns.some(m => PRICE_INTENT_PATTERN.test(m.content))
       if (priceAsked) {
-        const hasExtractableHint = priceWindow.some(
-          m => m.role === 'user' && EXTRACTABLE_HINT_PATTERN.test(m.content),
-        )
+        const hasExtractableHint = userTurns.some(m => EXTRACTABLE_HINT_PATTERN.test(m.content))
         if (hasExtractableHint) {
           const intent = await this.extractPricingIntent(messages)
           const quote = intent && resolveQuote(intent)
-          if (quote) return formatQuoteMessage(quote)
+          const quoteMessage = quote ? formatQuoteMessage(quote) : null
+          if (quoteMessage && quoteMessage !== previousQuote) return quoteMessage
         }
       }
 
