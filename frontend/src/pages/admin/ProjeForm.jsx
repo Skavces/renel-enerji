@@ -16,7 +16,7 @@ const EMPTY = {
   description: '', about: '', specsTitle: 'Sistem Özellikleri', specs: [],
   highlightsTitle: 'Öne Çıkan Özellikler', highlights: [],
   statBoxes: [], ctaText: 'Benzer Proje İçin Teklif Al',
-  published: true, sortOrder: 0,
+  published: true, featured: false, sortOrder: 0,
 }
 
 function slugify(str) {
@@ -63,7 +63,7 @@ export default function ProjeForm() {
           about: p.about || '', specsTitle: p.specsTitle, specs: p.specs || [],
           highlightsTitle: p.highlightsTitle, highlights: p.highlights || [],
           statBoxes: p.statBoxes || [], ctaText: p.ctaText,
-          published: p.published, sortOrder: p.sortOrder,
+          published: p.published, featured: p.featured, sortOrder: p.sortOrder,
         })
         setSpecsText((p.specs || []).join('\n'))
         setHighlightsText((p.highlights || []).join('\n'))
@@ -513,6 +513,15 @@ if (parsed.description) { set('description', parsed.description); count++ }
                 className="w-4 h-4 accent-[#448834]"
               />
               <span className="text-sm font-medium text-gray-700">Sitede yayınla</span>
+            </label>
+            <label className="flex items-center gap-3 cursor-pointer mt-5">
+              <input
+                type="checkbox"
+                checked={!!form.featured}
+                onChange={(e) => set('featured', e.target.checked)}
+                className="w-4 h-4 accent-[#448834]"
+              />
+              <span className="text-sm font-medium text-gray-700">Ana sayfada öne çıkar</span>
             </label>
           </div>
         </Section>

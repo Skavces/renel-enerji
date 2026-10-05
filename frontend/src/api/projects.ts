@@ -14,6 +14,12 @@ export async function fetchProjects(): Promise<Project[]> {
   return res.json()
 }
 
+export async function fetchFeaturedProjects(): Promise<Project[]> {
+  const res = await fetch(`${API}/api/projects/featured`)
+  if (!res.ok) throw new Error('Öne çıkan projeler yüklenemedi')
+  return res.json()
+}
+
 export async function fetchProjectBySlug(slug: string): Promise<Project> {
   const res = await fetch(`${API}/api/projects/${encodeURIComponent(slug)}`)
   if (res.status === 404) {

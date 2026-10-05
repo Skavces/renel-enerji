@@ -8,13 +8,14 @@ import { ObjectLiteral, Repository } from 'typeorm'
 export async function reorderByCase<T extends ObjectLiteral>(
   repo: Repository<T>,
   orderedIds: string[],
+  sortProp = 'sortOrder',
 ): Promise<void> {
   if (!orderedIds.length) return
   const meta = repo.metadata
   const idCol = meta.findColumnWithPropertyName('id')
-  const sortCol = meta.findColumnWithPropertyName('sortOrder')
+  const sortCol = meta.findColumnWithPropertyName(sortProp)
   if (!idCol || !sortCol) {
-    throw new Error(`${meta.name} entity'sinde id/sortOrder kolonu bulunamadı`)
+    throw new Error(`${meta.name} entity'sinde id/${sortProp} kolonu bulunamadı`)
   }
   const cases = orderedIds.map((_, i) => `WHEN $${i + 2} THEN ${i}`).join(' ')
   await repo.manager.query(

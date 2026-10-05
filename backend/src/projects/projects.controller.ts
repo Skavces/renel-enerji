@@ -39,6 +39,12 @@ export class ProjectsController {
     return this.service.findAllPublic()
   }
 
+  @Get('featured')
+  @Header('Cache-Control', 'public, max-age=60')
+  findFeatured() {
+    return this.service.findFeaturedPublic()
+  }
+
   @Get(':slug')
   @Header('Cache-Control', 'public, max-age=60')
   findOne(@Param('slug') slug: string) {
@@ -82,6 +88,12 @@ export class ProjectsController {
   @Patch('reorder')
   reorderProjects(@Body() dto: ReorderDto) {
     return this.service.reorderProjects(dto.orderedIds)
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('featured/reorder')
+  reorderFeatured(@Body() dto: ReorderDto) {
+    return this.service.reorderFeatured(dto.orderedIds)
   }
 
   @UseGuards(JwtAuthGuard)

@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common'
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { Project } from './entities/project.entity'
@@ -10,6 +10,8 @@ import { PublicCacheService } from '../common/public-cache.service'
 import { RESERVED_SLUGS } from '../common/reserved-slugs'
 import { reorderByCase } from '../common/reorder'
 import { isUniqueViolation } from '../common/errors'
+
+export const MAX_FEATURED = 6
 
 @Injectable()
 export class ProjectsService {
@@ -43,6 +45,20 @@ export class ProjectsService {
     })
   }
 
+  // Ana sayfa "Öne Çıkan Projelerimiz" bölümü. published filtresi elle eklenmeli:
+  // taslak proje öne çıkarılmış olsa bile public yüzeye sızmamalı.
+  findFeaturedPublic() {
+    return this.cache.wrap('projects:featured', async () => {
+      const projects = await this.projectRepo.find({
+        where: { published: true, featured: true },
+        relations: { media: true },
+        order: { featuredOrder: 'ASC', createdAt: 'DESC' },
+        take: MAX_FEATURED,
+      })
+      return projects.map(p => ({ ...p, media: ProjectsService.coverOnly(p.media ?? []) }))
+    })
+  }
+
   findAll() {
     return this.projectRepo.find({
       relations: { media: true },
@@ -71,8 +87,24 @@ export class ProjectsService {
     return project
   }
 
+  // Öne çıkan sayısı sınırı: yeni bir proje featured olurken en fazla MAX_FEATURED
+  // kadar featured proje olabilir. Yeni öne çıkana listenin sonundaki sıra verilir.
+  private async nextFeaturedOrder(): Promise<number> {
+    const count = await this.projectRepo.count({ where: { featured: true } })
+    if (count >= MAX_FEATURED) {
+      throw new BadRequestException(`En fazla ${MAX_FEATURED} öne çıkan proje seçilebilir`)
+    }
+    const last = await this.projectRepo.findOne({
+      where: { featured: true },
+      order: { featuredOrder: 'DESC' },
+      select: { id: true, featuredOrder: true },
+    })
+    return last ? last.featuredOrder + 1 : 0
+  }
+
   async create(dto: CreateProjectDto) {
     const project = this.projectRepo.create(dto)
+    if (dto.featured) project.featuredOrder = await this.nextFeaturedOrder()
     try {
       const saved = await this.projectRepo.save(project)
       this.cache.bust('projects')
@@ -85,7 +117,9 @@ export class ProjectsService {
 
   async update(id: string, dto: UpdateProjectDto) {
     const project = await this.findById(id)
+    const becomesFeatured = dto.featured === true && !project.featured
     Object.assign(project, dto)
+    if (becomesFeatured) project.featuredOrder = await this.nextFeaturedOrder()
     try {
       const saved = await this.projectRepo.save(project)
       this.cache.bust('projects')
@@ -111,6 +145,11 @@ export class ProjectsService {
     // Eski raw SQL yanlış `sort_order` kolon adıyla runtime'da patlıyordu;
     // helper kolon adlarını metadata'dan aldığından tekrarlayamaz
     await reorderByCase(this.projectRepo, orderedIds)
+    this.cache.bust('projects')
+  }
+
+  async reorderFeatured(orderedIds: string[]) {
+    await reorderByCase(this.projectRepo, orderedIds, 'featuredOrder')
     this.cache.bust('projects')
   }
 

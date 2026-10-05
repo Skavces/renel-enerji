@@ -1,15 +1,67 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Plus, Pencil, Trash2, Eye, EyeOff, GripVertical, RefreshCw } from 'lucide-react'
+import { Plus, Pencil, Trash2, Eye, EyeOff, GripVertical, RefreshCw, Star } from 'lucide-react'
 import { DndContext, closestCenter } from '@dnd-kit/core'
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { fetchAllProjects, deleteProject, reorderProjects, syncInstagram, updateProject } from '../../api/admin'
+import { fetchAllProjects, deleteProject, reorderProjects, reorderFeaturedProjects, syncInstagram, updateProject } from '../../api/admin'
 import { useAdminAuth } from '../../contexts/AdminAuthContext'
 import { mediaUrl } from '../../api/projects'
 import { useDndReorder } from '../../hooks/useDndReorder.js'
 
-function SortableRow({ p, coverPhoto, onDelete, deletingId, onTogglePublish, togglingId }) {
+const MAX_FEATURED = 6
+
+function FeaturedItem({ p, coverPhoto, onRemove }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: p.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 10 : undefined,
+    position: 'relative',
+  }
+
+  return (
+    <li
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center gap-3 px-4 py-3 bg-white"
+    >
+      <button
+        {...attributes}
+        {...listeners}
+        className="text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing touch-none"
+      >
+        <GripVertical size={18} />
+      </button>
+      <div className="w-10 h-10 rounded-lg shrink-0 overflow-hidden bg-gray-100">
+        {coverPhoto(p) && (
+          <img
+            src={coverPhoto(p)}
+            alt=""
+            className="w-full h-full object-cover"
+            onError={(e) => { e.currentTarget.style.display = 'none' }}
+          />
+        )}
+      </div>
+      <p className="flex-1 min-w-0 truncate text-sm font-semibold text-gray-900">{p.name}</p>
+      {!p.published && (
+        <span className="text-xs text-amber-600 shrink-0">Yayında değil — ana sayfada görünmez</span>
+      )}
+      <button
+        onClick={() => onRemove(p)}
+        title="Öne çıkanlardan kaldır"
+        className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+      >
+        <Trash2 size={15} />
+      </button>
+    </li>
+  )
+}
+
+function SortableRow({ p, coverPhoto, onDelete, deletingId, onTogglePublish, togglingId, onToggleFeatured, featuredFull }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: p.id })
 
@@ -76,6 +128,20 @@ function SortableRow({ p, coverPhoto, onDelete, deletingId, onTogglePublish, tog
         </button>
       </td>
       <td className="px-5 py-5">
+        <button
+          onClick={() => onToggleFeatured(p)}
+          disabled={togglingId === p.id || (!p.featured && featuredFull)}
+          title={
+            p.featured
+              ? 'Öne çıkanlardan kaldır'
+              : featuredFull ? `En fazla ${MAX_FEATURED} proje öne çıkarılabilir` : 'Ana sayfada öne çıkar'
+          }
+          className="p-2 rounded-lg transition-colors disabled:opacity-40 hover:bg-amber-50"
+        >
+          <Star size={18} className={p.featured ? 'fill-amber-400 text-amber-400' : 'text-gray-300'} />
+        </button>
+      </td>
+      <td className="px-5 py-5">
         <div className="flex items-center gap-2 justify-end">
           <Link
             to={`/rnl-panel/projeler/${p.id}/duzenle`}
@@ -108,6 +174,28 @@ export default function ProjelerAdmin() {
   const [togglingId, setTogglingId] = useState(null)
 
   const { sensors, handleDragEnd } = useDndReorder(projects, setProjects, reorderProjects, setSaving)
+
+  const featured = useMemo(
+    () => projects.filter((p) => p.featured).sort((a, b) => a.featuredOrder - b.featuredOrder),
+    [projects],
+  )
+  const featuredFull = featured.length >= MAX_FEATURED
+
+  const setFeaturedOrder = (reordered) =>
+    setProjects((prev) =>
+      prev.map((p) => {
+        const idx = reordered.findIndex((x) => x.id === p.id)
+        return idx === -1 ? p : { ...p, featuredOrder: idx }
+      }),
+    )
+
+  const { sensors: featuredSensors, handleDragEnd: handleFeaturedDragEnd } = useDndReorder(
+    featured,
+    setFeaturedOrder,
+    reorderFeaturedProjects,
+    setSaving,
+    (err) => alert('Sıralama kaydedilemedi: ' + err.message),
+  )
 
   const load = () => {
     setLoading(true)
@@ -146,6 +234,22 @@ export default function ProjelerAdmin() {
       setProjects((prev) => prev.map((x) => x.id === p.id ? { ...x, published: !p.published } : x))
     } catch (err) {
       alert('Durum değiştirilemedi: ' + err.message)
+    } finally {
+      setTogglingId(null)
+    }
+  }
+
+  const handleToggleFeatured = async (p) => {
+    setTogglingId(p.id)
+    try {
+      await updateProject(p.id, { featured: !p.featured })
+      // Yeni öne çıkan listenin sonuna eklenir (backend ile aynı kural)
+      const nextOrder = featured.length ? Math.max(...featured.map((x) => x.featuredOrder)) + 1 : 0
+      setProjects((prev) => prev.map((x) =>
+        x.id === p.id ? { ...x, featured: !p.featured, featuredOrder: p.featured ? x.featuredOrder : nextOrder } : x,
+      ))
+    } catch (err) {
+      alert('Öne çıkarma değiştirilemedi: ' + err.message)
     } finally {
       setTogglingId(null)
     }
@@ -211,6 +315,30 @@ export default function ProjelerAdmin() {
             </Link>
           </div>
         ) : (
+          <>
+          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden mb-6">
+            <div className="px-5 py-4 border-b border-gray-100">
+              <h2 className="text-sm font-bold text-gray-900">
+                Ana Sayfada Öne Çıkanlar ({featured.length}/{MAX_FEATURED})
+              </h2>
+              <p className="text-xs text-gray-400 mt-0.5">
+                Aşağıdaki listede yıldıza tıklayarak ekleyin; buradan sürükleyerek sıralayın.
+              </p>
+            </div>
+            {featured.length === 0 ? (
+              <p className="px-5 py-6 text-sm text-gray-400">Henüz öne çıkan proje yok.</p>
+            ) : (
+              <DndContext sensors={featuredSensors} collisionDetection={closestCenter} onDragEnd={handleFeaturedDragEnd}>
+                <SortableContext items={featured.map((p) => p.id)} strategy={verticalListSortingStrategy}>
+                  <ul className="divide-y divide-gray-50">
+                    {featured.map((p) => (
+                      <FeaturedItem key={p.id} p={p} coverPhoto={coverPhoto} onRemove={handleToggleFeatured} />
+                    ))}
+                  </ul>
+                </SortableContext>
+              </DndContext>
+            )}
+          </div>
           <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
             <div className="overflow-x-auto">
             <table className="w-full">
@@ -221,6 +349,7 @@ export default function ProjelerAdmin() {
                   <th className="text-left px-5 py-4 font-medium hidden sm:table-cell">Konum</th>
                   <th className="text-left px-5 py-4 font-medium hidden sm:table-cell">Güç</th>
                   <th className="text-left px-5 py-4 font-medium">Durum</th>
+                  <th className="text-left px-5 py-4 font-medium">Öne Çıkan</th>
                   <th className="px-5 py-4" />
                 </tr>
               </thead>
@@ -236,6 +365,8 @@ export default function ProjelerAdmin() {
                         deletingId={deletingId}
                         onTogglePublish={handleTogglePublish}
                         togglingId={togglingId}
+                        onToggleFeatured={handleToggleFeatured}
+                        featuredFull={featuredFull}
                       />
                     ))}
                   </tbody>
@@ -244,6 +375,7 @@ export default function ProjelerAdmin() {
             </table>
             </div>
           </div>
+          </>
         )}
     </main>
   )

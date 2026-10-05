@@ -11,6 +11,7 @@ import { ProjectMedia } from './project-media.entity'
 
 @Entity('projects')
 @Index(['published', 'sortOrder'])
+@Index(['featured', 'featuredOrder'])
 export class Project {
   @PrimaryGeneratedColumn('uuid')
   id: string
@@ -67,6 +68,12 @@ export class Project {
 
   @Column({ default: 0 })
   sortOrder: number
+
+  @Column({ default: false })
+  featured: boolean
+
+  @Column({ default: 0 })
+  featuredOrder: number
 
   @Index()
   @Column({ nullable: true, unique: true })

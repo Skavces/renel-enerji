@@ -90,6 +90,11 @@ export class CreateProjectDto {
   published?: boolean
 
   @IsOptional()
+  @IsBoolean()
+  @Transform(({ value }) => value === true || value === 'true')
+  featured?: boolean
+
+  @IsOptional()
   @IsNumber()
   @Min(0)
   @Max(2147483647)

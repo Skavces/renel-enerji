@@ -28,6 +28,8 @@ export interface Project {
   published: boolean
   instagramMediaId: string | null
   sortOrder: number
+  featured: boolean
+  featuredOrder: number
   createdAt: string
   updatedAt: string
   media: ProjectMedia[]

@@ -158,6 +158,14 @@ export async function reorderProjects(orderedIds: string[]): Promise<void> {
   if (!res.ok) throw apiError(res, 'Sıralama kaydedilemedi')
 }
 
+export async function reorderFeaturedProjects(orderedIds: string[]): Promise<void> {
+  const res = await fetch(`${API}/api/projects/featured/reorder`, {
+    ...authOptions({ method: 'PATCH' }),
+    body: JSON.stringify({ orderedIds }),
+  })
+  if (!res.ok) throw apiError(res, 'Sıralama kaydedilemedi')
+}
+
 export async function deleteProject(id: string): Promise<void> {
   const res = await fetch(`${API}/api/projects/${id}`, authOptions({ method: 'DELETE' }))
   if (!res.ok) throw apiError(res, 'Proje silinemedi')

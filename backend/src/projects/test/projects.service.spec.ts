@@ -1,6 +1,6 @@
-import { NotFoundException } from '@nestjs/common'
+import { BadRequestException, NotFoundException } from '@nestjs/common'
 import { Repository } from 'typeorm'
-import { ProjectsService } from '../projects.service'
+import { MAX_FEATURED, ProjectsService } from '../projects.service'
 import { Project } from '../entities/project.entity'
 import { MediaType, ProjectMedia } from '../entities/project-media.entity'
 import { MediaService } from '../media.service'
@@ -147,5 +147,48 @@ describe('ProjectsService — public cache (4.4)', () => {
     await expect(service.findBySlug('yeni')).rejects.toThrow('Proje bulunamadı')
     await expect(service.findBySlug('yeni')).resolves.toMatchObject({ slug: 'yeni' })
     expect(repo.findOne).toHaveBeenCalledTimes(2)
+  })
+})
+
+describe('ProjectsService — öne çıkan projeler', () => {
+  function makeFeaturedService(featuredCount: number, current?: Partial<Project>) {
+    const repo = {
+      find: jest.fn().mockResolvedValue([]),
+      count: jest.fn().mockResolvedValue(featuredCount),
+      findOne: jest.fn().mockImplementation((opts: { where: { id?: string } }) =>
+        Promise.resolve(opts.where.id ? current : { featuredOrder: featuredCount - 1 }),
+      ),
+      create: jest.fn().mockImplementation((dto: Partial<Project>) => ({ ...dto })),
+      save: jest.fn().mockImplementation((entity: Partial<Project>) => Promise.resolve(entity)),
+    } as unknown as jest.Mocked<Repository<Project>>
+    return { service: new ProjectsService(repo, {} as MediaService, new PublicCacheService()), repo }
+  }
+
+  it('findFeaturedPublic yalnızca yayınlanmış + öne çıkan projeleri, limitli ve sıralı ister', async () => {
+    const { service, repo } = makeFeaturedService(0)
+    await service.findFeaturedPublic()
+    expect(repo.find).toHaveBeenCalledWith({
+      where: { published: true, featured: true },
+      relations: { media: true },
+      order: { featuredOrder: 'ASC', createdAt: 'DESC' },
+      take: MAX_FEATURED,
+    })
+  })
+
+  it('limit doluyken yeni projeyi öne çıkarmak reddedilir', async () => {
+    const { service } = makeFeaturedService(MAX_FEATURED, { id: 'p1', featured: false })
+    await expect(service.update('p1', { featured: true })).rejects.toThrow(BadRequestException)
+  })
+
+  it('zaten öne çıkan projeyi güncellemek limite takılmaz', async () => {
+    const { service, repo } = makeFeaturedService(MAX_FEATURED, { id: 'p1', featured: true, featuredOrder: 2 })
+    await service.update('p1', { featured: true, name: 'Yeni ad' })
+    expect(repo.count).not.toHaveBeenCalled()
+  })
+
+  it('yeni öne çıkana listenin sonundaki sıra verilir', async () => {
+    const { service } = makeFeaturedService(3, { id: 'p1', featured: false })
+    const saved = await service.update('p1', { featured: true })
+    expect(saved.featuredOrder).toBe(3)
   })
 })

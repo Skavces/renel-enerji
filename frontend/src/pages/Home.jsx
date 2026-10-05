@@ -1,6 +1,7 @@
 import Hero from '../components/Hero'
 import Stats from '../components/Stats'
 import Services from '../components/Services'
+import FeaturedProjects from '../components/FeaturedProjects'
 import WhyUs from '../components/WhyUs'
 import HowItWorks from '../components/HowItWorks'
 import LogoMarquee from '../components/LogoMarquee'
@@ -88,6 +89,7 @@ export default function Home() {
       <Hero />
       <Stats />
       <Services />
+      <FeaturedProjects />
       <WhyUs />
       <HowItWorks />
       <LogoMarquee />

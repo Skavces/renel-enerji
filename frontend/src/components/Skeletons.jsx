@@ -25,10 +25,10 @@ export function BlogSkeleton() {
   )
 }
 
-export function ProjelerimizSkeleton() {
+export function ProjelerimizSkeleton({ count = 6 }) {
   return (
     <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-      {Array.from({ length: 6 }).map((_, i) => (
+      {Array.from({ length: count }).map((_, i) => (
         <div key={i} className="bg-white rounded-2xl border border-gray-100 overflow-hidden flex flex-col">
           <Skeleton className="h-56 w-full rounded-none" />
           <div className="p-5 flex flex-col gap-3 flex-1">
