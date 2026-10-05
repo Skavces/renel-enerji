@@ -26,6 +26,13 @@ export const LLM_API_URL = 'https://api.groq.com/openai/v1/chat/completions'
 
 const REQUEST_TIMEOUT_MS = 15000
 
+// Anahtar soğuma süreleri: 401/403 = anahtar ölü/iptal (uzun), 429 = rate limit
+// (Retry-After yoksa kısa). Soğuyan anahtar sıranın sonuna itilir, tamamen
+// dışlanmaz: hepsi soğuyorsa yine de denenir.
+const DEAD_KEY_COOLDOWN_MS = 60 * 60 * 1000
+const RATE_LIMIT_COOLDOWN_MS = 60 * 1000
+const MAX_RATE_LIMIT_COOLDOWN_MS = 5 * 60 * 1000
+
 // Modele özgü ek istek parametreleri. gpt-oss reasoning modelidir; "low" olmadan
 // max_tokens'ı (chatbot'ta 180, judge'da küçük) düşünmeye harcayıp boş içerik döner.
 const MODEL_PARAMS: Record<string, Record<string, unknown>> = {
@@ -56,6 +63,10 @@ function sleep(ms: number): Promise<void> {
 export class LlmService {
   private readonly logger = new Logger(LlmService.name)
   private legacyWarned = false
+  // Anahtar → soğuma bitiş zamanı (ms). Süreç içi; yeniden başlatmada sıfırlanır.
+  private readonly cooldowns = new Map<string, number>()
+  // Dönüşümlü başlangıç anahtarı: yükü (ve hesap başı günlük token limitini) dağıtır.
+  private cursor = 0
 
   constructor(private config: ConfigService) {}
 
@@ -112,15 +123,45 @@ export class LlmService {
     return `finish_reason=${choice.finish_reason ?? '?'}, reasoning=${reasoningLen} karakter`
   }
 
+  // Dönüşümlü başlangıçla anahtar sırası; soğuyanlar (401/403/429 almış) sona.
+  private orderKeys(keys: string[]): string[] {
+    const start = this.cursor++ % keys.length
+    const rotated = [...keys.slice(start), ...keys.slice(0, start)]
+    const now = Date.now()
+    const active = rotated.filter(k => (this.cooldowns.get(k) ?? 0) <= now)
+    const cooling = rotated.filter(k => (this.cooldowns.get(k) ?? 0) > now)
+    return [...active, ...cooling]
+  }
+
+  private coolDownIfNeeded(key: string, res: Response): void {
+    let ms = 0
+    if (res.status === 401 || res.status === 403) {
+      ms = DEAD_KEY_COOLDOWN_MS
+    } else if (res.status === 429) {
+      const retryAfterSec = Number(res.headers?.get?.('retry-after'))
+      ms = Number.isFinite(retryAfterSec) && retryAfterSec > 0
+        ? Math.min(retryAfterSec * 1000, MAX_RATE_LIMIT_COOLDOWN_MS)
+        : RATE_LIMIT_COOLDOWN_MS
+    }
+    if (!ms) return
+    this.cooldowns.set(key, Date.now() + ms)
+    // Anahtarın kendisi loglanmaz; yalnızca "gsk_" sonrası ilk 4 karakter (hangisi olduğunu
+    // ayırt etmek için; "gsk_" öneki tüm Groq anahtarlarında aynı)
+    this.logger.warn(`LLM anahtarı (…${key.slice(4, 8)}…) ${Math.round(ms / 1000)} sn devre dışı: ${res.status}`)
+  }
+
   async call(
     keys: string[],
     payload: { model: string } & Record<string, unknown>,
   ): Promise<{ res: Response | null; data: LlmResponse | null }> {
-    // Sırasıyla: birincil anahtar → yedek anahtar (429/5xx için) → yedek model
+    // Sırasıyla: her anahtar birincil modelle (dönüşümlü başlangıç, soğuyanlar sonda)
+    // → yedek model ilk sağlıklı anahtarla. Tek anahtar varsa aynı anahtar bir kez
+    // daha denenir (eski davranış).
+    const ordered = this.orderKeys(keys)
+    const tries = ordered.length > 1 ? ordered : [ordered[0], ordered[0]]
     const attempts = [
-      { key: keys[0], model: payload.model, delayMs: 0 },
-      { key: keys[1] ?? keys[0], model: payload.model, delayMs: 500 },
-      { key: keys[0], model: LLM_FALLBACK_MODEL, delayMs: 1000 },
+      ...tries.map((key, i) => ({ key, model: payload.model, delayMs: i === 0 ? 0 : 500 })),
+      { key: ordered[0], model: LLM_FALLBACK_MODEL, delayMs: 1000 },
     ]
 
     let res: Response | null = null
@@ -146,6 +187,7 @@ export class LlmService {
       this.logger.warn(
         `LLM ${attempt.model} yanıtı: ${res ? res.status : 'ağ hatası/zaman aşımı'}`,
       )
+      if (res) this.coolDownIfNeeded(attempt.key, res)
     }
 
     this.logger.error(`LLM tüm denemelerde başarısız (son durum: ${lastStatus})`)

@@ -26,8 +26,12 @@ function emptyResponse(): Response {
   } as unknown as Response
 }
 
-function errResponse(status: number): Response {
-  return { ok: false, status } as unknown as Response
+function errResponse(status: number, retryAfter?: string): Response {
+  return {
+    ok: false,
+    status,
+    headers: { get: (name: string) => (name.toLowerCase() === 'retry-after' ? retryAfter ?? null : null) },
+  } as unknown as Response
 }
 
 function sentPayload(callIndex: number): { model: string; key: string } {
@@ -81,6 +85,74 @@ describe('LlmService', () => {
     expect(res?.ok).toBe(true)
     expect(mockFetch).toHaveBeenCalledTimes(3)
     expect(sentPayload(2)).toEqual({ model: LLM_FALLBACK_MODEL, key: 'key1' })
+  })
+
+  describe('çoklu anahtar: dönüşüm ve soğuma', () => {
+    const keysOf = (n: number): string[] => Array.from({ length: n }, (_, i) => sentPayload(i).key)
+
+    it('rotates the starting key across calls to spread load over accounts', async () => {
+      mockFetch.mockResolvedValue(okResponse())
+      for (let i = 0; i < 4; i++) await service.call(['k1', 'k2', 'k3'], payload)
+      expect(keysOf(4)).toEqual(['k1', 'k2', 'k3', 'k1'])
+    })
+
+    it('tries every key on the primary model before falling back to the secondary model', async () => {
+      mockFetch.mockResolvedValue(errResponse(503))
+      await service.call(['k1', 'k2', 'k3'], payload)
+      expect(mockFetch).toHaveBeenCalledTimes(4)
+      expect([0, 1, 2].map(i => sentPayload(i))).toEqual([
+        { model: LLM_MODEL, key: 'k1' },
+        { model: LLM_MODEL, key: 'k2' },
+        { model: LLM_MODEL, key: 'k3' },
+      ])
+      expect(sentPayload(3)).toEqual({ model: LLM_FALLBACK_MODEL, key: 'k1' })
+    })
+
+    it('puts a key that returned 401 last on following calls (dead key is not tried first)', async () => {
+      mockFetch.mockResolvedValueOnce(errResponse(401)).mockResolvedValue(okResponse())
+      await service.call(['k1', 'k2', 'k3'], payload) // k1 401 → k2 ok
+      mockFetch.mockClear()
+      mockFetch.mockResolvedValue(errResponse(503))
+      await service.call(['k1', 'k2', 'k3'], payload)
+      // cursor 1 → k2,k3,k1 sırası; soğuyan k1 sonda kalır
+      expect([0, 1, 2].map(i => sentPayload(i).key)).toEqual(['k2', 'k3', 'k1'])
+    })
+
+    it('cools a rate-limited key down using Retry-After and restores it afterwards', async () => {
+      const now = jest.spyOn(Date, 'now').mockReturnValue(1_000_000)
+      mockFetch.mockResolvedValueOnce(errResponse(429, '30')).mockResolvedValue(okResponse())
+      await service.call(['k1', 'k2'], payload) // k1 429 (30 sn soğuma) → k2 ok
+      mockFetch.mockClear()
+      mockFetch.mockResolvedValue(okResponse())
+
+      await service.call(['k1', 'k2'], payload) // cursor 1 → sıra k2,k1; k1 soğuyor
+      expect(sentPayload(0).key).toBe('k2')
+
+      mockFetch.mockClear()
+      now.mockReturnValue(1_000_000 + 31_000) // soğuma bitti
+      await service.call(['k1', 'k2'], payload) // cursor 2 → k1 ilk sırada
+      expect(sentPayload(0).key).toBe('k1')
+    })
+
+    it('does not cool a key down for server errors or empty content (model issues, not key issues)', async () => {
+      mockFetch.mockResolvedValueOnce(errResponse(503)).mockResolvedValue(okResponse())
+      await service.call(['k1', 'k2'], payload)
+      mockFetch.mockClear()
+      mockFetch.mockResolvedValue(okResponse())
+      await service.call(['k1', 'k2'], payload) // cursor 1 → k2 önce (soğuma değil, dönüşüm)
+      await service.call(['k1', 'k2'], payload) // cursor 2 → k1 yine ilk sırada
+      expect(keysOf(2)).toEqual(['k2', 'k1'])
+    })
+
+    it('still tries cooled-down keys as a last resort when every key is cooling', async () => {
+      mockFetch.mockResolvedValue(errResponse(401))
+      await service.call(['k1', 'k2'], payload)
+      mockFetch.mockClear()
+      mockFetch.mockResolvedValue(okResponse())
+      const { data } = await service.call(['k1', 'k2'], payload)
+      expect(data).not.toBeNull()
+      expect(mockFetch).toHaveBeenCalledTimes(1)
+    })
   })
 
   it('treats a 200 with empty content as a failed attempt and moves down the chain', async () => {
