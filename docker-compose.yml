@@ -127,6 +127,8 @@ services:
     # the separate postgresql-* tag, image auto-detects DB type from DATABASE_URL.
     image: ghcr.io/umami-software/umami:3.1.0@sha256:e3f80c0625aad7179b49da27d475357cabb1068b8cacd9a792cfd6966888b123
     restart: unless-stopped
+    # PID 1 (pnpm) doesn't reap children (leaves a defunct node from startup); adds tini
+    init: true
     ports:
       - "127.0.0.1:3002:3000"
     environment:
