@@ -11,23 +11,29 @@ const PARSE_PROMPT = `Sen RenEl Enerji şirketinin web sitesi için Instagram g�
 Aşağıdaki Instagram gönderisini analiz et ve SADECE şu JSON formatında yanıt ver, başka hiçbir şey yazma:
 
 {
-  "name": "Proje adı. Güç değeri varsa başa yaz, sonra sistem tipi. Gerçek örnekler: '10,2 kW Hibrit GES Sistemi', '4 kWp Bağ Evi GES Sistemi', 'Hayvan Çiftliği GES Kurulumu', 'Ahmetli Bağ Sulama Projesi'",
-  "location": "Sadece şehir adı (örn: 'Manisa', 'Balıkesir')",
+  "name": "Proje adı. Güç değeri varsa başa yaz, sonra sistem tipi. Gerçek örnekler: '10,2 kW Hibrit GES Sistemi', '4 kWp Bağ Evi GES Sistemi', 'Hayvan Çiftliği GES Kurulumu', 'Ahmetli Bağ Sulama Projesi', '13,5 MW Enerji Nakil Hattı Denetimi'",
+  "location": "Sadece İL adı, ilçe veya köy değil (örn: 'Manisa', 'Balıkesir'). Gönderide ilçe geçiyorsa ilini yaz: Soma -> 'Manisa'",
   "kw": 11.25,
 "description": "Liste sayfası için 1 cümle. Teknik özellikleri virgülle sırala, sonuna müşteri faydası ekle. Gerçek örnekler: '16 panel, hibrit invertör ve 15,3 kWh LiFePO₄ batarya ile kesintisiz enerji depolama sistemi.' / 'Çatı tipi 4,6 kW GES ve 5 kWh LiFePO₄ batarya ile sağım, havalandırma ve aydınlatmada kesintisiz enerji.'",
   "about": "Detay sayfası için 2-3 cümle. Müşteriye ne kazandırdığını anlat, gönderinin canlı dilini koru. Gerçek örnekler: 'Doğanın içinde, sessizliğin ortasında artık enerji kesintisi yok. 4 kWp güneş enerjisi sistemiyle bu bağ evi şebekeden tamamen bağımsız hale geldi.' / 'Manisa Ahmetli'de bağ alanına kurduğumuz akıllı sistemle tarımsal sulamada enerji maliyetlerini sıfırladık. Çiftçimiz artık telefonundan tek tıkla sulama sistemini yönetiyor.'",
-  "specs": ["N Adet XW Marka Panel formatında — örn: '28 Adet 600W Kalyon Güneş Paneli'", "X kW Tip İnvertör — örn: '10,2 kW Hibrit İnvertör'", "X kWh LiFePO₄ Batarya — örn: '15,3 kWh Depolama Kapasitesi'"],
-  "highlights": ["Müşteri faydası odaklı kısa maddeler", "Gerçek örnekler: 'Elektrik kesintilerinden etkilenmeyen çalışma'", "'Şebekeden tamamen bağımsız çalışma'", "'DC sistem sayesinde maksimum verim, sıfır dönüşüm kaybı'"],
-  "statBoxes": [{"value": "11,25 kWp", "label": "Kurulu Güç"}, {"value": "15 kWh", "label": "Depolama"}, {"value": "18", "label": "Panel"}],
+  "specs": ["Gönderide geçen teknik veriler. GES ise: 'N Adet XW Marka Panel' — örn: '28 Adet 600W Kalyon Güneş Paneli', 'X kW Tip İnvertör' — örn: '10,2 kW Hibrit İnvertör', 'X kWh LiFePO₄ Batarya' — örn: '15,3 kWh Depolama Kapasitesi'. GES değilse (nakil hattı, denetim, sulama vb.) gönderideki sayısal verileri 'Değer + ne olduğu' biçiminde yaz — örn: '126 Adet Direk', '30 km Hat Uzunluğu', '34,5 kV Gerilim Seviyesi', '477 Tipi İletken'"],
+  "highlights": ["Müşteri faydası odaklı kısa maddeler", "Gerçek örnekler: 'Elektrik kesintilerinden etkilenmeyen çalışma'", "'Şebekeden tamamen bağımsız çalışma'", "'DC sistem sayesinde maksimum verim, sıfır dönüşüm kaybı'", "'Sahada adım adım kalite ve uygunluk denetimi'", "'13,5 MW gücün şebekeye güvenle aktarımı'"],
+  "statBoxes": [{"value": "11,25 kWp", "label": "Kurulu Güç"}, {"value": "15 kWh", "label": "Depolama"}, {"value": "18", "label": "Panel"}, {"value": "30 km", "label": "Hat Uzunluğu"}],
   "date": "2025"
 }
 
 Kurallar:
 - Sayılarda Türkçe ondalık ayracı kullan: 11,25 kWp (nokta değil virgül) — SADECE kw alanı hariç (JavaScript sayısı: 11.25)
+- kw alanı HER ZAMAN kW cinsindendir: güç MW ise 1000 ile çarp (13,5 MW -> 13500), kWp/kW ise olduğu gibi yaz
+- date alanını yalnızca gönderide açıkça bir yıl yazıyorsa doldur; yıl yoksa "" bırak (örnekteki 2025 sadece biçim örneğidir, kullanma)
 - specs formatı: "N Adet XW Marka Panel", "X kW Tip İnvertör", "X kWh Tip Batarya"
 - highlights müşteriye "ne işe yarar" sorusunu yanıtlar, fiil veya isim cümlesi
 - statBoxes: value çok kısa (sadece sayı+birim), label açıklayıcı
-- Emin olamadığın alanlar için boş string ("") ya da boş dizi ([]) kullan
+- Proje GES olmak zorunda değil: nakil hattı, denetim, sulama, trafo vb. gönderilerde de description, about, specs, highlights ve statBoxes alanlarını gönderideki bilgilerle MUTLAKA doldur
+- Gönderide bir bilginin karşılığı varsa o alanı boş bırakma; boş string ("") ya da boş dizi ([]) yalnızca gönderide o alanı dolduracak hiçbir bilgi yoksa kullanılır
+- Gönderide olmayan rakam, marka veya özellik UYDURMA; sadece gönderideki gerçek verileri kullan
+- description en fazla 200 karakter, about en fazla 450 karakter olsun
+- statBoxes'a en fazla 3-4 kutu yaz, sayısal veri yoksa boş bırak
 - Hiçbir alanda markdown kullanma — yıldız (*), çift yıldız (**), alt çizgi (_) kesinlikle yazma`
 
 @Injectable()
