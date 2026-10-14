@@ -1,8 +1,12 @@
 import { useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 
 // Tam ekran video oynatıcı. Stil ve davranış ProjeDetay lightbox'ıyla aynı:
 // arka plana tıklama, X ve Esc ile kapanır; açıkken sayfa kaydırılmaz.
+// document.body'ye portal ile render edilir: kartın içinde kalırsa üst
+// öğelerin z-index'li stacking context'i yüzünden navbar'ın ve sonraki
+// bölümlerin altında/üstünde kalıp ekranı kaplamaz.
 export default function VideoModal({ src, title, onClose }) {
   const closeRef = useRef(null)
 
@@ -18,12 +22,12 @@ export default function VideoModal({ src, title, onClose }) {
     }
   }, [onClose])
 
-  return (
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
       aria-label={title ? `${title} videosu` : 'Video'}
-      className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
+      className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4"
       onClick={onClose}
     >
       <button
@@ -40,9 +44,10 @@ export default function VideoModal({ src, title, onClose }) {
         controls
         autoPlay
         playsInline
-        className="max-h-[85vh] max-w-[90vw] w-auto rounded-xl"
+        className="max-h-[80vh] max-w-[min(90vw,64rem)] w-auto rounded-xl bg-black"
         onClick={(e) => e.stopPropagation()}
       />
-    </div>
+    </div>,
+    document.body,
   )
 }
