@@ -6,7 +6,7 @@ import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-
 import { CSS } from '@dnd-kit/utilities'
 import { fetchAllProjects, deleteProject, reorderProjects, reorderFeaturedProjects, syncInstagram, updateProject } from '../../api/admin'
 import { useAdminAuth } from '../../contexts/AdminAuthContext'
-import { mediaUrl } from '../../api/projects'
+import { projectCover } from '../../lib/projectCover'
 import { useDndReorder } from '../../hooks/useDndReorder.js'
 
 const MAX_FEATURED = 6
@@ -268,10 +268,7 @@ export default function ProjelerAdmin() {
     }
   }
 
-  const coverPhoto = (p) => {
-    const first = p.media?.find((m) => m.type === 'thumbnail') ?? p.media?.find((m) => m.type === 'image')
-    return first ? mediaUrl(first.src) : null
-  }
+  const coverPhoto = (p) => projectCover(p).image
 
   return (
     <main className="max-w-6xl mx-auto px-6 py-8">

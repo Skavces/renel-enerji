@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
-  ArrowLeft, Plus, Trash2, Upload, X, Sparkles, CheckCircle2,
+  ArrowLeft, Plus, Trash2, Upload, X, Sparkles, CheckCircle2, ImageIcon,
 } from 'lucide-react'
 import {
   createProject, updateProject, fetchAllProjects,
@@ -16,7 +16,7 @@ const EMPTY = {
   description: '', about: '', specsTitle: 'Sistem Özellikleri', specs: [],
   highlightsTitle: 'Öne Çıkan Özellikler', highlights: [],
   statBoxes: [], ctaText: 'Benzer Proje İçin Teklif Al',
-  published: true, featured: false, sortOrder: 0,
+  published: true, featured: false, sortOrder: 0, coverMediaId: null,
 }
 
 function slugify(str) {
@@ -64,6 +64,7 @@ export default function ProjeForm() {
           highlightsTitle: p.highlightsTitle, highlights: p.highlights || [],
           statBoxes: p.statBoxes || [], ctaText: p.ctaText,
           published: p.published, featured: p.featured, sortOrder: p.sortOrder,
+          coverMediaId: p.coverMediaId ?? null,
         })
         setSpecsText((p.specs || []).join('\n'))
         setHighlightsText((p.highlights || []).join('\n'))
@@ -107,6 +108,7 @@ export default function ProjeForm() {
     try {
       await deleteMedia(id, mediaId)
       setExistingMedia((prev) => prev.filter((m) => m.id !== mediaId))
+      setForm((prev) => (prev.coverMediaId === mediaId ? { ...prev, coverMediaId: null } : prev))
     } catch (err) {
       alert('Silinemedi: ' + err.message)
     }
@@ -439,23 +441,50 @@ if (parsed.description) { set('description', parsed.description); count++ }
             <div>
               <p className="text-xs font-medium text-gray-500 mb-2 uppercase tracking-wide">Mevcut Medya</p>
               <div className="grid grid-cols-5 sm:grid-cols-7 gap-2">
-                {existingMedia.filter(m => m.type !== 'thumbnail').map((m) => (
-                  <div key={m.id} className="relative group aspect-square rounded-xl overflow-hidden bg-gray-100">
-                    {m.type === 'video' ? (
-                      <video src={mediaUrl(m.src)} className="w-full h-full object-cover" muted />
-                    ) : (
-                      <img src={mediaUrl(m.src)} alt="" className="w-full h-full object-cover" />
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteExisting(m.id)}
-                      className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+                {existingMedia.filter(m => m.type !== 'thumbnail').map((m) => {
+                  const isCover = form.coverMediaId === m.id
+                  return (
+                    <div
+                      key={m.id}
+                      className={`relative group aspect-square rounded-xl overflow-hidden bg-gray-100 ${isCover ? 'ring-2 ring-[#448834]' : ''}`}
                     >
-                      <Trash2 size={15} className="text-white" />
-                    </button>
-                  </div>
-                ))}
+                      {m.type === 'video' ? (
+                        <video src={mediaUrl(m.src)} className="w-full h-full object-cover" muted />
+                      ) : (
+                        <img src={mediaUrl(m.src)} alt="" className="w-full h-full object-cover" />
+                      )}
+                      {isCover && (
+                        <span className="absolute top-1 left-1 bg-[#448834] text-white text-[10px] font-semibold px-1.5 py-0.5 rounded">
+                          Kapak
+                        </span>
+                      )}
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 focus-within:opacity-100 flex items-center justify-center gap-2 transition-opacity">
+                        <button
+                          type="button"
+                          onClick={() => set('coverMediaId', isCover ? null : m.id)}
+                          title={isCover ? 'Kapaktan kaldır (otomatik seçim)' : 'Kapak yap'}
+                          aria-label={isCover ? 'Kapaktan kaldır' : 'Kapak yap'}
+                          className={`p-1.5 rounded-lg ${isCover ? 'bg-[#448834] text-white' : 'bg-white/90 text-gray-700 hover:bg-white'}`}
+                        >
+                          <ImageIcon size={14} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteExisting(m.id)}
+                          title="Sil"
+                          aria-label="Sil"
+                          className="p-1.5 rounded-lg bg-white/90 text-red-600 hover:bg-white"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
+              <p className="text-xs text-gray-400 mt-2">
+                Kapak olarak bir fotoğraf ya da video seçebilirsiniz. Seçim yapılmazsa kapak otomatik belirlenir.
+              </p>
             </div>
           )}
 
@@ -478,6 +507,10 @@ if (parsed.description) { set('description', parsed.description); count++ }
                 </div>
               ))}
             </div>
+          )}
+
+          {newFiles.length > 0 && (
+            <p className="text-xs text-amber-600">Yeni yüklenen dosyalar kaydedildikten sonra kapak olarak seçilebilir.</p>
           )}
 
           <button

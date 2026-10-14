@@ -30,6 +30,7 @@ export interface Project {
   sortOrder: number
   featured: boolean
   featuredOrder: number
+  coverMediaId?: string | null
   createdAt: string
   updatedAt: string
   media: ProjectMedia[]

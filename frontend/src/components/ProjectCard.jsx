@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom'
-import { MapPin, Zap, Calendar } from 'lucide-react'
-import { coverPhoto } from '../lib/projectCover'
+import { MapPin, Zap, Calendar, Play } from 'lucide-react'
+import { projectCover } from '../lib/projectCover'
 
 export default function ProjectCard({ p }) {
-  const cover = coverPhoto(p)
+  const { image: cover, video } = projectCover(p)
   return (
     <Link
       to={`/projelerimiz/${p.slug}`}
@@ -21,10 +21,18 @@ export default function ProjectCard({ p }) {
               e.currentTarget.nextElementSibling.style.display = 'flex'
             }}
           />
+        ) : video ? (
+          // Posteri olmayan video kapak: ilk kare gösterilir
+          <video src={`${video}#t=0.1`} muted playsInline preload="metadata" className="w-full h-full object-cover" />
         ) : null}
+        {video && (
+          <span className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/55 text-white flex items-center justify-center">
+            <Play size={14} fill="currentColor" className="ml-0.5" />
+          </span>
+        )}
         <div
           className="w-full h-full items-center justify-center text-gray-300"
-          style={{ display: cover ? 'none' : 'flex' }}
+          style={{ display: cover || video ? 'none' : 'flex' }}
         >
           <Zap size={32} />
         </div>
