@@ -1,14 +1,6 @@
 import { Link } from 'react-router-dom'
 import { MapPin, Zap, Calendar } from 'lucide-react'
-import { mediaUrl } from '../api/projects'
-
-function coverPhoto(p) {
-  const thumb = p.media?.find((m) => m.type === 'thumbnail')
-  if (thumb) return mediaUrl(thumb.src)
-  const sorted = [...(p.media || [])].sort((a, b) => a.sortOrder - b.sortOrder)
-  const first = sorted.find((m) => m.type === 'image')
-  return first ? mediaUrl(first.src) : null
-}
+import { coverPhoto } from '../lib/projectCover'
 
 export default function ProjectCard({ p }) {
   const cover = coverPhoto(p)

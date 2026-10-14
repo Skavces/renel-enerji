@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
 import ProjectCard from './ProjectCard'
+import FeaturedProjectHero from './FeaturedProjectHero'
 import { ProjelerimizSkeleton } from './Skeletons'
 import { fetchFeaturedProjects } from '../api/projects'
 
@@ -36,8 +37,17 @@ export default function FeaturedProjects() {
 
         {loading ? (
           <ProjelerimizSkeleton count={3} />
+        ) : projects.length === 1 ? (
+          <FeaturedProjectHero p={projects[0]} />
         ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          // 2 projede kartlar ortalanır; 3+ projede standart 3 kolonlu grid
+          <div
+            className={
+              projects.length === 2
+                ? 'grid sm:grid-cols-2 gap-8 max-w-4xl mx-auto'
+                : 'grid sm:grid-cols-2 lg:grid-cols-3 gap-8'
+            }
+          >
             {projects.map((p) => <ProjectCard key={p.id} p={p} />)}
           </div>
         )}
