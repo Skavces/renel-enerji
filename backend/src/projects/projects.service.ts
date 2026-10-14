@@ -2,6 +2,7 @@ import { BadRequestException, ConflictException, Injectable, NotFoundException }
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { Project } from './entities/project.entity'
+import { InstagramSkippedMedia } from './entities/instagram-skipped-media.entity'
 import { MediaType, ProjectMedia } from './entities/project-media.entity'
 import { CreateProjectDto } from './dto/create-project.dto'
 import { UpdateProjectDto } from './dto/update-project.dto'
@@ -20,6 +21,8 @@ export class ProjectsService {
     private projectRepo: Repository<Project>,
     private mediaService: MediaService,
     private cache: PublicCacheService,
+    @InjectRepository(InstagramSkippedMedia)
+    private skippedRepo: Repository<InstagramSkippedMedia>,
   ) {}
 
   // Liste sayfası kart başına tek kapak görseli kullanıyor; tüm medya dizisi
@@ -134,6 +137,15 @@ export class ProjectsService {
     const project = await this.projectRepo.findOne({ where: { id }, relations: { media: true } })
     if (!project) throw new NotFoundException('Proje bulunamadı')
     const sources = project.media.map(m => m.src)
+    // Silinen Instagram projesi bir sonraki sync'te geri gelmesin
+    if (project.instagramMediaId) {
+      await this.skippedRepo.save({
+        mediaId: project.instagramMediaId,
+        reason: 'deleted',
+        failCount: 0,
+        lastError: null,
+      })
+    }
     await this.projectRepo.remove(project) // media satırları DB cascade ile silinir
     for (const src of sources) {
       await this.mediaService.deleteFileIfUnreferenced(src)

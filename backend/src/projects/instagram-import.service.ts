@@ -1,6 +1,7 @@
 import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { InjectRepository } from '@nestjs/typeorm'
+import { Cron } from '@nestjs/schedule'
 import { In, Repository } from 'typeorm'
 import sharp from 'sharp'
 import { createWriteStream } from 'fs'
@@ -9,6 +10,7 @@ import { Readable } from 'stream'
 import { pipeline } from 'stream/promises'
 import { join } from 'path'
 import { Project } from './entities/project.entity'
+import { InstagramSkippedMedia } from './entities/instagram-skipped-media.entity'
 import { MediaType } from './entities/project-media.entity'
 import { ProjectsService } from './projects.service'
 import { MediaService } from './media.service'
@@ -26,6 +28,11 @@ const INSTAGRAM_API_VERSION = 'v21.0'
 const INSTAGRAM_MEDIA_FIELDS =
   'id,caption,media_url,thumbnail_url,media_type,timestamp,children{id,media_url,media_type,thumbnail_url}'
 const MAX_VIDEO_BYTES = 100 * 1024 * 1024
+// Parse'ı bu kadar başarısız olan post otomatik sync'te atlanır (her 30 dk'da
+// bir boşuna LLM çağrısı yapılmasın); manuel sync her zaman yeniden dener
+const MAX_AUTO_PARSE_FAILURES = 3
+
+type SyncTrigger = 'manual' | 'scheduled'
 
 // Video akışı diske yazılırken RAM'e alınmadan sayılır — sınır aşılırsa
 // pipeline'ı throw ile keser (disk doldurma koruması)
@@ -41,6 +48,8 @@ async function* limitBytes(source: AsyncIterable<Buffer>, maxBytes: number): Asy
 @Injectable()
 export class InstagramImportService {
   private readonly logger = new Logger(InstagramImportService.name)
+
+  private autoSyncFailing = false
 
   private readonly syncStatus = {
     running: false,
@@ -58,6 +67,8 @@ export class InstagramImportService {
     private tokenService: InstagramTokenService,
     private config: ConfigService,
     private cache: PublicCacheService,
+    @InjectRepository(InstagramSkippedMedia)
+    private skippedRepo: Repository<InstagramSkippedMedia>,
   ) {}
 
   getSyncStatus() {
@@ -68,23 +79,55 @@ export class InstagramImportService {
     if (this.syncStatus.running) {
       return { status: 'already_running' }
     }
-    this.syncStatus.running = true
-    this.syncStatus.lastError = null
-    this.syncInstagram()
-      .then(r => {
-        this.syncStatus.lastResult = r
-        this.syncStatus.lastRun = new Date()
-        this.logger.log(`Sync tamamlandı: ${r.imported} eklendi, ${r.skipped} atlandı`)
-      })
-      .catch((err: unknown) => {
-        this.syncStatus.lastError = errorMessage(err)
-        this.logger.error(`Sync hatası: ${errorMessage(err)}`)
-      })
-      .finally(() => { this.syncStatus.running = false })
+    void this.runSync('manual')
     return { status: 'started' }
   }
 
-  async syncInstagram(autoPublish = false): Promise<{ imported: number; skipped: number }> {
+  // Webhook (feed/add) Meta panelinde abone edilemediği için yeni #proje postları
+  // periyodik sync ile yakalanır. Postlar taslak düşer; yayına admin karar verir.
+  @Cron('*/30 * * * *')
+  async scheduledSync(): Promise<void> {
+    if (this.syncStatus.running) return
+    const userId = this.config.get<string>('INSTAGRAM_USER_ID')
+    const token = await this.tokenService.getAccessToken()
+    if (!token || !userId) {
+      this.logger.debug('Instagram oto-sync atlandı: token veya INSTAGRAM_USER_ID tanımlı değil')
+      return
+    }
+    await this.runSync('scheduled')
+  }
+
+  private async runSync(trigger: SyncTrigger): Promise<void> {
+    this.syncStatus.running = true
+    this.syncStatus.lastError = null
+    try {
+      const r = await this.syncInstagram({ trigger })
+      this.syncStatus.lastResult = r
+      this.syncStatus.lastRun = new Date()
+      if (trigger === 'manual' || r.imported > 0) {
+        this.logger.log(`Sync tamamlandı (${trigger}): ${r.imported} eklendi, ${r.skipped} atlandı`)
+      }
+      if (trigger === 'scheduled' && this.autoSyncFailing) {
+        this.autoSyncFailing = false
+        this.logger.log('Instagram oto-sync tekrar çalışıyor')
+      }
+    } catch (err) {
+      this.syncStatus.lastError = errorMessage(err)
+      // Token ölürse günde 48 aynı hata Loglar sayfasını doldurmasın: oto-sync
+      // yalnızca ilk hatada loglar, düzelince bir kez bildirir
+      if (trigger === 'manual' || !this.autoSyncFailing) {
+        this.logger.error(`Sync hatası (${trigger}): ${errorMessage(err)}`)
+      }
+      if (trigger === 'scheduled') this.autoSyncFailing = true
+    } finally {
+      this.syncStatus.running = false
+    }
+  }
+
+  async syncInstagram(
+    opts: { autoPublish?: boolean; trigger?: SyncTrigger } = {},
+  ): Promise<{ imported: number; skipped: number }> {
+    const { autoPublish = false, trigger = 'manual' } = opts
     const token = await this.tokenService.getAccessToken()
     const userId = this.config.get<string>('INSTAGRAM_USER_ID')
     if (!token || !userId) {
@@ -111,7 +154,20 @@ export class InstagramImportService {
       select: ['instagramMediaId'],
     })
     const existingIds = new Set(existing.map(p => p.instagramMediaId))
-    const newPosts = posts.filter(p => !existingIds.has(p.id))
+
+    // Silinen / tekrar tekrar parse'ı başarısız olan postlar tekrar içeri alınmaz
+    const skipRecords = new Map<string, InstagramSkippedMedia>()
+    if (postIds.length) {
+      const records = await this.skippedRepo.find({ where: { mediaId: In(postIds) } })
+      for (const r of records) skipRecords.set(r.mediaId, r)
+    }
+    const newPosts = posts.filter(p => {
+      if (existingIds.has(p.id)) return false
+      const rec = skipRecords.get(p.id)
+      if (!rec) return true
+      if (rec.reason === 'deleted') return false
+      return !(trigger === 'scheduled' && rec.failCount >= MAX_AUTO_PARSE_FAILURES)
+    })
 
     let imported = 0
     let skipped = posts.length - newPosts.length
@@ -123,16 +179,20 @@ export class InstagramImportService {
         parsed = await this.parseService.parseInstagram(post.caption ?? '')
       } catch (err) {
         this.logger.warn(`Parse hatası (post ${post.id}): ${errorMessage(err)}`)
+        await this.recordParseFailure(post.id, skipRecords.get(post.id)?.failCount ?? 0, err)
         parseErrors++
         skipped++
         continue
       }
 
       await this.createProjectFromInstagram(parsed, post, autoPublish)
+      if (skipRecords.has(post.id)) await this.skippedRepo.delete({ mediaId: post.id })
       imported++
     }
 
-    this.logger.log(`Sync özet: ${imported} eklendi, ${skipped - parseErrors} zaten var, ${parseErrors} parse hatası`)
+    if (trigger === 'manual' || imported > 0 || parseErrors > 0) {
+      this.logger.log(`Sync özet: ${imported} eklendi, ${skipped - parseErrors} zaten var, ${parseErrors} parse hatası`)
+    }
     return { imported, skipped }
   }
 
@@ -140,6 +200,12 @@ export class InstagramImportService {
     const already = await this.projectRepo.findOne({ where: { instagramMediaId: mediaId } })
     if (already) {
       this.logger.log(`Instagram post ${mediaId} zaten kayıtlı, atlanıyor`)
+      return
+    }
+
+    const skipRecord = await this.skippedRepo.findOne({ where: { mediaId } })
+    if (skipRecord?.reason === 'deleted') {
+      this.logger.log(`Instagram post ${mediaId} admin tarafından silinmiş, atlanıyor`)
       return
     }
 
@@ -169,6 +235,20 @@ export class InstagramImportService {
 
     const saved = await this.createProjectFromInstagram(parsed, post, true)
     this.logger.log(`Webhook ile proje oluşturuldu: ${saved.slug}`)
+  }
+
+  // Sayaç kaydı sync'i düşürmemeli: DB hatası yalnızca uyarı olarak loglanır
+  private async recordParseFailure(mediaId: string, previousCount: number, err: unknown): Promise<void> {
+    try {
+      await this.skippedRepo.save({
+        mediaId,
+        reason: 'parse_failed',
+        failCount: previousCount + 1,
+        lastError: errorMessage(err).slice(0, 500),
+      })
+    } catch (saveErr) {
+      this.logger.warn(`Parse hata sayacı yazılamadı (post ${mediaId}): ${errorMessage(saveErr)}`)
+    }
   }
 
   private async createProjectFromInstagram(parsed: ParsedProject, post: InstagramPost, published: boolean): Promise<Project> {

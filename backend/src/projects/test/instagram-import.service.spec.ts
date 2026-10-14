@@ -3,6 +3,7 @@ import type { Repository } from 'typeorm'
 import type { ConfigService } from '@nestjs/config'
 import { InstagramImportService } from '../instagram-import.service'
 import type { Project } from '../entities/project.entity'
+import type { InstagramSkippedMedia } from '../entities/instagram-skipped-media.entity'
 import type { ProjectsService } from '../projects.service'
 import type { MediaService } from '../media.service'
 import type { InstagramParseService } from '../instagram-parse.service'
@@ -60,6 +61,7 @@ function makeService(overrides: {
   tokenValue?: string | null
   parseResult?: ParsedProject
   saveShouldFail?: boolean
+  skipRecords?: { mediaId: string; reason: 'deleted' | 'parse_failed'; failCount: number }[]
 } = {}) {
   const existingIds = new Set(overrides.existingIds ?? [])
 
@@ -97,6 +99,19 @@ function makeService(overrides: {
         },
       ),
     },
+  }
+
+  const skipRecords = overrides.skipRecords ?? []
+  const skippedRepo = {
+    find: jest.fn().mockImplementation(({ where }: { where?: { mediaId?: { _value?: string[] } } }) => {
+      const ids = where?.mediaId?._value ?? []
+      return Promise.resolve(skipRecords.filter(r => ids.includes(r.mediaId)))
+    }),
+    findOne: jest.fn().mockImplementation(({ where }: { where?: { mediaId?: string } }) =>
+      Promise.resolve(skipRecords.find(r => r.mediaId === where?.mediaId) ?? null),
+    ),
+    save: jest.fn().mockResolvedValue(undefined),
+    delete: jest.fn().mockResolvedValue({ affected: 1 }),
   }
 
   const projectsService = {
@@ -147,9 +162,10 @@ function makeService(overrides: {
     tokenService as unknown as InstagramTokenService,
     config as unknown as ConfigService,
     cache as unknown as PublicCacheService,
+    skippedRepo as unknown as Repository<InstagramSkippedMedia>,
   )
 
-  return { service, projectRepo, mediaService, parseService, tokenService, transactionSaves, cache }
+  return { service, projectRepo, mediaService, parseService, tokenService, transactionSaves, cache, skippedRepo, config }
 }
 
 // Mock global fetch
@@ -238,6 +254,142 @@ describe('InstagramImportService', () => {
       expect(parseService.parseInstagram).toHaveBeenCalledTimes(2)
       expect(result.imported).toBe(1)
       expect(result.skipped).toBe(1)
+    })
+  })
+
+  describe('syncInstagram — silinen ve tekrar başarısız olan postlar', () => {
+    const feed = (posts: InstagramPost[]) =>
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ data: posts }),
+        text: () => Promise.resolve(''),
+      })
+
+    it('skips a deleted post in both manual and scheduled sync', async () => {
+      for (const trigger of ['manual', 'scheduled'] as const) {
+        const { service, parseService } = makeService({
+          skipRecords: [{ mediaId: 'gone', reason: 'deleted', failCount: 0 }],
+        })
+        feed([mockPost('gone', 'Silinen proje #proje')])
+
+        const result = await service.syncInstagram({ trigger })
+
+        expect(result.imported).toBe(0)
+        expect(parseService.parseInstagram).not.toHaveBeenCalled()
+      }
+    })
+
+    it('skips a post with 3 parse failures in scheduled sync only', async () => {
+      const skipRecords = [{ mediaId: 'bad', reason: 'parse_failed' as const, failCount: 3 }]
+
+      const scheduled = makeService({ skipRecords })
+      feed([mockPost('bad', 'Bozuk #proje')])
+      await scheduled.service.syncInstagram({ trigger: 'scheduled' })
+      expect(scheduled.parseService.parseInstagram).not.toHaveBeenCalled()
+
+      const manual = makeService({ skipRecords })
+      feed([mockPost('bad', 'Bozuk #proje')])
+      mockFetch.mockResolvedValue(
+        mediaResponse({ ok: true, arrayBuffer: () => Promise.resolve(Buffer.from('fake-image')) }),
+      )
+      await manual.service.syncInstagram({ trigger: 'manual' })
+      expect(manual.parseService.parseInstagram).toHaveBeenCalledTimes(1)
+    })
+
+    it('increments the failure counter on a parse error', async () => {
+      const { service, parseService, skippedRepo } = makeService({
+        skipRecords: [{ mediaId: 'flaky', reason: 'parse_failed', failCount: 1 }],
+      })
+      parseService.parseInstagram.mockRejectedValueOnce(new InternalServerErrorException('LLM down'))
+      feed([mockPost('flaky', 'Bozuk #proje')])
+
+      await service.syncInstagram({ trigger: 'scheduled' })
+
+      expect(skippedRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({ mediaId: 'flaky', reason: 'parse_failed', failCount: 2 }),
+      )
+    })
+
+    it('clears the failure record once the post finally parses', async () => {
+      const { service, skippedRepo } = makeService({
+        skipRecords: [{ mediaId: 'fixed', reason: 'parse_failed', failCount: 2 }],
+      })
+      feed([mockPost('fixed', 'Düzeltilmiş #proje')])
+      mockFetch.mockResolvedValue(
+        mediaResponse({ ok: true, arrayBuffer: () => Promise.resolve(Buffer.from('fake-image')) }),
+      )
+
+      const result = await service.syncInstagram({ trigger: 'scheduled' })
+
+      expect(result.imported).toBe(1)
+      expect(skippedRepo.delete).toHaveBeenCalledWith({ mediaId: 'fixed' })
+    })
+
+    it('never auto-publishes imported posts in scheduled sync', async () => {
+      const { service, transactionSaves } = makeService()
+      feed([mockPost('fresh', 'Yeni #proje')])
+      mockFetch.mockResolvedValue(
+        mediaResponse({ ok: true, arrayBuffer: () => Promise.resolve(Buffer.from('fake-image')) }),
+      )
+
+      await service.scheduledSync()
+
+      expect(transactionSaves).toHaveLength(1)
+      expect(transactionSaves[0].published).toBe(false)
+    })
+  })
+
+  describe('scheduledSync', () => {
+    it('does not call the Instagram API when the token is missing', async () => {
+      const { service } = makeService({ tokenValue: null })
+
+      await service.scheduledSync()
+
+      expect(mockFetch).not.toHaveBeenCalled()
+    })
+
+    it('skips the run while another sync is in progress', async () => {
+      const { service, tokenService } = makeService()
+      ;(service.getSyncStatus() as { running: boolean }).running = true
+
+      await service.scheduledSync()
+
+      expect(tokenService.getAccessToken).not.toHaveBeenCalled()
+      expect(mockFetch).not.toHaveBeenCalled()
+    })
+
+    it('logs repeated failures once and announces recovery once', async () => {
+      const { service } = makeService()
+      const logger = (service as unknown as { logger: { error: jest.Mock; log: jest.Mock } }).logger
+      const errorSpy = jest.spyOn(logger, 'error').mockImplementation(() => undefined)
+      const logSpy = jest.spyOn(logger, 'log').mockImplementation(() => undefined)
+
+      mockFetch.mockResolvedValue({ ok: false, text: () => Promise.resolve('token expired') })
+      await service.scheduledSync()
+      await service.scheduledSync()
+      expect(errorSpy).toHaveBeenCalledTimes(1)
+
+      mockFetch.mockReset()
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ data: [] }),
+        text: () => Promise.resolve(''),
+      })
+      await service.scheduledSync()
+      expect(logSpy).toHaveBeenCalledWith('Instagram oto-sync tekrar çalışıyor')
+    })
+  })
+
+  describe('syncInstagramByMediaId — silinen post', () => {
+    it('does not recreate a project the admin deleted', async () => {
+      const { service, parseService } = makeService({
+        skipRecords: [{ mediaId: 'gone', reason: 'deleted', failCount: 0 }],
+      })
+
+      await service.syncInstagramByMediaId('gone')
+
+      expect(mockFetch).not.toHaveBeenCalled()
+      expect(parseService.parseInstagram).not.toHaveBeenCalled()
     })
   })
 

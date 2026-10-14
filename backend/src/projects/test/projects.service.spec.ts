@@ -5,6 +5,10 @@ import { Project } from '../entities/project.entity'
 import { MediaType, ProjectMedia } from '../entities/project-media.entity'
 import { MediaService } from '../media.service'
 import { PublicCacheService } from '../../common/public-cache.service'
+import { InstagramSkippedMedia } from '../entities/instagram-skipped-media.entity'
+
+const makeSkippedRepo = () =>
+  ({ save: jest.fn().mockResolvedValue(undefined) }) as unknown as jest.Mocked<Repository<InstagramSkippedMedia>>
 
 function media(type: MediaType, src: string, sortOrder: number): ProjectMedia {
   return { id: src, type, src, sortOrder } as ProjectMedia
@@ -17,7 +21,7 @@ function makeService(projects: Partial<Project>[]) {
     save: jest.fn().mockImplementation((entity: Partial<Project>) => Promise.resolve(entity)),
   } as unknown as jest.Mocked<Repository<Project>>
   const mediaService = {} as MediaService
-  return { service: new ProjectsService(repo, mediaService, new PublicCacheService()), repo }
+  return { service: new ProjectsService(repo, mediaService, new PublicCacheService(), makeSkippedRepo()), repo }
 }
 
 function makeSlugService(existingSlugs: string[]) {
@@ -29,7 +33,7 @@ function makeSlugService(existingSlugs: string[]) {
   const repo = {
     createQueryBuilder: jest.fn().mockReturnValue(qb),
   } as unknown as jest.Mocked<Repository<Project>>
-  return new ProjectsService(repo, {} as MediaService, new PublicCacheService())
+  return new ProjectsService(repo, {} as MediaService, new PublicCacheService(), makeSkippedRepo())
 }
 
 describe('ProjectsService.uniqueSlug — rezerve sluglar', () => {
@@ -161,7 +165,7 @@ describe('ProjectsService — öne çıkan projeler', () => {
       create: jest.fn().mockImplementation((dto: Partial<Project>) => ({ ...dto })),
       save: jest.fn().mockImplementation((entity: Partial<Project>) => Promise.resolve(entity)),
     } as unknown as jest.Mocked<Repository<Project>>
-    return { service: new ProjectsService(repo, {} as MediaService, new PublicCacheService()), repo }
+    return { service: new ProjectsService(repo, {} as MediaService, new PublicCacheService(), makeSkippedRepo()), repo }
   }
 
   it('findFeaturedPublic yalnızca yayınlanmış + öne çıkan projeleri, limitli ve sıralı ister', async () => {
@@ -190,5 +194,35 @@ describe('ProjectsService — öne çıkan projeler', () => {
     const { service } = makeFeaturedService(3, { id: 'p1', featured: false })
     const saved = await service.update('p1', { featured: true })
     expect(saved.featuredOrder).toBe(3)
+  })
+})
+
+describe('ProjectsService.remove — Instagram projesi', () => {
+  function makeRemoveService(project: Partial<Project> | null) {
+    const repo = {
+      findOne: jest.fn().mockResolvedValue(project),
+      remove: jest.fn().mockResolvedValue(undefined),
+    } as unknown as jest.Mocked<Repository<Project>>
+    const mediaService = { deleteFileIfUnreferenced: jest.fn() } as unknown as MediaService
+    const skippedRepo = makeSkippedRepo()
+    return { service: new ProjectsService(repo, mediaService, new PublicCacheService(), skippedRepo), skippedRepo }
+  }
+
+  it('Instagram kaynaklı projeyi silerken medya ID\'sini deleted olarak işaretler', async () => {
+    const { service, skippedRepo } = makeRemoveService({ id: 'p1', instagramMediaId: 'ig-1', media: [] })
+
+    await service.remove('p1')
+
+    expect(skippedRepo.save).toHaveBeenCalledWith(
+      expect.objectContaining({ mediaId: 'ig-1', reason: 'deleted' }),
+    )
+  })
+
+  it('Instagram kaynaklı olmayan projede skip kaydı yazmaz', async () => {
+    const { service, skippedRepo } = makeRemoveService({ id: 'p2', instagramMediaId: null as unknown as string, media: [] })
+
+    await service.remove('p2')
+
+    expect(skippedRepo.save).not.toHaveBeenCalled()
   })
 })
