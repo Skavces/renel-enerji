@@ -23,8 +23,16 @@ export default function FeaturedProjects() {
   if (!loading && projects.length === 0) return null
 
   return (
-    <section id="one-cikan-projeler" className="py-24 bg-gray-50">
-      <div className="max-w-7xl mx-auto px-6">
+    <section id="one-cikan-projeler" className="relative py-24 bg-gray-50 overflow-hidden">
+      <img
+        src="/stats-bg.webp"
+        alt=""
+        width="1440"
+        height="611"
+        className="absolute inset-0 w-full h-full object-cover object-bottom opacity-35 mix-blend-multiply pointer-events-none select-none z-0"
+        loading="lazy"
+      />
+      <div className="relative z-10 max-w-7xl mx-auto px-6">
         <div className="text-center mb-12">
           <span className="block text-[#357228] font-semibold text-sm mb-3">PROJELERİMİZ</span>
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight mb-3">
@@ -55,7 +63,7 @@ export default function FeaturedProjects() {
         <div className="text-center mt-12">
           <Link
             to="/projelerimiz"
-            className="inline-flex items-center gap-2 text-[#448834] hover:text-[#357228] font-bold transition-colors"
+            className="inline-flex items-center gap-2 bg-[#448834] hover:bg-[#357228] text-white font-semibold text-base px-8 py-3.5 rounded-xl transition-colors"
           >
             Tüm Projeleri Gör
             <ArrowRight size={18} />

@@ -11,7 +11,7 @@ export default function FeaturedProjectHero({ p }) {
   return (
     <Link
       to={`/projelerimiz/${p.slug}`}
-      className="bg-white rounded-2xl border border-gray-100 hover:shadow-xl hover:border-[#448834]/20 transition-shadow duration-300 grid md:grid-cols-2 overflow-hidden group max-w-5xl mx-auto"
+      className="bg-white rounded-2xl border border-gray-100 shadow-lg shadow-gray-900/5 hover:shadow-xl hover:border-[#448834]/20 transition-shadow duration-300 grid md:grid-cols-2 overflow-hidden group max-w-5xl mx-auto"
     >
       <div className="h-64 md:h-auto md:min-h-[22rem] overflow-hidden relative bg-gray-100">
         {cover ? (
