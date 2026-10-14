@@ -1,4 +1,4 @@
-import { IsArray, IsBoolean, IsNotEmpty, IsNotIn, IsNumber, IsOptional, IsString, Matches, Max, MaxLength, Min, ValidateNested } from 'class-validator'
+import { IsArray, IsBoolean, IsNotEmpty, IsNotIn, IsNumber, IsOptional, IsString, IsUUID, Matches, Max, MaxLength, Min, ValidateNested } from 'class-validator'
 import { Transform, Type } from 'class-transformer'
 import { RESERVED_SLUGS } from '../../common/reserved-slugs'
 
@@ -100,4 +100,9 @@ export class CreateProjectDto {
   @Max(2147483647)
   @Type(() => Number)
   sortOrder?: number
+
+  // null seçimi temizler (otomatik kapağa döner)
+  @IsOptional()
+  @IsUUID()
+  coverMediaId?: string | null
 }

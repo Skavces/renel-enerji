@@ -79,6 +79,11 @@ export class Project {
   @Column({ nullable: true, unique: true })
   instagramMediaId: string
 
+  // Admin'in seçtiği kapak (görsel veya video). FK yalnızca migration'da
+  // (ON DELETE SET NULL): medya silinince otomatik kapak seçimine dönülür.
+  @Column({ type: 'uuid', nullable: true })
+  coverMediaId: string | null
+
   @OneToMany(() => ProjectMedia, (m) => m.project, { cascade: true })
   media: ProjectMedia[]
 

@@ -23,6 +23,10 @@ export class MediaService {
     return project
   }
 
+  findProjectMedia(projectId: string, mediaId: string): Promise<ProjectMedia | null> {
+    return this.mediaRepo.findOne({ where: { id: mediaId, project: { id: projectId } } })
+  }
+
   async addMedia(projectId: string, type: MediaType, src: string) {
     const project = await this.findProjectById(projectId)
     const count = await this.mediaRepo.count({ where: { project: { id: projectId } } })

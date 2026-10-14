@@ -226,3 +226,87 @@ describe('ProjectsService.remove — Instagram projesi', () => {
     expect(skippedRepo.save).not.toHaveBeenCalled()
   })
 })
+
+describe('ProjectsService — seçilebilir kapak (coverMediaId)', () => {
+  const img = (id: string, sortOrder: number): ProjectMedia =>
+    ({ id, type: MediaType.IMAGE, src: `/uploads/${id}.webp`, sortOrder }) as ProjectMedia
+  const vid = (id: string, sortOrder: number): ProjectMedia =>
+    ({ id, type: MediaType.VIDEO, src: `/uploads/${id}.mp4`, sortOrder }) as ProjectMedia
+  const thumb = (id: string): ProjectMedia =>
+    ({ id, type: MediaType.THUMBNAIL, src: `/uploads/${id}.webp`, sortOrder: 9 }) as ProjectMedia
+
+  async function coverOf(project: Partial<Project>): Promise<string[]> {
+    const { service } = makeService([{ id: 'p1', ...project }])
+    const [p] = await service.findAllPublic()
+    return p.media.map(m => m.id)
+  }
+
+  it('seçili görsel kapak olur', async () => {
+    expect(await coverOf({ coverMediaId: 'i2', media: [img('i1', 0), img('i2', 1)] })).toEqual(['i2'])
+  })
+
+  it('seçili video [video, thumbnail poster] olarak döner', async () => {
+    expect(
+      await coverOf({ coverMediaId: 'v1', media: [img('i1', 0), vid('v1', 1), thumb('t1')] }),
+    ).toEqual(['v1', 't1'])
+  })
+
+  it('thumbnail yoksa video posteri ilk görsel olur', async () => {
+    expect(await coverOf({ coverMediaId: 'v1', media: [vid('v1', 0), img('i2', 2), img('i1', 1)] })).toEqual([
+      'v1',
+      'i1',
+    ])
+  })
+
+  it('görsel hiç yoksa yalnızca video döner', async () => {
+    expect(await coverOf({ coverMediaId: 'v1', media: [vid('v1', 0)] })).toEqual(['v1'])
+  })
+
+  it('geçersiz (silinmiş / başka projenin) kapak otomatik seçime döner', async () => {
+    expect(await coverOf({ coverMediaId: 'gone', media: [img('i1', 0), thumb('t1')] })).toEqual(['t1'])
+  })
+
+  it('kapak seçilmemişse davranış değişmez: thumbnail > ilk görsel', async () => {
+    expect(await coverOf({ coverMediaId: null, media: [img('i1', 0), vid('v1', 1)] })).toEqual(['i1'])
+  })
+
+  describe('update — kapak doğrulaması', () => {
+    function makeUpdateService(found: Partial<ProjectMedia> | null) {
+      const repo = {
+        findOne: jest.fn().mockResolvedValue({ id: 'p1', featured: false }),
+        save: jest.fn().mockImplementation((e: Partial<Project>) => Promise.resolve(e)),
+      } as unknown as jest.Mocked<Repository<Project>>
+      const mediaService = {
+        findProjectMedia: jest.fn().mockResolvedValue(found),
+      } as unknown as jest.Mocked<MediaService>
+      return {
+        service: new ProjectsService(repo, mediaService, new PublicCacheService(), makeSkippedRepo()),
+        mediaService,
+      }
+    }
+
+    it('başka projenin ya da olmayan medyası reddedilir', async () => {
+      const { service, mediaService } = makeUpdateService(null)
+      await expect(service.update('p1', { coverMediaId: 'x' })).rejects.toThrow(BadRequestException)
+      expect(mediaService.findProjectMedia).toHaveBeenCalledWith('p1', 'x')
+    })
+
+    it('thumbnail kapak seçilemez', async () => {
+      const { service } = makeUpdateService({ id: 't1', type: MediaType.THUMBNAIL })
+      await expect(service.update('p1', { coverMediaId: 't1' })).rejects.toThrow(BadRequestException)
+    })
+
+    it('video kapak olarak kabul edilir', async () => {
+      const { service } = makeUpdateService({ id: 'v1', type: MediaType.VIDEO })
+      const saved = await service.update('p1', { coverMediaId: 'v1' })
+      expect(saved.coverMediaId).toBe('v1')
+    })
+
+    it('null seçimi temizler ve medya sorgulanmaz', async () => {
+      const { service, mediaService } = makeUpdateService(null)
+      const saved = await service.update('p1', { coverMediaId: null })
+      expect(saved.coverMediaId).toBeNull()
+      expect(mediaService.findProjectMedia).not.toHaveBeenCalled()
+    })
+  })
+})

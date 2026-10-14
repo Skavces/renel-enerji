@@ -25,15 +25,26 @@ export class ProjectsService {
     private skippedRepo: Repository<InstagramSkippedMedia>,
   ) {}
 
-  // Liste sayfası kart başına tek kapak görseli kullanıyor; tüm medya dizisi
-  // yerine yalnızca kapak gönderilir (detay sayfası findBySlug ile tam listeyi alır).
-  // Kapak seçimi frontend'deki mantıkla birebir: thumbnail > en düşük sortOrder'lı görsel.
-  private static coverOnly(media: ProjectMedia[]): ProjectMedia[] {
+  // Liste sayfası kart başına tek kapak kullanıyor; tüm medya dizisi yerine
+  // yalnızca kapak gönderilir (detay sayfası findBySlug ile tam listeyi alır).
+  // Admin bir kapak seçtiyse (coverMediaId) o kullanılır: video seçildiyse yanıt
+  // [video, poster] olur (poster = thumbnail, yoksa ilk görsel). Seçim yoksa veya
+  // artık geçerli değilse otomatik seçim: thumbnail > en düşük sortOrder'lı görsel.
+  // Frontend'deki lib/projectCover.ts ile birebir aynı kural.
+  private static coverOnly(media: ProjectMedia[], coverMediaId?: string | null): ProjectMedia[] {
     const thumb = media.find(m => m.type === MediaType.THUMBNAIL)
-    if (thumb) return [thumb]
     const firstImage = [...media]
       .sort((a, b) => a.sortOrder - b.sortOrder)
       .find(m => m.type === MediaType.IMAGE)
+
+    const chosen = coverMediaId ? media.find(m => m.id === coverMediaId) : undefined
+    if (chosen && chosen.type === MediaType.IMAGE) return [chosen]
+    if (chosen && chosen.type === MediaType.VIDEO) {
+      const poster = thumb ?? firstImage
+      return poster ? [chosen, poster] : [chosen]
+    }
+
+    if (thumb) return [thumb]
     return firstImage ? [firstImage] : []
   }
 
@@ -44,7 +55,7 @@ export class ProjectsService {
         relations: { media: true },
         order: { sortOrder: 'ASC', createdAt: 'DESC' },
       })
-      return projects.map(p => ({ ...p, media: ProjectsService.coverOnly(p.media ?? []) }))
+      return projects.map(p => ({ ...p, media: ProjectsService.coverOnly(p.media ?? [], p.coverMediaId) }))
     })
   }
 
@@ -58,7 +69,7 @@ export class ProjectsService {
         order: { featuredOrder: 'ASC', createdAt: 'DESC' },
         take: MAX_FEATURED,
       })
-      return projects.map(p => ({ ...p, media: ProjectsService.coverOnly(p.media ?? []) }))
+      return projects.map(p => ({ ...p, media: ProjectsService.coverOnly(p.media ?? [], p.coverMediaId) }))
     })
   }
 
@@ -121,6 +132,12 @@ export class ProjectsService {
   async update(id: string, dto: UpdateProjectDto) {
     const project = await this.findById(id)
     const becomesFeatured = dto.featured === true && !project.featured
+    if (dto.coverMediaId) {
+      const media = await this.mediaService.findProjectMedia(id, dto.coverMediaId)
+      if (!media || (media.type !== MediaType.IMAGE && media.type !== MediaType.VIDEO)) {
+        throw new BadRequestException('Kapak, bu projeye ait bir görsel veya video olmalıdır')
+      }
+    }
     Object.assign(project, dto)
     if (becomesFeatured) project.featuredOrder = await this.nextFeaturedOrder()
     try {
