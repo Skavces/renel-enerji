@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
-  ArrowLeft, Plus, Trash2, Upload, X, Sparkles, CheckCircle2, ImageIcon,
+  ArrowLeft, Plus, Trash2, Upload, X, Sparkles, CheckCircle2, ImageIcon, Play,
 } from 'lucide-react'
 import {
   createProject, updateProject, fetchAllProjects,
@@ -17,6 +17,16 @@ const EMPTY = {
   highlightsTitle: 'Öne Çıkan Özellikler', highlights: [],
   statBoxes: [], ctaText: 'Benzer Proje İçin Teklif Al',
   published: true, featured: false, sortOrder: 0, coverMediaId: null,
+}
+
+// Medya karolarında videoyu görselden ayırt eden rozet
+function VideoBadge() {
+  return (
+    <span className="absolute bottom-1 left-1 flex items-center gap-1 bg-black/65 text-white text-[10px] font-semibold pl-1 pr-1.5 py-0.5 rounded pointer-events-none">
+      <Play size={10} fill="currentColor" />
+      Video
+    </span>
+  )
 }
 
 function slugify(str) {
@@ -453,6 +463,7 @@ if (parsed.description) { set('description', parsed.description); count++ }
                       ) : (
                         <img src={mediaUrl(m.src)} alt="" className="w-full h-full object-cover" />
                       )}
+                      {m.type === 'video' && <VideoBadge />}
                       {isCover && (
                         <span className="absolute top-1 left-1 bg-[#448834] text-white text-[10px] font-semibold px-1.5 py-0.5 rounded">
                           Kapak
@@ -497,6 +508,7 @@ if (parsed.description) { set('description', parsed.description); count++ }
                   ) : (
                     <img src={URL.createObjectURL(f)} alt="" className="w-full h-full object-cover" />
                   )}
+                  {f.type.startsWith('video') && <VideoBadge />}
                   <button
                     type="button"
                     onClick={() => removeNewFile(i)}
