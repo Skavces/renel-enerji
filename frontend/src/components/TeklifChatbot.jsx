@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { X, Send, Loader2, MessageCircle, Star, Zap, Droplets, Car, Wifi, Battery, Wrench, ClipboardList, FileBarChart } from 'lucide-react'
+import { X, Send, Loader2, MessageCircle, Star, Zap, Droplets, Car, Wifi, Battery, ThermometerSun, Wrench, ClipboardList, FileBarChart } from 'lucide-react'
 import { sendChatMessage, generateWhatsappSummary, submitChatRating, trackChatOpen } from '../api/chat'
 import { WA_NUMBER, waLink } from '../lib/whatsapp'
 
@@ -15,6 +15,7 @@ const QUICK_REPLIES = [
   { label: 'Tarımsal Sulama GES', desc: 'Tarla ve bahçe sulama sistemleri', icon: Droplets, value: 'Tarımsal sulama için güneş enerjisi sistemi hakkında bilgi almak istiyorum.' },
   { label: 'EV Şarj İstasyonu', desc: 'Güneş enerjili araç şarj altyapısı', icon: Car, value: 'Elektrikli araç şarj istasyonu hakkında bilgi almak istiyorum.' },
   { label: 'Bağ Evi / Off-Grid GES', desc: 'Bataryalı, şebekeden bağımsız çözüm', icon: Battery, value: 'Bağ evi veya off-grid güneş enerjisi sistemi hakkında bilgi almak istiyorum.' },
+  { label: 'Isı Pompası', desc: 'GES destekli ısıtma ve soğutma', icon: ThermometerSun, value: 'Isı pompası ile ısıtma-soğutma sistemi hakkında bilgi almak istiyorum.' },
   { label: 'GES Bakım & Onarım', desc: 'Mevcut sistem bakım ve arıza onarımı', icon: Wrench, value: 'Mevcut GES sistemimin bakım ve onarımı hakkında bilgi almak istiyorum.' },
   { label: 'Elektrik Altyapı Bakımı', desc: 'Trafo, pano, AG/OG şebeke bakımı', icon: Wifi, value: 'Trafo, pano ve elektrik altyapısı bakım onarımı hakkında bilgi almak istiyorum.' },
   { label: 'Proje Danışmanlığı', desc: 'Fizibilite, yatırım analizi, mevzuat', icon: ClipboardList, value: 'GES yatırımı için proje danışmanlığı ve fizibilite analizi hakkında bilgi almak istiyorum.' },
