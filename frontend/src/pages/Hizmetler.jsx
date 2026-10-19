@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Droplets, Home, Battery, Car, Wrench, Zap, ClipboardList, FileBarChart, ArrowRight, CheckCircle } from 'lucide-react'
+import { Droplets, Home, Battery, Car, ThermometerSun, Wrench, Zap, ClipboardList, FileBarChart, ArrowRight, CheckCircle } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
 import SEO from '../components/SEO'
 import { waLink } from '../lib/whatsapp'
@@ -77,6 +77,29 @@ const categories = [
         ],
         photo: '/elektrikli-arac-sarj-istasyonu.webp',
         waMessage: 'Merhaba, elektrikli araç şarj istasyonu kurulumu için teklif almak istiyorum. Güneş enerjili EV şarj sistemi hakkında bilgi alabilir miyim?',
+      },
+    ],
+  },
+  {
+    id: 'isitma-sogutma',
+    label: 'Isıtma & Soğutma',
+    services: [
+      {
+        icon: ThermometerSun,
+        title: 'Isı Pompası Sistemleri',
+        slug: 'isi-pompasi',
+        description:
+          'Hava kaynaklı ısı pompasıyla evinizi kışın ısıtın, yazın serinletin. GES ile birlikte kurulduğunda ısıtma ve soğutma için harcanan elektriği güneşten karşılayarak işletme maliyetinizi en aza indirin.',
+        features: [
+          'Hava kaynaklı (havadan suya / havadan havaya) ısı pompası',
+          'Isıtma, soğutma ve sıcak kullanım suyu',
+          'GES ile entegre, düşük işletme maliyeti',
+          'Yerden ısıtma, fan-coil ve radyatör uyumu',
+          'Isı kaybı hesabı ve doğru kapasite seçimi',
+          'Kurulum, devreye alma ve periyodik bakım',
+        ],
+        photo: '/isi-pompasi.webp',
+        waMessage: 'Merhaba, ısı pompası sistemi hakkında bilgi almak istiyorum. Evim/işyerim için ısıtma-soğutma çözümü ve GES entegrasyonu konusunda teklif alabilir miyim?',
       },
     ],
   },
@@ -172,7 +195,7 @@ const hizmetlerJsonLd = {
   name: 'Hizmetler | RenEl Enerji Mühendislik',
   url: 'https://renelenerji.com/hizmetler',
   description:
-    'Güneş enerjisi hizmetlerimiz: tarımsal sulama GES, çatı ve arazi tipi GES, bağ evi depolamalı GES, elektrikli araç şarj istasyonu, GES bakım onarım, elektrik altyapı bakımı, proje danışmanlığı ve enerji danışmanlığı.',
+    'Güneş enerjisi hizmetlerimiz: tarımsal sulama GES, çatı ve arazi tipi GES, bağ evi depolamalı GES, elektrikli araç şarj istasyonu, ısı pompası, GES bakım onarım, elektrik altyapı bakımı, proje danışmanlığı ve enerji danışmanlığı.',
   mainEntity: {
     '@type': 'ItemList',
     itemListElement: allServices.map((s, i) => ({
@@ -196,7 +219,7 @@ export default function Hizmetler() {
     <>
       <SEO
         title="GES Kurulum, Bakım & Danışmanlık Hizmetleri | Soma Manisa"
-        description="Soma ve Manisa'da güneş enerjisi hizmetleri: tarımsal sulama GES, çatı ve arazi tipi GES, bağ evi depolamalı GES, EV şarj istasyonu, GES bakım onarım, elektrik altyapı bakımı, proje ve enerji danışmanlığı."
+        description="Soma ve Manisa'da güneş enerjisi hizmetleri: tarımsal sulama GES, çatı ve arazi tipi GES, bağ evi depolamalı GES, EV şarj istasyonu, ısı pompası, GES bakım onarım, elektrik altyapı bakımı, proje ve enerji danışmanlığı."
         jsonLd={hizmetlerJsonLd}
       />
       <PageHeader title="Hizmetler" />

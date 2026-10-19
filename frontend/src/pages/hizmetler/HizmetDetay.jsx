@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useParams, Link, Navigate } from 'react-router-dom'
-import { Droplets, Home, Battery, Car, Wrench, Zap, ClipboardList, FileBarChart, CheckCircle, ChevronRight } from 'lucide-react'
+import { Droplets, Home, Battery, Car, ThermometerSun, Wrench, Zap, ClipboardList, FileBarChart, CheckCircle, ChevronRight } from 'lucide-react'
 import PageHeader from '../../components/PageHeader'
 import SEO from '../../components/SEO'
 import { waLink } from '../../lib/whatsapp'
@@ -85,6 +85,30 @@ const services = [
       'Kurulum, sertifikasyon ve devreye alma',
     ],
     waMessage: 'Merhaba, elektrikli araç şarj istasyonu kurulumu için teklif almak istiyorum. Güneş enerjili EV şarj sistemi hakkında bilgi alabilir miyim?',
+  },
+  {
+    slug: 'isi-pompasi',
+    icon: ThermometerSun,
+    title: 'Isı Pompası Sistemleri',
+    seoTitle: 'Isı Pompası Kurulumu | Soma Manisa',
+    seoDescription:
+      "Soma ve Manisa'da hava kaynaklı ısı pompası kurulumu. GES ile entegre çözümle ısıtma, soğutma ve sıcak su elektriğini güneşten karşılayın.",
+    photo: '/isi-pompasi.webp',
+    photoAlt: 'Isı pompası - çatısında güneş panelleri bulunan evin yanında hava kaynaklı ısı pompası dış ünitesi',
+    subtitle: 'Isıtma ve soğutma elektriğinizi güneşten karşılayın, hava kaynaklı ısı pompasıyla konforu düşük işletme maliyetiyle yaşayın.',
+    description:
+      'Isı pompası, havadaki ısı enerjisini kullanarak kışın evinizi ısıtan, yazın serinleten ve sıcak kullanım suyu üreten verimli bir sistemdir. RenEl olarak hava kaynaklı ısı pompalarını, binanızın ısı kaybı hesabına göre doğru kapasitede seçiyor; kurulum ve devreye almayı uçtan uca üstleniyoruz.',
+    description2:
+      'Isı pompası çalışırken elektrik tükettiği için en büyük avantajı GES ile birlikte ortaya çıkar: ısıtma ve soğutma için gereken elektriği çatınızdaki güneş enerjisi sisteminden karşılayarak işletme maliyetinizi en aza indirebilirsiniz. Mevcut GES\'inize ısı pompası ekleyebilir ya da ikisini birlikte tasarlayabiliriz.',
+    features: [
+      'Hava kaynaklı (havadan suya / havadan havaya) ısı pompası',
+      'Isıtma, soğutma ve sıcak kullanım suyu',
+      'GES ile entegre, düşük işletme maliyeti',
+      'Yerden ısıtma, fan-coil ve radyatör uyumu',
+      'Isı kaybı hesabı ve doğru kapasite seçimi',
+      'Kurulum, devreye alma ve periyodik bakım',
+    ],
+    waMessage: 'Merhaba, ısı pompası sistemi hakkında bilgi almak istiyorum. Evim/işyerim için ısıtma-soğutma çözümü ve GES entegrasyonu konusunda teklif alabilir miyim?',
   },
   {
     slug: 'ges-bakim-onarim',
@@ -204,8 +228,8 @@ export default function HizmetDetay() {
   return (
     <>
       <SEO
-        title={service.title}
-        description={`${service.subtitle} ${service.description}`.slice(0, 160)}
+        title={service.seoTitle ?? service.title}
+        description={service.seoDescription ?? `${service.subtitle} ${service.description}`.slice(0, 160)}
         image={`https://renelenerji.com${service.photo}`}
         jsonLd={jsonLd}
       />

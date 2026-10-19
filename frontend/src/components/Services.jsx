@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Droplets, Home, Battery, Car, Wrench, Zap, ClipboardList, FileBarChart, ArrowRight } from 'lucide-react'
+import { Droplets, Home, Battery, Car, ThermometerSun, Wrench, Zap, ClipboardList, FileBarChart, ArrowRight } from 'lucide-react'
 import { waLink } from '../lib/whatsapp'
 
 const categories = [
@@ -50,6 +50,25 @@ const categories = [
         photo: '/elektrikli-arac-sarj-istasyonu.webp',
         ring: 'ring-2 ring-[#448834]/30',
         waMessage: 'Merhaba, elektrikli araç şarj istasyonu kurulumu için teklif almak istiyorum. Güneş enerjili EV şarj sistemi hakkında bilgi alabilir miyim?',
+      },
+    ],
+  },
+  {
+    id: 'isitma-sogutma',
+    label: 'Isıtma & Soğutma',
+    labelShort: 'Isıtma & Soğutma',
+    description:
+      'Hava kaynaklı ısı pompası sistemleriyle evinizi kışın ısıtıyor, yazın serinletiyoruz. GES ile birlikte tasarlanan çözümlerde ısıtma ve soğutma elektriği güneşten karşılanarak işletme maliyeti düşük tutulur.',
+    services: [
+      {
+        icon: ThermometerSun,
+        title: 'Isı Pompası Sistemleri',
+        slug: 'isi-pompasi',
+        description: 'Hava kaynaklı ısı pompasıyla ısıtma, soğutma ve sıcak su ihtiyacınızı karşılayın; GES ile birlikte işletme maliyetini düşürün.',
+        features: ['Isıtma, soğutma & sıcak su', 'GES ile entegre kurulum', 'Doğru kapasite seçimi'],
+        photo: '/isi-pompasi.webp',
+        ring: 'ring-2 ring-[#448834]/30',
+        waMessage: 'Merhaba, ısı pompası sistemi hakkında bilgi almak istiyorum. Evim/işyerim için ısıtma-soğutma çözümü ve GES entegrasyonu konusunda teklif alabilir miyim?',
       },
     ],
   },

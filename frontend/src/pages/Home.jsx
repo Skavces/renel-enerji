@@ -75,6 +75,7 @@ const homeSchema = {
           { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Çatı ve Arazi Tipi GES' } },
           { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Bağ Evi Depolamalı GES' } },
           { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Elektrikli Araç Şarj İstasyonu' } },
+          { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Isı Pompası Sistemleri' } },
         ],
       },
       areaServed: ['Soma', 'Manisa', 'İzmir', 'Balıkesir'],

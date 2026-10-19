@@ -14,6 +14,12 @@ const hizmetlerDropdown = [
     ],
   },
   {
+    category: 'Isıtma & Soğutma',
+    items: [
+      { label: 'Isı Pompası', to: '/hizmetler/isi-pompasi' },
+    ],
+  },
+  {
     category: 'Bakım & Onarım',
     items: [
       { label: 'GES Bakım & Onarım', to: '/hizmetler/ges-bakim-onarim' },

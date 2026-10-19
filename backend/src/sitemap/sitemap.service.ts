@@ -13,6 +13,7 @@ const STATIC_URLS = [
   { loc: '/hizmetler/cati-arazi', priority: '0.7', changefreq: 'monthly' },
   { loc: '/hizmetler/bag-evi', priority: '0.7', changefreq: 'monthly' },
   { loc: '/hizmetler/ev-sarj', priority: '0.7', changefreq: 'monthly' },
+  { loc: '/hizmetler/isi-pompasi', priority: '0.7', changefreq: 'monthly' },
   { loc: '/hizmetler/ges-bakim-onarim', priority: '0.7', changefreq: 'monthly' },
   { loc: '/hizmetler/elektrik-altyapi-bakimi', priority: '0.7', changefreq: 'monthly' },
   { loc: '/hizmetler/proje-danismanlik', priority: '0.7', changefreq: 'monthly' },

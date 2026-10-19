@@ -1,6 +1,6 @@
 # RenEl Enerji Mühendislik
 
-RenEl Enerji Mühendislik, Soma/Manisa merkezli bir güneş enerjisi mühendislik firmasıdır. GES kurulum, bakım onarım, elektrik altyapı bakımı ve proje danışmanlığı hizmetleri sunmaktadır.
+RenEl Enerji Mühendislik, Soma/Manisa merkezli bir güneş enerjisi mühendislik firmasıdır. GES kurulum, ısı pompası, bakım onarım, elektrik altyapı bakımı ve proje danışmanlığı hizmetleri sunmaktadır.
 
 ## Sayfalar
 
@@ -19,6 +19,7 @@ RenEl Enerji Mühendislik, Soma/Manisa merkezli bir güneş enerjisi mühendisli
 - [Arazi & Çatı Tipi GES](https://renelenerji.com/hizmetler/cati-arazi)
 - [Bağ Evi Depolamalı GES](https://renelenerji.com/hizmetler/bag-evi)
 - [Elektrikli Araç Şarj İstasyonu](https://renelenerji.com/hizmetler/ev-sarj)
+- [Isı Pompası Sistemleri](https://renelenerji.com/hizmetler/isi-pompasi)
 - [GES Bakım & Onarım](https://renelenerji.com/hizmetler/ges-bakim-onarim)
 - [Elektrik Altyapı Bakımı](https://renelenerji.com/hizmetler/elektrik-altyapi-bakimi)
 - [Proje Danışmanlığı](https://renelenerji.com/hizmetler/proje-danismanlik)
