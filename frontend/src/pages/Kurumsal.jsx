@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { CheckCircle, Award, Wrench, HeartHandshake, Leaf, BarChart3, ArrowRight } from 'lucide-react'
+import { CheckCircle, Award, Wrench, HeartHandshake, Leaf, BarChart3, ArrowRight, ArrowUpRight, MapPin, Sun, ClipboardCheck, Zap, FileText, Factory } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
 import SEO from '../components/SEO'
 
@@ -42,6 +42,48 @@ const stats = [
   { value: '25 Yıl', label: 'Panel Garantisi' },
   { value: '4', label: 'Hizmet Alanı' },
   { value: '0₺', label: 'Keşif Ücreti' },
+]
+
+const experiences = [
+  {
+    value: '15 Yıl',
+    title: 'Enerji Dağıtım ve Yönetim Tecrübesi',
+    desc: 'Kurucu kadromuzda; Gediz Elektrik ve GDZ Elektrik bünyesinde 15 yıllık sektör deneyimi, 10 yıllık yöneticilik geçmişi ve Manisa genelinde bölge yönetimi tecrübesi bulunmaktadır. Elektrik piyasası mevzuatı, resmi kurum süreçleri, bağlantı anlaşmaları, enerji altyapısı ve yatırım danışmanlığı alanlarındaki birikimimizi müşterilerimizin hizmetine sunuyoruz.',
+  },
+  {
+    value: '5 Yıl',
+    title: 'Uluslararası Teknik Denetim ve Kalite Mühendisliği',
+    desc: 'TÜV SÜD bünyesinde edinilen 5 yıllık saha kontrol mühendisliği, kalite güvence, GES projeleri ve fotovoltaik modül üretim denetimi tecrübemizi ulusal ölçekteki projelere taşıyoruz.',
+  },
+]
+
+// location boşsa MapPin satırı render edilmez
+const fieldProjects = [
+  {
+    location: 'Malatya ve Bingöl',
+    title: '3 Aktif Proje',
+    desc: 'İşveren mühendislik kapsamında üç ayrı enerji projesinde kalite mühendisliği ve saha denetim hizmetleri yürütüyoruz.',
+  },
+  {
+    location: '', // TODO: konum eklenecek
+    title: '3 GES — Toplam 10 MW',
+    desc: 'Üç güneş enerjisi santralinin izleme, arıza tespiti, onarım ve trafo işletme sorumluluğu hizmetlerini üstleniyoruz.',
+  },
+]
+
+const activityAreas = [
+  { icon: Sun, text: 'Güneş enerjisi santralleri ve EPC hizmetleri' },
+  { icon: ClipboardCheck, text: 'Teknik müşavirlik, işveren mühendisliği ve kalite kontrol' },
+  { icon: Zap, text: 'OG/YG tesisleri ve trafo işletme sorumluluğu' },
+  { icon: Wrench, text: 'GES işletme, bakım, izleme ve arıza yönetimi' },
+  { icon: FileText, text: 'Enerji mevzuatı, resmi kurum ve yatırım danışmanlığı' },
+  { icon: Factory, text: 'Elektrik proje, taahhüt ve enerji altyapısı' },
+  { icon: Leaf, text: 'Enerji verimliliği ve sürdürülebilir enerji çözümleri' },
+]
+
+const founders = [
+  { name: 'Mertcan Yılmaz', url: 'https://www.linkedin.com/in/mertcan-y%C4%B1lmaz-ab1429209/' },
+  { name: 'Muammer Yılmaz', url: 'https://www.linkedin.com/in/muammer-y%C4%B1lmaz-433742146/' },
 ]
 
 const collagePhotos = [
@@ -150,8 +192,105 @@ export default function Kurumsal() {
         </div>
       </section>
 
+      {/* Biz Kimiz */}
+      <section id="biz-kimiz" className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-12">
+            <p className="text-[#448834] font-semibold text-xs uppercase tracking-widest mb-3">Biz Kimiz</p>
+            <h2 className="text-3xl font-bold text-gray-900 mb-5">Enerjide Tecrübe, Sahada Güven</h2>
+            <p className="text-gray-500 leading-relaxed max-w-3xl mx-auto">
+              Enerji sektöründe edindiğimiz yöneticilik, mühendislik ve teknik denetim tecrübemizi bir araya
+              getirerek; enerji yatırımlarının planlanmasından işletilmesine kadar her aşamada profesyonel
+              çözümler sunuyoruz. Gücümüz tecrübemizden, güvenimiz sahadaki çalışmalarımızdan geliyor.
+            </p>
+          </div>
+
+          {/* Experience: subgrid ile sayı/başlık/paragraf satırları iki kartta hizalı */}
+          <div className="grid md:grid-cols-2 md:grid-rows-[auto_auto_1fr] gap-5 md:gap-y-0">
+            {experiences.map(({ value, title, desc }) => (
+              <div key={title} className="flex flex-col md:grid md:row-span-3 md:grid-rows-subgrid p-6 sm:p-8 bg-white rounded-2xl border border-gray-100 hover:border-[#448834]/30 hover:shadow-md transition-all">
+                <p className="text-[#448834] font-bold text-5xl font-['Rajdhani'] leading-none mb-5">{value}</p>
+                <h3 className="font-bold text-gray-900 text-base leading-snug mb-3">{title}</h3>
+                <p className="text-gray-500 text-sm leading-relaxed">{desc}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Field projects */}
+          <div className="mt-16 sm:mt-20 flex items-center justify-center gap-5 mb-8">
+            <div className="hidden sm:block h-px flex-1 bg-gray-200" aria-hidden="true" />
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900 text-center text-balance">Bugün sahadayız, projelerin içindeyiz</h3>
+            <div className="hidden sm:block h-px flex-1 bg-gray-200" aria-hidden="true" />
+          </div>
+          <div className="grid sm:grid-cols-2 gap-5">
+            {fieldProjects.map(({ location, title, desc }) => (
+              <div key={title} className="flex flex-col h-full p-6 sm:p-8 bg-white rounded-2xl border border-gray-100 hover:border-[#448834]/30 hover:shadow-md transition-all">
+                <h4 className="font-bold text-gray-900 text-lg leading-snug mb-3">{title}</h4>
+                <p className="text-gray-500 text-sm leading-relaxed">{desc}</p>
+                {location && (
+                  <div className="flex items-center gap-2 mt-auto pt-5">
+                    <MapPin size={20} aria-hidden="true" className="text-[#448834] shrink-0" />
+                    <span className="text-[#448834] font-semibold text-sm">{location}</span>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Activity areas */}
+          <div className="mt-16 sm:mt-20 flex items-center justify-center gap-5 mb-8">
+            <div className="hidden sm:block h-px flex-1 bg-gray-200" aria-hidden="true" />
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900 text-center">Faaliyet Alanlarımız</h3>
+            <div className="hidden sm:block h-px flex-1 bg-gray-200" aria-hidden="true" />
+          </div>
+          {/* 7 madde: lg'de 4+3 (12 kolonlu grid), sm'de 2'li + son kart tam genişlik */}
+          <ul className="grid sm:grid-cols-2 lg:grid-cols-12 gap-5">
+            {activityAreas.map(({ icon, text }, i) => {
+              const Icon = icon
+              const span = i < 4 ? 'lg:col-span-3' : 'lg:col-span-4'
+              const last = i === activityAreas.length - 1 ? 'sm:max-lg:col-span-2' : ''
+              return (
+                <li key={text} className={`${span} ${last}`}>
+                  <div className="flex lg:flex-col items-start gap-4 lg:gap-3 h-full p-6 bg-white rounded-2xl border border-gray-100 hover:border-[#448834]/30 hover:shadow-md transition-all">
+                    <Icon size={20} aria-hidden="true" className="text-[#448834] shrink-0 mt-0.5 lg:mt-0" />
+                    <p className="font-bold text-gray-900 text-sm leading-snug">{text}</p>
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
+
+          {/* Closing */}
+          <div className="mt-16 sm:mt-20 text-center">
+            <p className="text-gray-500 leading-relaxed max-w-3xl mx-auto">
+              2 elektrik mühendisi ve 2 teknik personelden oluşan ekibimizle, mühendislik disiplinini saha
+              tecrübesiyle birleştiriyoruz. Hedefimiz; yatırımcılarımızın güvenle çalışabileceği, teknik
+              yetkinliği yüksek, uzun vadeli bir çözüm ortağı olmaktır.
+            </p>
+            <div className="w-10 h-1 rounded-full bg-[#f5ce31] mx-auto my-8" aria-hidden="true" />
+            <p className="text-[#448834] font-bold text-xl sm:text-2xl text-balance">Enerjide Tecrübe, Mühendislikte Güven.</p>
+            <ul className="mt-6 flex flex-wrap items-center justify-center gap-3 list-none p-0">
+              {founders.map((person) => (
+                <li key={person.url}>
+                  <a
+                    href={person.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`${person.name} LinkedIn profili (yeni sekmede açılır)`}
+                    className="group inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-5 py-2.5 text-sm font-semibold text-gray-900 shadow-sm transition-all hover:border-[#448834] hover:text-[#448834] hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#448834]"
+                  >
+                    {person.name}
+                    <ArrowUpRight size={16} aria-hidden="true" className="shrink-0 text-gray-400 transition-colors group-hover:text-[#448834] group-focus-visible:text-[#448834]" />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
+
       {/* Values */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-12">
             <p className="text-[#448834] font-semibold text-xs uppercase tracking-widest mb-3">Değerlerimiz</p>
